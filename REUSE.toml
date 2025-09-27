@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2025 The Linux Foundation
+# SPDX-License-Identifier: Apache-2.0
+version = 1
+
+# Annotate spec kit files
+[[annotations]]
+path = [".github/prompts/*", ".specify/**"]
+SPDX-License-Identifier = "Apache-2.0"
+SPDX-FileCopyrightText = "2025 The Linux Foundation"
