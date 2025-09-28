@@ -44,8 +44,8 @@ queue scheduler with adaptive concurrency 2→5) aligned with constitution princ
 security/privacy, test-first).
 
 ## Technical Context
-**Language/Version**: Python 3.12 (Home Assistant base image alignment)
-**Primary Dependencies**: FastAPI (admin + portal HTTP), httpx (controller API calls), Jinja2 (theme templating), pydantic (config & models)
+**Language/Version**: Python 3.13 (target) – ensure addon base image variant supports 3.13; if not, introduce build stage to supply 3.13 runtime
+**Primary Dependencies**: FastAPI (admin + portal HTTP), httpx (controller API calls), Jinja2 (theme templating), pydantic (config & models), uv (package/env management)
 **Storage**: Lightweight embedded DB (SQLite) for grants, vouchers, events (future pluggable) – small scale persistence
 **Testing**: pytest (unit + integration), pytest-asyncio, coverage
 **Target Platform**: Home Assistant OS / Supervisor managed addon container (Linux, amd64/arm64)
@@ -53,6 +53,8 @@ security/privacy, test-first).
 **Performance Goals**: Provision latency < 2s p95, portal page render < 300ms server-side, adaptive queue latency <400ms threshold
 **Constraints**: Memory <150MB RSS typical; do not block HA supervisor; structured logging JSON-capable; hardened against concurrent modification
 **Scale/Scope**: Expected concurrent active grants: <500; burst grant creations: up to 50 in 1 minute at property turnover
+**Packaging Note**: Use uv for dependency resolution, lockfile generation, and isolated execution; block merges without updated uv lock on dependency changes.
+
 
 ## Constitution Check
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
