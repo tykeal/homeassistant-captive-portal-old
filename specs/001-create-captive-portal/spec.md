@@ -101,7 +101,7 @@ but still manage them centrally.
 - **FR-010**: System MUST mark provisioning attempts as pending and retry (with backoff) if the network controller is unreachable.
 - **FR-011**: System MUST isolate plugin logic for different network controllers (pluggable backend) without code changes to core logic.
 - **FR-012**: System MUST expose an API endpoint to adjust an existing grant end time.
-- **FR-013**: System MUST prevent shortening a grant to a time earlier than current time (clamp & warn) unless forced override (NEEDS CLARIFICATION: Should force override be supported?).
+- **FR-013**: System MUST allow administrators to force terminate (immediate revoke) an active grant at any time; otherwise normal shortening clamps to now with a warning.
 - **FR-014**: System MUST fall back to a default theme if a configured theme asset is missing.
 - **FR-015**: System MUST differentiate between Rental Control derived grants and voucher grants in UI and logs.
 - **FR-016**: System MUST handle burst creation of multiple grants concurrently without UI timeouts.
@@ -110,7 +110,7 @@ but still manage them centrally.
 - **FR-019**: System MUST allow revocation of a grant prior to natural expiry via admin action.
 - **FR-020**: System MUST queue provisioning tasks to avoid blocking HA main thread (NEEDS CLARIFICATION: specific queue or scheduling constraints?).
 
-*Ambiguities flagged for clarification: FR-013 force override rule, FR-020 scheduling/queueing mechanics.*
+*Ambiguities flagged for clarification: FR-020 scheduling/queueing mechanics.*
 
 ### Key Entities *(include if feature involves data)*
 - **AccessGrant**: Represents time-bounded network access derived from Rental Control (fields: id, source=RentalControl, username, secret/credential, start_at, end_at, status[pending|active|revoking|revoked|error], controller_type, controller_ref, created_at, updated_at).
@@ -122,8 +122,10 @@ but still manage them centrally.
 ## Clarifications
 
 ### Outstanding Ambiguities
-- FR-013: Should administrators be able to forcefully shorten a grant earlier than now (immediate termination) beyond automatic clamp? [NEEDS CLARIFICATION]
 - FR-020: What scheduling/queue constraint (e.g., max parallel provisioning jobs) should be enforced for controller operations? [NEEDS CLARIFICATION]
+
+### Session 2025-09-28
+- Q: Should administrators be able to forcefully shorten (immediate terminate) an active grant at any time? → A: Allow force terminate anytime; revoke immediately and log reason
 
 
 ---
