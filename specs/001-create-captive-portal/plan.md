@@ -214,6 +214,8 @@ ios/ or android/
 
 - Reference: TP-Omada voucher & portal workflow (https://www.tp-link.com/us/support/faq/896/) to inform controller adapter contract design (voucher creation fields, expiration handling, portal redirection parameters).
 
+- Reference: Home Assistant addon structure & build conventions from example repo (https://github.com/hassio-addons/addon-example) for base Dockerfile, config.yaml patterns, s6-overlay usage, health checks.
+
 ### Phase 1 Design Notes
 - Entities map: AccessGrant, Voucher, Event (audit), Theme.
 - Contracts: provisioning endpoint(s), extension/shorten, voucher create, theme update, audit log fetch, health.
