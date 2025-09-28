@@ -108,9 +108,9 @@ but still manage them centrally.
 - **FR-017**: System MUST provide a read-only audit view/filter for lifecycle events.
 - **FR-018**: System MUST ensure expired credentials cannot be reused (deny & user-friendly message).
 - **FR-019**: System MUST allow revocation of a grant prior to natural expiry via admin action.
-- **FR-020**: System MUST queue provisioning tasks to avoid blocking HA main thread (NEEDS CLARIFICATION: specific queue or scheduling constraints?).
+- **FR-020**: System MUST use an adaptive provisioning queue: start concurrency=2 and increase up to 5 if average provisioning latency <200ms over last 20 jobs; decrease if >400ms.
 
-*Ambiguities flagged for clarification: FR-020 scheduling/queueing mechanics.*
+*All previously flagged ambiguities resolved in clarification session.*
 
 ### Key Entities *(include if feature involves data)*
 - **AccessGrant**: Represents time-bounded network access derived from Rental Control (fields: id, source=RentalControl, username, secret/credential, start_at, end_at, status[pending|active|revoking|revoked|error], controller_type, controller_ref, created_at, updated_at).
@@ -122,10 +122,11 @@ but still manage them centrally.
 ## Clarifications
 
 ### Outstanding Ambiguities
-- FR-020: What scheduling/queue constraint (e.g., max parallel provisioning jobs) should be enforced for controller operations? [NEEDS CLARIFICATION]
+(None — all resolved)
 
 ### Session 2025-09-28
 - Q: Should administrators be able to forcefully shorten (immediate terminate) an active grant at any time? → A: Allow force terminate anytime; revoke immediately and log reason
+- Q: What scheduling/queue constraint should govern parallel provisioning operations? → A: Adaptive: start 2, scale to 5 if avg latency <200ms (reduce if >400ms)
 
 
 ---
