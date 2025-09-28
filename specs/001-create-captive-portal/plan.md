@@ -212,6 +212,8 @@ ios/ or android/
 - Assess SQLite write contention under adaptive queue concurrency.
 - Determine theming asset size guidelines.
 
+- Reference: TP-Omada voucher & portal workflow (https://www.tp-link.com/us/support/faq/896/) to inform controller adapter contract design (voucher creation fields, expiration handling, portal redirection parameters).
+
 ### Phase 1 Design Notes
 - Entities map: AccessGrant, Voucher, Event (audit), Theme.
 - Contracts: provisioning endpoint(s), extension/shorten, voucher create, theme update, audit log fetch, health.
