@@ -36,11 +36,11 @@ SPDX-License-Identifier: Apache-2.0
 
 
 ## Phase 3.3: Core Implementation
-- [ ] T019 Implement domain models (pydantic): AccessGrant, Voucher, EventLogEntry, ThemeConfig
-- [ ] T020 [P] Implement storage layer (sqlite repository) with migrations or init scripts
-- [ ] T021 [P] Implement audit_logger service (append-only events)
-- [ ] T022 [P] Implement voucher_service (create, expire, list)
-- [ ] T023 Implement grant_manager: lifecycle (pending→active, extend, shorten/force terminate, revoke)
+- [x] T019 Implement domain models (pydantic): AccessGrant, Voucher, EventLogEntry, ThemeConfig
+- [x] T020 [P] Implement storage layer (sqlite repository) with migrations or init scripts
+- [x] T021 [P] Implement audit_logger service (append-only events)
+- [x] T022 [P] Implement voucher_service (create, expire, list)
+- [x] T023 Implement grant_manager: lifecycle (pending→active, extend, shorten/force terminate, revoke)
 - [ ] T024 Implement queue_scheduler adaptive logic (concurrency scale 2→5 with latency windows)
 - [ ] T025 Implement controller adapter interface & TP-Omada adapter stub (fields per FAQ 896)
 - [ ] T026 Implement FastAPI routers (grants, vouchers, theme, audit, health)
