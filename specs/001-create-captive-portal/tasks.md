@@ -8,31 +8,31 @@ SPDX-License-Identifier: Apache-2.0
 **Prerequisites**: plan.md (required); research.md, data-model.md, contracts/, quickstart.md (future)
 
 ## Phase 3.1: Setup
-- [ ] T001 Create addon/ base structure (addon/src + tests skeleton, Dockerfile) per plan structure
-- [ ] T002 Add Python 3.13 base Dockerfile using HA addon-example pattern (s6-overlay) and uv installation
-- [ ] T003 [P] Initialize uv project (pyproject.toml, uv.lock) with FastAPI, httpx, Jinja2, pydantic, pytest, pytest-asyncio
-- [ ] T004 [P] Add SPDX headers pre-commit hook / validation config updates
-- [ ] T005 Configure logging & structured JSON formatter baseline
-- [ ] T006 Define configuration schema file for addon (config.yaml, options schema) with theme + controller fields
+- [x] T001 Create addon/ base structure (addon/src + tests skeleton, Dockerfile) per plan structure
+- [x] T002 Add Python 3.13 base Dockerfile using HA addon-example pattern (s6-overlay) and uv installation
+- [x] T003 [P] Initialize uv project (pyproject.toml, uv.lock) with FastAPI, httpx, Jinja2, pydantic, pytest, pytest-asyncio
+- [x] T004 [P] Add SPDX headers pre-commit hook / validation config updates
+- [x] T005 Configure logging & structured JSON formatter baseline
+- [x] T006 Define configuration schema file for addon (config.yaml, options schema) with theme + controller fields
 
 ## Phase 3.2: Tests First (Contract & Lifecycle) ⚠️ MUST COMPLETE BEFORE 3.3
-- [ ] T007 Create test scaffolding: tests/unit, tests/contract, tests/integration, tests/performance
-- [ ] T008 [P] Contract test: POST /api/grants (provision grant from Rental Control event) → expects pending → active transition
-- [ ] T009 [P] Contract test: PATCH /api/grants/{id}/extend (extension)
-- [ ] T010 [P] Contract test: PATCH /api/grants/{id}/shorten (immediate force terminate)
-- [ ] T011 [P] Contract test: POST /api/vouchers (create voucher)
-- [ ] T012 [P] Contract test: GET /api/audit (filter events)
-- [ ] T013 [P] Contract test: POST /api/theme (update theme)
-- [ ] T014 Integration test: adaptive queue scaling scenario (burst grant creation then latency measurement)
-- [ ] T015 Integration test: controller unreachable retry / pending state
-- [ ] T016 Integration test: voucher and Rental Control derived grant coexistence
-- [ ] T017 Integration test: theme fallback on missing asset
-- [ ] T018 Integration test: forced termination logging
-- [ ] T018A Integration test: splash page credential validation success & failure (FR-009)
-- [ ] T018B Integration test: expired credential reuse denied (FR-018)
+- [x] T007 Create test scaffolding: tests/unit, tests/contract, tests/integration, tests/performance
+- [x] T008 [P] Contract test: POST /api/grants (provision grant from Rental Control event) → expects pending → active transition
+- [x] T009 [P] Contract test: PATCH /api/grants/{id}/extend (extension)
+- [x] T010 [P] Contract test: PATCH /api/grants/{id}/shorten (immediate force terminate)
+- [x] T011 [P] Contract test: POST /api/vouchers (create voucher)
+- [x] T012 [P] Contract test: GET /api/audit (filter events)
+- [x] T013 [P] Contract test: POST /api/theme (update theme)
+- [x] T014 Integration test: adaptive queue scaling scenario (burst grant creation then latency measurement)
+- [x] T015 Integration test: controller unreachable retry / pending state
+- [x] T016 Integration test: voucher and Rental Control derived grant coexistence
+- [x] T017 Integration test: theme fallback on missing asset
+- [x] T018 Integration test: forced termination logging
+- [x] T018A Integration test: splash page credential validation success & failure (FR-009)
+- [x] T018B Integration test: expired credential reuse denied (FR-018)
 
-- [ ] T018C Integration test: automatic expiry scheduler revokes grants after grace period (FR-003)
-- [ ] T018D Integration test: Rental Control event ingestion creates pending grant then activates at start (FR-001)
+- [x] T018C Integration test: automatic expiry scheduler revokes grants after grace period (FR-003)
+- [x] T018D Integration test: Rental Control event ingestion creates pending grant then activates at start (FR-001)
 
 
 ## Phase 3.3: Core Implementation

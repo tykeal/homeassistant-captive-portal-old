@@ -1,0 +1,48 @@
+# SPDX-FileCopyrightText: 2025 Andrew Grimberg <tykeal@bardicgrove.org>
+# SPDX-License-Identifier: Apache-2.0
+
+name: Captive Portal
+version: "1.0.0"
+slug: captive_portal
+description: Captive portal for rental guest network access with TP-Omada integration
+url: https://github.com/tykeal/homeassistant-captive-portal
+arch:
+  - aarch64
+  - amd64
+  - armhf
+  - armv7
+  - i386
+startup: services
+boot: auto
+init: false
+ports:
+  8000/tcp: 8000
+ports_description:
+  8000/tcp: Captive portal web interface
+options:
+  controller:
+    type: omada
+    url: ""
+    username: ""
+    password: ""
+    site_name: "Default"
+  theme:
+    portal_title: "Guest Network Access"
+    background_color: "#f5f5f5"
+    primary_color: "#007bff"
+    logo_url: ""
+  log_level: info
+schema:
+  controller:
+    type: str
+    url: url
+    username: str
+    password: password
+    site_name: str?
+  theme:
+    portal_title: str?
+    background_color: str?
+    primary_color: str?
+    logo_url: url?
+  log_level: list(debug|info|warning|error|critical)?
+image: ghcr.io/hassio-addons/addon-captive-portal
