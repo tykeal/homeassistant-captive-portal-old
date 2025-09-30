@@ -41,7 +41,7 @@ SPDX-License-Identifier: Apache-2.0
 - [x] T021 [P] Implement audit_logger service (append-only events)
 - [x] T022 [P] Implement voucher_service (create, expire, list)
 - [x] T023 Implement grant_manager: lifecycle (pending→active, extend, shorten/force terminate, revoke)
-- [ ] T024 Implement queue_scheduler adaptive logic (concurrency scale 2→5 with latency windows)
+- [x] T024 Implement queue_scheduler adaptive logic (concurrency scale 2→5 with latency windows)
 - [ ] T025 Implement controller adapter interface & TP-Omada adapter stub (fields per FAQ 896)
 - [ ] T026 Implement FastAPI routers (grants, vouchers, theme, audit, health)
 - [ ] T027 Implement theme_manager (fallback + validation)
