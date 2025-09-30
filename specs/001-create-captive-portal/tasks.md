@@ -31,6 +31,9 @@ SPDX-License-Identifier: Apache-2.0
 - [ ] T018A Integration test: splash page credential validation success & failure (FR-009)
 - [ ] T018B Integration test: expired credential reuse denied (FR-018)
 
+- [ ] T018C Integration test: automatic expiry scheduler revokes grants after grace period (FR-003)
+- [ ] T018D Integration test: Rental Control event ingestion creates pending grant then activates at start (FR-001)
+
 
 ## Phase 3.3: Core Implementation
 - [ ] T019 Implement domain models (pydantic): AccessGrant, Voucher, EventLogEntry, ThemeConfig
@@ -42,9 +45,11 @@ SPDX-License-Identifier: Apache-2.0
 - [ ] T025 Implement controller adapter interface & TP-Omada adapter stub (fields per FAQ 896)
 - [ ] T026 Implement FastAPI routers (grants, vouchers, theme, audit, health)
 - [ ] T027 Implement theme_manager (fallback + validation)
-- [ ] T028 Implement startup provisioning watcher for new Rental Control events (stub event ingestion)
+- [ ] T028 Implement startup provisioning watcher for new Rental Control events (stub event ingestion) (FR-001)
 - [ ] T030A Implement captive portal splash/login endpoint (serves themed page & processes credential submission) (FR-009)
 - [ ] T030B Implement expired credential rejection logic (check status/expiry, audit log) (FR-018)
+- [ ] T030C Implement automatic expiry scheduler & grace period enforcement (FR-003)
+
 
 - [ ] T029 Implement forced termination path (revocation + audit + controller call)
 - [ ] T030 Implement extension & shortening logic with clamp + audit entries
