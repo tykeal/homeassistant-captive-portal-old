@@ -28,6 +28,9 @@ SPDX-License-Identifier: Apache-2.0
 - [ ] T016 Integration test: voucher and Rental Control derived grant coexistence
 - [ ] T017 Integration test: theme fallback on missing asset
 - [ ] T018 Integration test: forced termination logging
+- [ ] T018A Integration test: splash page credential validation success & failure (FR-009)
+- [ ] T018B Integration test: expired credential reuse denied (FR-018)
+
 
 ## Phase 3.3: Core Implementation
 - [ ] T019 Implement domain models (pydantic): AccessGrant, Voucher, EventLogEntry, ThemeConfig
@@ -40,6 +43,9 @@ SPDX-License-Identifier: Apache-2.0
 - [ ] T026 Implement FastAPI routers (grants, vouchers, theme, audit, health)
 - [ ] T027 Implement theme_manager (fallback + validation)
 - [ ] T028 Implement startup provisioning watcher for new Rental Control events (stub event ingestion)
+- [ ] T030A Implement captive portal splash/login endpoint (serves themed page & processes credential submission) (FR-009)
+- [ ] T030B Implement expired credential rejection logic (check status/expiry, audit log) (FR-018)
+
 - [ ] T029 Implement forced termination path (revocation + audit + controller call)
 - [ ] T030 Implement extension & shortening logic with clamp + audit entries
 
