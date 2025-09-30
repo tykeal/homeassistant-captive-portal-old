@@ -74,6 +74,21 @@ SPDX-License-Identifier: Apache-2.0
 - [ ] T045 Add CHANGELOG entry initial release notes
 - [ ] T046 Remove duplication / dead code scan
 - [ ] T047 Manual validation using quickstart scenarios (to be defined) & update quickstart.md stub
+- [ ] T048 Implement admin authentication/authorization layer (token or HA context) (FR-005 security)
+- [ ] T049 [P] Security test: unauthorized access to admin API endpoints rejected (401/403)
+- [ ] T050 Implement rate limiting & credential attempt lockout (portal splash) (FR-009 security)
+- [ ] T051 [P] Test: rate limiting triggers and lockout reset after cooldown
+- [ ] T052 Implement log redaction for credentials/secrets
+- [ ] T053 [P] Test: log redaction (no raw secrets in lifecycle logs)
+- [ ] T054 [P] Metrics assertion test (active_grants, queue_depth, provision_latency exported) (FR-020 observability)
+- [ ] T055 [P] Test: queue scaling decision log entries present & structured
+- [ ] T056 Unit tests: grant_manager lifecycle state transitions (pending→active→expired/force revoke)
+- [ ] T057 Unit tests: voucher expiry boundary conditions
+- [ ] T058 Performance test: portal page render <300ms p95 (FR-007/FR-009 non-functional)
+- [ ] T059 Implement graceful shutdown: drain queue & mark in-flight tasks
+- [ ] T060 [P] Integration test: graceful shutdown preserves in-flight provisioning
+- [ ] T061 Documentation: adaptive queue algorithm & security model (README)
+
 
 ## Dependencies
 - Tests (T007–T018) before core implementation (T019–T030)
