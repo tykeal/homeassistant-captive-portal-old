@@ -6,5 +6,10 @@ __pycache__
 pythonenv*
 .python-version
 .coverage
+coverage.xml
 venv
 .venv
+
+# Generated files that can be recreated
+addon/coverage.xml
+addon/uv.lock

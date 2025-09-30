@@ -1,0 +1,10 @@
+#!/usr/bin/env bashio
+# SPDX-FileCopyrightText: 2025 Andrew Grimberg <tykeal@bardicgrove.org>
+# SPDX-License-Identifier: Apache-2.0
+
+cd /app || exit 1
+
+bashio::log.info "Starting Captive Portal addon..."
+
+# Start the FastAPI application using uv
+exec uv run python -m src.core.main
