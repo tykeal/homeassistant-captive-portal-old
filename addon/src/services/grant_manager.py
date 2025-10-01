@@ -584,6 +584,14 @@ class GrantManager:
 
         return stats
 
+    async def get_stats(self) -> dict:
+        """Get grant statistics (alias for get_grant_stats for API compatibility).
+
+        Returns:
+            Dictionary with grant statistics
+        """
+        return await self.get_grant_stats()
+
 
 # Global grant manager instance
 _grant_manager: GrantManager | None = None
