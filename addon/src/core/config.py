@@ -99,8 +99,8 @@ class AddonConfig(BaseModel):
         try:
             with open(config_path) as f:
                 options = json.load(f)
-        except FileNotFoundError:
-            raise ValueError(f"Configuration file not found: {config_path}")
+        except FileNotFoundError as e:
+            raise ValueError(f"Configuration file not found: {config_path}") from e
         except json.JSONDecodeError as e:
             raise ValueError(f"Invalid configuration JSON: {e}") from e
 
