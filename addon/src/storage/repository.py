@@ -4,26 +4,30 @@
 """Repository layer for data access."""
 
 import json
-from typing import List, Optional, Dict, Any
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from sqlalchemy import select, update, delete, and_, or_, desc, asc
+from sqlalchemy import and_, desc, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from ..models.domain import (
-    AccessGrant, Voucher, EventLogEntry, ThemeConfig,
-    GrantStatus, VoucherStatus, EventType
+    AccessGrant,
+    EventLogEntry,
+    EventType,
+    GrantStatus,
+    ThemeConfig,
+    Voucher,
+    VoucherStatus,
 )
-from .schema import GrantTable, VoucherTable, EventLogTable, ThemeConfigTable
+from .schema import EventLogTable, GrantTable, ThemeConfigTable, VoucherTable
 
 
 class GrantRepository:
     """Repository for access grants."""
-    
+
     def __init__(self, session: AsyncSession):
+        """Initialize the grant repository with a database session."""
         self.session = session
-    
+
     async def create(self, grant: AccessGrant) -> AccessGrant:
         """Create a new grant."""
         grant_row = GrantTable(
@@ -44,27 +48,27 @@ class GrantRepository:
             retry_count=grant.retry_count,
             revocation_reason=grant.revocation_reason,
         )
-        
+
         self.session.add(grant_row)
         await self.session.flush()
         return grant
-    
-    async def get_by_id(self, grant_id: str) -> Optional[AccessGrant]:
+
+    async def get_by_id(self, grant_id: str) -> AccessGrant | None:
         """Get grant by ID."""
         result = await self.session.execute(
             select(GrantTable).where(GrantTable.grant_id == grant_id)
         )
         row = result.scalar_one_or_none()
         return self._row_to_domain(row) if row else None
-    
-    async def get_by_booking_id(self, booking_id: str) -> Optional[AccessGrant]:
+
+    async def get_by_booking_id(self, booking_id: str) -> AccessGrant | None:
         """Get grant by booking ID."""
         result = await self.session.execute(
             select(GrantTable).where(GrantTable.booking_id == booking_id)
         )
         row = result.scalar_one_or_none()
         return self._row_to_domain(row) if row else None
-    
+
     async def update(self, grant: AccessGrant) -> AccessGrant:
         """Update an existing grant."""
         await self.session.execute(
@@ -85,57 +89,59 @@ class GrantRepository:
             )
         )
         return grant
-    
+
     async def list_grants(
         self,
-        status: Optional[GrantStatus] = None,
-        source: Optional[str] = None,
+        status: GrantStatus | None = None,
+        source: str | None = None,
         limit: int = 100,
-        offset: int = 0
-    ) -> List[AccessGrant]:
+        offset: int = 0,
+    ) -> list[AccessGrant]:
         """List grants with optional filtering."""
         query = select(GrantTable)
-        
+
         if status:
             query = query.where(GrantTable.status == status.value)
-        
+
         if source:
             query = query.where(GrantTable.source == source)
-        
+
         query = query.order_by(desc(GrantTable.created_at)).limit(limit).offset(offset)
-        
+
         result = await self.session.execute(query)
         rows = result.scalars().all()
         return [self._row_to_domain(row) for row in rows]
-    
-    async def get_grants_needing_activation(self) -> List[AccessGrant]:
+
+    async def get_grants_needing_activation(self) -> list[AccessGrant]:
         """Get grants that should be activated (past start time, still pending)."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         result = await self.session.execute(
             select(GrantTable).where(
                 and_(
                     GrantTable.status == GrantStatus.PENDING.value,
-                    GrantTable.start_time <= now
+                    GrantTable.start_time <= now,
                 )
             )
         )
         rows = result.scalars().all()
         return [self._row_to_domain(row) for row in rows]
-    
-    async def get_grants_needing_expiry(self) -> List[AccessGrant]:
+
+    async def get_grants_needing_expiry(self) -> list[AccessGrant]:
         """Get grants that should be expired (past end time)."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         result = await self.session.execute(
             select(GrantTable).where(
                 and_(
-                    GrantTable.status.in_([GrantStatus.PENDING.value, GrantStatus.ACTIVE.value]),
-                    GrantTable.end_time < now
+                    GrantTable.status.in_(
+                        [GrantStatus.PENDING.value, GrantStatus.ACTIVE.value]
+                    ),
+                    GrantTable.end_time < now,
                 )
             )
         )
         rows = result.scalars().all()
         return [self._row_to_domain(row) for row in rows]
-    
+
     def _row_to_domain(self, row: GrantTable) -> AccessGrant:
         """Convert database row to domain model."""
         return AccessGrant(
@@ -160,10 +166,11 @@ class GrantRepository:
 
 class VoucherRepository:
     """Repository for vouchers."""
-    
+
     def __init__(self, session: AsyncSession):
+        """Initialize the voucher repository with a database session."""
         self.session = session
-    
+
     async def create(self, voucher: Voucher) -> Voucher:
         """Create a new voucher."""
         voucher_row = VoucherTable(
@@ -178,27 +185,27 @@ class VoucherRepository:
             created_at=voucher.created_at,
             expires_at=voucher.expires_at,
         )
-        
+
         self.session.add(voucher_row)
         await self.session.flush()
         return voucher
-    
-    async def get_by_id(self, voucher_id: str) -> Optional[Voucher]:
+
+    async def get_by_id(self, voucher_id: str) -> Voucher | None:
         """Get voucher by ID."""
         result = await self.session.execute(
             select(VoucherTable).where(VoucherTable.voucher_id == voucher_id)
         )
         row = result.scalar_one_or_none()
         return self._row_to_domain(row) if row else None
-    
-    async def get_by_code(self, code: str) -> Optional[Voucher]:
+
+    async def get_by_code(self, code: str) -> Voucher | None:
         """Get voucher by code."""
         result = await self.session.execute(
             select(VoucherTable).where(VoucherTable.code == code.upper())
         )
         row = result.scalar_one_or_none()
         return self._row_to_domain(row) if row else None
-    
+
     async def update(self, voucher: Voucher) -> Voucher:
         """Update an existing voucher."""
         await self.session.execute(
@@ -211,25 +218,24 @@ class VoucherRepository:
             )
         )
         return voucher
-    
+
     async def list_vouchers(
-        self,
-        status: Optional[VoucherStatus] = None,
-        limit: int = 100,
-        offset: int = 0
-    ) -> List[Voucher]:
+        self, status: VoucherStatus | None = None, limit: int = 100, offset: int = 0
+    ) -> list[Voucher]:
         """List vouchers with optional filtering."""
         query = select(VoucherTable)
-        
+
         if status:
             query = query.where(VoucherTable.status == status.value)
-        
-        query = query.order_by(desc(VoucherTable.created_at)).limit(limit).offset(offset)
-        
+
+        query = (
+            query.order_by(desc(VoucherTable.created_at)).limit(limit).offset(offset)
+        )
+
         result = await self.session.execute(query)
         rows = result.scalars().all()
         return [self._row_to_domain(row) for row in rows]
-    
+
     def _row_to_domain(self, row: VoucherTable) -> Voucher:
         """Convert database row to domain model."""
         return Voucher(
@@ -248,10 +254,11 @@ class VoucherRepository:
 
 class EventRepository:
     """Repository for audit events."""
-    
+
     def __init__(self, session: AsyncSession):
+        """Initialize the event repository with a database session."""
         self.session = session
-    
+
     async def create(self, event: EventLogEntry) -> EventLogEntry:
         """Create a new event log entry."""
         event_row = EventLogTable(
@@ -266,76 +273,78 @@ class EventRepository:
             ip_address=event.ip_address,
             user_agent=event.user_agent,
         )
-        
+
         self.session.add(event_row)
         await self.session.flush()
         return event
-    
+
     async def list_events(
         self,
-        event_type: Optional[EventType] = None,
-        entity_type: Optional[str] = None,
-        entity_id: Optional[str] = None,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        event_type: EventType | None = None,
+        entity_type: str | None = None,
+        entity_id: str | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         limit: int = 100,
-        offset: int = 0
-    ) -> List[EventLogEntry]:
+        offset: int = 0,
+    ) -> list[EventLogEntry]:
         """List events with filtering."""
         query = select(EventLogTable)
-        
+
         if event_type:
             query = query.where(EventLogTable.event_type == event_type.value)
-        
+
         if entity_type:
             query = query.where(EventLogTable.entity_type == entity_type)
-        
+
         if entity_id:
             query = query.where(EventLogTable.entity_id == entity_id)
-        
+
         if start_date:
             query = query.where(EventLogTable.timestamp >= start_date)
-        
+
         if end_date:
             query = query.where(EventLogTable.timestamp <= end_date)
-        
-        query = query.order_by(desc(EventLogTable.timestamp)).limit(limit).offset(offset)
-        
+
+        query = (
+            query.order_by(desc(EventLogTable.timestamp)).limit(limit).offset(offset)
+        )
+
         result = await self.session.execute(query)
         rows = result.scalars().all()
         return [self._row_to_domain(row) for row in rows]
-    
+
     async def count_events(
         self,
-        event_type: Optional[EventType] = None,
-        entity_type: Optional[str] = None,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None
+        event_type: EventType | None = None,
+        entity_type: str | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
     ) -> int:
         """Count events with filtering."""
         from sqlalchemy import func
-        
+
         query = select(func.count(EventLogTable.event_id))
-        
+
         if event_type:
             query = query.where(EventLogTable.event_type == event_type.value)
-        
+
         if entity_type:
             query = query.where(EventLogTable.entity_type == entity_type)
-        
+
         if start_date:
             query = query.where(EventLogTable.timestamp >= start_date)
-        
+
         if end_date:
             query = query.where(EventLogTable.timestamp <= end_date)
-        
+
         result = await self.session.execute(query)
         return result.scalar() or 0
-    
+
     def _row_to_domain(self, row: EventLogTable) -> EventLogEntry:
         """Convert database row to domain model."""
         details = json.loads(row.details) if row.details else {}
-        
+
         return EventLogEntry(
             event_id=row.event_id,
             event_type=EventType(row.event_type),
@@ -352,23 +361,24 @@ class EventRepository:
 
 class ThemeRepository:
     """Repository for theme configuration."""
-    
+
     def __init__(self, session: AsyncSession):
+        """Initialize the theme repository with a database session."""
         self.session = session
-    
+
     async def get_current_theme(self) -> ThemeConfig:
         """Get current theme configuration."""
         result = await self.session.execute(
             select(ThemeConfigTable).where(ThemeConfigTable.id == 1)
         )
         row = result.scalar_one_or_none()
-        
+
         if row:
             return self._row_to_domain(row)
         else:
             # Return default theme if none exists
             return ThemeConfig()
-    
+
     async def update_theme(self, theme: ThemeConfig) -> ThemeConfig:
         """Update theme configuration."""
         # Check if theme exists
@@ -376,7 +386,7 @@ class ThemeRepository:
             select(ThemeConfigTable).where(ThemeConfigTable.id == 1)
         )
         existing = result.scalar_one_or_none()
-        
+
         if existing:
             # Update existing
             await self.session.execute(
@@ -405,10 +415,10 @@ class ThemeRepository:
                 updated_by=theme.updated_by,
             )
             self.session.add(theme_row)
-        
+
         await self.session.flush()
         return theme
-    
+
     def _row_to_domain(self, row: ThemeConfigTable) -> ThemeConfig:
         """Convert database row to domain model."""
         return ThemeConfig(

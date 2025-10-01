@@ -94,8 +94,6 @@ class TestAdaptiveQueueScaling:
         metrics_response = test_client.get("/metrics")
         assert metrics_response.status_code == 200
 
-        initial_metrics = metrics_response.text
-
         # Create enough load to trigger scaling
         concurrent_requests = []
         for i in range(10):
