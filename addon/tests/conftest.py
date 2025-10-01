@@ -11,6 +11,7 @@ from unittest.mock import MagicMock
 import pytest
 from fastapi.testclient import TestClient
 
+from src.app import create_app
 from src.core.config import AddonConfig, ControllerConfig, ThemeConfig
 
 
@@ -64,7 +65,10 @@ def mock_controller() -> MagicMock:
 
 @pytest.fixture
 def test_client(test_config: AddonConfig) -> Generator[TestClient]:
-    """Provide FastAPI test client."""
-    # This will be implemented when we create the main app
-    # For now, return a placeholder
-    yield MagicMock(spec=TestClient)
+    """Provide FastAPI test client with actual app."""
+    # Create the FastAPI app
+    app = create_app()
+
+    # Create test client
+    with TestClient(app) as client:
+        yield client
