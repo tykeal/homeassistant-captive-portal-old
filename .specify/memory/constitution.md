@@ -1,11 +1,11 @@
 <!--
 Sync Impact Report
-Version change: (none prior) → v1.0.0
-Modified principles: (initial creation)
-Added sections: Core Principles; Additional Constraints & Standards; Development Workflow & Quality Gates; Governance
-Removed sections: None
+Version change: v1.0.0 → v1.1.0
+Modified sections: Development Workflow & Quality Gates
+Added sections: (none)
+Removed sections: (none)
 Templates requiring updates:
-  .specify/templates/plan-template.md ✅ (version reference updated)
+  .specify/templates/plan-template.md ✅ (version reference updated to v1.1.0)
   .specify/templates/spec-template.md ✅ (no direct version reference; no change needed)
   .specify/templates/tasks-template.md ✅ (no direct reference; no change needed)
 Follow-up TODOs: None
@@ -80,6 +80,8 @@ aggregated in a single NOTICE or LICENSE metadata location.
 6. CI Gates (blocking): formatting, SPDX scan, tests pass, license compliance, static analysis (if configured).
 7. Documentation: New externally visible behavior MUST update README/addon usage docs before merge.
 8. Release Artifacts: Versioned changelog entries summarizing feature, security, and compatibility notes.
+9. Pre-commit Enforcement: Local git hooks (e.g., pre-commit) MUST NOT be bypassed (no use of --no-verify) except via a
+   time-bound documented exception referencing an issue; disabling hooks without approval is a policy violation.
 
 ## Governance
 
@@ -100,4 +102,4 @@ aggregated in a single NOTICE or LICENSE metadata location.
    block release.
 6. Archival: Superseded versions retained in VCS history; no in-place edits to historical versions.
 
-**Version**: v1.0.0 | **Ratified**: 2025-09-28 | **Last Amended**: 2025-09-28
+**Version**: v1.1.0 | **Ratified**: 2025-09-28 | **Last Amended**: 2025-10-01
