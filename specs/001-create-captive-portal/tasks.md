@@ -44,7 +44,7 @@ SPDX-License-Identifier: Apache-2.0
 - [x] T024 Implement queue_scheduler adaptive logic (concurrency scale 2→5 with latency windows)
 - [x] T025 Implement controller adapter interface & TP-Omada adapter stub (fields per FAQ 896)
 - [x] T026 Implement FastAPI routers (grants, vouchers, theme, audit, health)
-- [ ] T027 Implement theme_manager (fallback + validation)
+- [x] T027 Implement theme_manager (fallback + validation)
 - [ ] T028 Implement startup provisioning watcher for new Rental Control events (stub event ingestion) (FR-001)
 - [ ] T030A Implement captive portal splash/login endpoint (serves themed page & processes credential submission) (FR-009)
 - [ ] T030B Implement expired credential rejection logic (check status/expiry, audit log) (FR-018)
