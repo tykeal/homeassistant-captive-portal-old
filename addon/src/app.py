@@ -17,6 +17,7 @@ from .api import (
 )
 from .core.config import get_config
 from .core.logging_config import configure_logging, get_logger
+from .portal import portal_router
 from .services.event_ingestion import get_event_ingestion_service
 from .storage.database import initialize_database
 
@@ -71,6 +72,7 @@ def create_app() -> FastAPI:
     )
 
     # Register routers
+    app.include_router(portal_router)  # Portal first for captive redirect
     app.include_router(grants_router)
     app.include_router(vouchers_router)
     app.include_router(theme_router)
@@ -87,7 +89,7 @@ app = create_app()
 
 
 @app.get("/")
-async def root():
+async def root() -> dict[str, str]:
     """Root endpoint - provides API information."""
     return {
         "service": "Captive Portal Addon",
