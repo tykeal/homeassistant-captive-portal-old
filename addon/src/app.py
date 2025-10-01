@@ -17,6 +17,7 @@ from .api import (
 )
 from .core.config import get_config
 from .core.logging_config import configure_logging, get_logger
+from .services.event_ingestion import get_event_ingestion_service
 from .storage.database import initialize_database
 
 logger = get_logger(__name__)
@@ -36,10 +37,19 @@ async def lifespan(app: FastAPI):
     await initialize_database()
     logger.info("Database initialized")
 
+    # Start event ingestion service for Rental Control integration
+    event_service = get_event_ingestion_service()
+    await event_service.start()
+    logger.info("Event ingestion service started")
+
     yield
 
     # Shutdown
     logger.info("Shutting down captive portal addon")
+
+    # Stop event ingestion service
+    await event_service.stop()
+    logger.info("Event ingestion service stopped")
 
 
 def create_app() -> FastAPI:

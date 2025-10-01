@@ -9,6 +9,7 @@ from fastapi import APIRouter, HTTPException, status
 
 from ..core.logging_config import get_logger
 from ..models.domain import GrantSource, GrantStatus
+from ..services.event_ingestion import get_event_ingestion_service
 from ..services.grant_manager import get_grant_manager
 from .models import GrantCreateRequest, GrantExtendRequest, GrantShortenRequest
 
@@ -208,3 +209,87 @@ async def list_grants(
         "grants": [grant.model_dump(mode="json") for grant in grants],
         "total": len(grants),
     }
+
+
+@router.post("/{grant_id}/activate")
+async def activate_grant(grant_id: str) -> dict:
+    """Manually activate a pending grant.
+
+    This endpoint allows manual activation of grants that are in pending state.
+    Typically used for testing or manual intervention when automatic activation
+    hasn't occurred.
+    """
+    grant_manager = get_grant_manager()
+
+    try:
+        # Get the grant
+        grant = await grant_manager.get_grant_by_id(grant_id)
+        if not grant:
+            raise ValueError(f"Grant {grant_id} not found")
+
+        # Activate it
+        activated_grant = await grant_manager.activate_grant(grant)
+
+        logger.info(
+            "Grant manually activated",
+            grant_id=grant_id,
+        )
+
+        return activated_grant.model_dump(mode="json")
+
+    except ValueError as e:
+        logger.warning(
+            "Failed to activate grant",
+            grant_id=grant_id,
+            error=str(e),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        ) from e
+
+
+@router.post("/ingest-event", status_code=status.HTTP_201_CREATED)
+async def ingest_rental_control_event(event_data: dict) -> dict:
+    """Ingest a Rental Control event and create a grant.
+
+    This endpoint allows manual ingestion of Rental Control events.
+    In production, this would typically be called automatically by
+    the Home Assistant integration.
+
+    Required fields in event_data:
+    - booking_id: Unique booking identifier
+    - start_time: ISO 8601 timestamp
+    - end_time: ISO 8601 timestamp
+    - guest_name: Guest name
+    """
+    event_service = get_event_ingestion_service()
+
+    try:
+        grant_id = await event_service.ingest_rental_control_event(event_data)
+
+        logger.info(
+            "Rental Control event ingested",
+            grant_id=grant_id,
+            booking_id=event_data.get("booking_id"),
+        )
+
+        # Return the created grant
+        grant_manager = get_grant_manager()
+        grant = await grant_manager.get_grant_by_id(grant_id)
+
+        if not grant:
+            # Should not happen, but handle gracefully
+            return {"grant_id": grant_id, "message": "Grant created"}
+
+        return grant.model_dump(mode="json")
+
+    except ValueError as e:
+        logger.warning(
+            "Failed to ingest Rental Control event",
+            error=str(e),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e),
+        ) from e
