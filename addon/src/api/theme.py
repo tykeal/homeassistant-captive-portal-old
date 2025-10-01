@@ -3,14 +3,10 @@
 
 """Theme API router."""
 
-from datetime import UTC, datetime
-
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status
 
 from ..core.logging_config import get_logger
-from ..models.domain import ThemeConfig
-from ..storage.database import get_db_session
-from ..storage.repository import ThemeRepository
+from ..services.theme_manager import get_theme_manager
 from .models import ThemeUpdateRequest
 
 logger = get_logger(__name__)
@@ -20,10 +16,8 @@ router = APIRouter(prefix="/api/theme", tags=["theme"])
 @router.get("")
 async def get_current_theme() -> dict:
     """Get the current theme configuration."""
-    async with get_db_session() as session:
-        theme_repo = ThemeRepository(session)
-        theme = await theme_repo.get_current_theme()
-
+    theme_manager = get_theme_manager()
+    theme = await theme_manager.get_current_theme(use_fallback=True)
     return theme.model_dump(mode="json")
 
 
@@ -33,24 +27,13 @@ async def update_theme(request: ThemeUpdateRequest) -> dict:
 
     Supports partial updates - only provided fields will be updated.
     """
-    async with get_db_session() as session:
-        theme_repo = ThemeRepository(session)
+    theme_manager = get_theme_manager()
 
-        # Get current theme
-        current_theme = await theme_repo.get_current_theme()
-
+    try:
         # Apply updates (partial update support)
         update_data = request.model_dump(exclude_unset=True)
 
-        for field, value in update_data.items():
-            if value is not None and hasattr(current_theme, field):
-                setattr(current_theme, field, value)
-
-        # Update timestamp
-        current_theme.updated_at = datetime.now(UTC)
-
-        # Save updated theme
-        updated_theme = await theme_repo.update_theme(current_theme)
+        updated_theme = await theme_manager.update_theme(update_data)
 
         logger.info(
             "Theme updated",
@@ -59,29 +42,23 @@ async def update_theme(request: ThemeUpdateRequest) -> dict:
 
         return updated_theme.model_dump(mode="json")
 
+    except ValueError as e:
+        logger.warning("Theme validation failed", error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(e),
+        ) from e
+
 
 @router.post("/reset")
 async def reset_theme() -> dict:
     """Reset theme to default configuration."""
-    async with get_db_session() as session:
-        theme_repo = ThemeRepository(session)
+    theme_manager = get_theme_manager()
+    reset_theme_config = await theme_manager.reset_to_default()
 
-        # Create default theme
-        default_theme = ThemeConfig(
-            portal_title="Guest Network Portal",
-            background_color="#ffffff",
-            primary_color="#0066cc",
-            logo_url=None,
-            custom_css=None,
-            updated_at=datetime.now(UTC),
-        )
+    logger.info("Theme reset to defaults")
 
-        # Save default theme
-        reset_theme = await theme_repo.update_theme(default_theme)
-
-        logger.info("Theme reset to defaults")
-
-        return reset_theme.model_dump(mode="json")
+    return reset_theme_config.model_dump(mode="json")
 
 
 @router.get("/preview")
@@ -91,9 +68,8 @@ async def preview_theme(
     primary_color: str | None = None,
 ) -> dict:
     """Preview theme with specified parameters without saving."""
-    async with get_db_session() as session:
-        theme_repo = ThemeRepository(session)
-        current_theme = await theme_repo.get_current_theme()
+    theme_manager = get_theme_manager()
+    current_theme = await theme_manager.get_current_theme(use_fallback=True)
 
     # Create preview theme by overlaying parameters
     preview_data = current_theme.model_dump()
@@ -101,8 +77,22 @@ async def preview_theme(
     if portal_title:
         preview_data["portal_title"] = portal_title
     if background_color:
-        preview_data["background_color"] = background_color
+        try:
+            theme_manager._validate_color(background_color)
+            preview_data["background_color"] = background_color
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Invalid background_color: {e}",
+            ) from e
     if primary_color:
-        preview_data["primary_color"] = primary_color
+        try:
+            theme_manager._validate_color(primary_color)
+            preview_data["primary_color"] = primary_color
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Invalid primary_color: {e}",
+            ) from e
 
     return preview_data
