@@ -98,6 +98,7 @@ def redact_sensitive_data(record: dict[str, Any]) -> dict[str, Any]:
     }
 
     def _redact_dict(data: Any) -> Any:
+        """Recursively redact sensitive fields from nested data structures."""
         if isinstance(data, dict):
             return {
                 k: "[REDACTED]"

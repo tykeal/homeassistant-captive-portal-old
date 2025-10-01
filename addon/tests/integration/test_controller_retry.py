@@ -50,6 +50,7 @@ class TestControllerUnreachable:
         call_times = []
 
         def track_call_time(*args, **kwargs):
+            """Mock function that tracks call times to verify backoff behavior."""
             import time
 
             call_times.append(time.time())
@@ -96,6 +97,7 @@ class TestControllerUnreachable:
         call_count = 0
 
         def mock_provision_with_recovery(*args, **kwargs):
+            """Mock function that fails twice then succeeds to simulate recovery."""
             nonlocal call_count
             call_count += 1
 

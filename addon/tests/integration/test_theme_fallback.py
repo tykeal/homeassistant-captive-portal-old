@@ -203,7 +203,7 @@ class TestThemeFallback:
             "logo_url": "javascript:alert('xss')",  # Security issue
         }
 
-        response = test_client.post("/api/theme", json=problematic_theme)
+        _response = test_client.post("/api/theme", json=problematic_theme)
         # Theme service should reject dangerous URLs
 
         # Try to reset to default

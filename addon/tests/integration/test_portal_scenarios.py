@@ -51,7 +51,7 @@ class TestForcedTerminationLogging:
         assert (
             term_event["details"]["reason"] == "Policy violation - unauthorized devices"
         )
-        assert term_event["details"]["immediate"] == True
+        assert term_event["details"]["immediate"]
 
 
 class TestSplashPageCredentialValidation:

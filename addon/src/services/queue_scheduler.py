@@ -5,10 +5,10 @@
 
 import asyncio
 import time
-from typing import List, Dict, Any, Optional, Callable, Awaitable
-from datetime import datetime, timezone
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any
 
 from ..core.logging_config import get_logger
 
@@ -17,6 +17,7 @@ logger = get_logger(__name__)
 
 class TaskPriority(Enum):
     """Task priority levels."""
+
     LOW = 1
     NORMAL = 2
     HIGH = 3
@@ -26,14 +27,15 @@ class TaskPriority(Enum):
 @dataclass
 class QueueTask:
     """Represents a task in the queue."""
+
     task_id: str
     priority: TaskPriority
     created_at: float
     coro: Callable[[], Awaitable[Any]]
     retry_count: int = 0
     max_retries: int = 3
-    context: Dict[str, Any] = field(default_factory=dict)
-    
+    context: dict[str, Any] = field(default_factory=dict)
+
     def __post_init__(self):
         """Initialize task after creation."""
         if self.created_at == 0:
@@ -43,6 +45,7 @@ class QueueTask:
 @dataclass
 class QueueMetrics:
     """Queue performance metrics."""
+
     queue_depth: int = 0
     active_workers: int = 0
     max_workers: int = 5
@@ -58,7 +61,7 @@ class QueueMetrics:
 
 class AdaptiveQueueScheduler:
     """Queue scheduler with adaptive concurrency scaling (2→5 workers)."""
-    
+
     def __init__(
         self,
         min_workers: int = 2,
@@ -67,10 +70,10 @@ class AdaptiveQueueScheduler:
         scale_up_threshold_ms: float = 600.0,
         scale_down_threshold_ms: float = 200.0,
         scale_cooldown_seconds: float = 10.0,
-        metrics_window_size: int = 100
+        metrics_window_size: int = 100,
     ):
         """Initialize adaptive queue scheduler.
-        
+
         Args:
             min_workers: Minimum number of concurrent workers
             max_workers: Maximum number of concurrent workers
@@ -87,83 +90,77 @@ class AdaptiveQueueScheduler:
         self.scale_down_threshold_ms = scale_down_threshold_ms
         self.scale_cooldown_seconds = scale_cooldown_seconds
         self.metrics_window_size = metrics_window_size
-        
+
         # Queue and worker management
         self._task_queue: asyncio.PriorityQueue = asyncio.PriorityQueue()
-        self._workers: List[asyncio.Task] = []
+        self._workers: list[asyncio.Task] = []
         self._running = False
         self._shutdown_event = asyncio.Event()
-        
+
         # Metrics tracking
-        self._metrics = QueueMetrics(
-            min_workers=min_workers,
-            max_workers=max_workers
-        )
-        self._processing_times: List[float] = []
+        self._metrics = QueueMetrics(min_workers=min_workers, max_workers=max_workers)
+        self._processing_times: list[float] = []
         self._last_metrics_update = time.time()
-        
+
         # Adaptive scaling state
         self._current_workers = min_workers
         self._last_scale_decision = 0.0
         self._consecutive_high_latency = 0
         self._consecutive_low_latency = 0
-        
+
         # Task tracking
-        self._active_tasks: Dict[str, float] = {}  # task_id -> start_time
-        
+        self._active_tasks: dict[str, float] = {}  # task_id -> start_time
+
     async def start(self) -> None:
         """Start the queue scheduler."""
         if self._running:
             return
-        
+
         self._running = True
         self._shutdown_event.clear()
-        
+
         # Start initial workers
         await self._scale_workers(self.min_workers)
-        
+
         # Start metrics collection task
         asyncio.create_task(self._metrics_collector())
-        
+
         logger.info(
             "Queue scheduler started",
             min_workers=self.min_workers,
             max_workers=self.max_workers,
-            latency_threshold_ms=self.latency_threshold_ms
+            latency_threshold_ms=self.latency_threshold_ms,
         )
-    
+
     async def stop(self) -> None:
         """Stop the queue scheduler gracefully."""
         if not self._running:
             return
-        
+
         logger.info("Stopping queue scheduler...")
-        
+
         self._running = False
         self._shutdown_event.set()
-        
+
         # Wait for all workers to finish current tasks
         if self._workers:
             await asyncio.gather(*self._workers, return_exceptions=True)
-        
+
         self._workers.clear()
         self._current_workers = 0
-        
-        logger.info(
-            "Queue scheduler stopped",
-            final_metrics=self.get_metrics()
-        )
-    
+
+        logger.info("Queue scheduler stopped", final_metrics=self.get_metrics())
+
     async def submit_task(
         self,
         task_id: str,
         coro: Callable[[], Awaitable[Any]],
         priority: TaskPriority = TaskPriority.NORMAL,
         max_retries: int = 3,
-        context: Optional[Dict[str, Any]] = None
+        context: dict[str, Any] | None = None,
     ) -> None:
         """Submit a task to the queue.
-        
+
         Args:
             task_id: Unique task identifier
             coro: Coroutine to execute
@@ -173,57 +170,56 @@ class AdaptiveQueueScheduler:
         """
         if not self._running:
             raise RuntimeError("Queue scheduler is not running")
-        
+
         task = QueueTask(
             task_id=task_id,
             priority=priority,
             created_at=time.time(),
             coro=coro,
             max_retries=max_retries,
-            context=context or {}
+            context=context or {},
         )
-        
+
         # Priority queue uses negative priority for max-heap behavior
         priority_value = -priority.value
         await self._task_queue.put((priority_value, task.created_at, task))
-        
+
         self._metrics.queue_depth = self._task_queue.qsize()
-        
+
         logger.debug(
             "Task submitted to queue",
             task_id=task_id,
             priority=priority.name,
-            queue_depth=self._metrics.queue_depth
+            queue_depth=self._metrics.queue_depth,
         )
-        
+
         # Check if we need to scale up due to queue pressure
         await self._evaluate_scaling()
-    
+
     async def _worker(self, worker_id: int) -> None:
         """Worker coroutine that processes tasks from the queue.
-        
+
         Args:
             worker_id: Worker identifier
         """
         logger.debug(f"Worker {worker_id} started")
-        
+
         while self._running:
             try:
                 # Wait for task with timeout to allow graceful shutdown
                 try:
                     priority, created_at, task = await asyncio.wait_for(
-                        self._task_queue.get(),
-                        timeout=1.0
+                        self._task_queue.get(), timeout=1.0
                     )
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     continue
-                
+
                 self._metrics.queue_depth = self._task_queue.qsize()
-                
+
                 # Track task start
                 start_time = time.time()
                 self._active_tasks[task.task_id] = start_time
-                
+
                 try:
                     # Execute the task
                     logger.debug(
@@ -231,36 +227,36 @@ class AdaptiveQueueScheduler:
                         task_id=task.task_id,
                         worker_id=worker_id,
                         priority=task.priority.name,
-                        queue_wait_time_ms=(start_time - task.created_at) * 1000
+                        queue_wait_time_ms=(start_time - task.created_at) * 1000,
                     )
-                    
-                    result = await task.coro()
-                    
+
+                    await task.coro()
+
                     # Task completed successfully
                     processing_time = (time.time() - start_time) * 1000  # Convert to ms
                     self._record_task_completion(task, processing_time, True)
-                    
+
                     logger.debug(
                         "Task completed successfully",
                         task_id=task.task_id,
                         worker_id=worker_id,
-                        processing_time_ms=processing_time
+                        processing_time_ms=processing_time,
                     )
-                
+
                 except Exception as e:
                     # Task failed
                     processing_time = (time.time() - start_time) * 1000
                     self._record_task_completion(task, processing_time, False)
-                    
+
                     logger.error(
                         "Task execution failed",
                         task_id=task.task_id,
                         worker_id=worker_id,
                         error=str(e),
                         retry_count=task.retry_count,
-                        max_retries=task.max_retries
+                        max_retries=task.max_retries,
                     )
-                    
+
                     # Retry if possible
                     if task.retry_count < task.max_retries:
                         task.retry_count += 1
@@ -271,178 +267,189 @@ class AdaptiveQueueScheduler:
                         logger.info(
                             "Task re-queued for retry",
                             task_id=task.task_id,
-                            retry_count=task.retry_count
+                            retry_count=task.retry_count,
                         )
-                
+
                 finally:
                     # Clean up task tracking
                     self._active_tasks.pop(task.task_id, None)
                     self._task_queue.task_done()
-            
+
             except Exception as e:
                 logger.error(f"Worker {worker_id} error: {e}")
                 await asyncio.sleep(0.1)
-        
+
         logger.debug(f"Worker {worker_id} stopped")
-    
-    def _record_task_completion(self, task: QueueTask, processing_time_ms: float, success: bool) -> None:
+
+    def _record_task_completion(
+        self, task: QueueTask, processing_time_ms: float, success: bool
+    ) -> None:
         """Record task completion metrics.
-        
+
         Args:
             task: Completed task
             processing_time_ms: Processing time in milliseconds
             success: Whether task completed successfully
         """
         self._processing_times.append(processing_time_ms)
-        
+
         # Keep only recent measurements for rolling window
         if len(self._processing_times) > self.metrics_window_size:
-            self._processing_times = self._processing_times[-self.metrics_window_size:]
-        
+            self._processing_times = self._processing_times[-self.metrics_window_size :]
+
         # Update metrics
         if success:
             self._metrics.tasks_processed += 1
         else:
             self._metrics.tasks_failed += 1
-        
+
         # Update latency metrics
         if self._processing_times:
-            self._metrics.avg_processing_time = sum(self._processing_times) / len(self._processing_times)
-            
+            self._metrics.avg_processing_time = sum(self._processing_times) / len(
+                self._processing_times
+            )
+
             # Calculate P95
             sorted_times = sorted(self._processing_times)
             p95_index = int(0.95 * len(sorted_times))
-            self._metrics.p95_processing_time = sorted_times[min(p95_index, len(sorted_times) - 1)]
-    
+            self._metrics.p95_processing_time = sorted_times[
+                min(p95_index, len(sorted_times) - 1)
+            ]
+
     async def _evaluate_scaling(self) -> None:
         """Evaluate whether to scale workers up or down."""
         current_time = time.time()
-        
+
         # Respect cooldown period
         if current_time - self._last_scale_decision < self.scale_cooldown_seconds:
             return
-        
+
         # Get current metrics
         queue_depth = self._task_queue.qsize()
         current_latency = self._metrics.p95_processing_time
-        
+
         # Decision logic
         should_scale_up = False
         should_scale_down = False
-        
+
         # Scale up conditions
-        if (self._current_workers < self.max_workers and
-            (queue_depth > self._current_workers * 2 or  # Queue pressure
-             current_latency > self.scale_up_threshold_ms)):  # High latency
-            
+        if self._current_workers < self.max_workers and (
+            queue_depth > self._current_workers * 2  # Queue pressure
+            or current_latency > self.scale_up_threshold_ms
+        ):  # High latency
             self._consecutive_high_latency += 1
             self._consecutive_low_latency = 0
-            
+
             # Scale up after 2 consecutive high latency measurements
             if self._consecutive_high_latency >= 2:
                 should_scale_up = True
-        
+
         # Scale down conditions
-        elif (self._current_workers > self.min_workers and
-              queue_depth == 0 and  # Empty queue
-              current_latency < self.scale_down_threshold_ms):  # Low latency
-            
+        elif (
+            self._current_workers > self.min_workers
+            and queue_depth == 0  # Empty queue
+            and current_latency < self.scale_down_threshold_ms
+        ):  # Low latency
             self._consecutive_low_latency += 1
             self._consecutive_high_latency = 0
-            
+
             # Scale down after 5 consecutive low latency measurements
             if self._consecutive_low_latency >= 5:
                 should_scale_down = True
-        
+
         else:
             # Reset counters if conditions not met
             self._consecutive_high_latency = 0
             self._consecutive_low_latency = 0
-        
+
         # Execute scaling decision
         if should_scale_up:
             new_worker_count = min(self._current_workers + 1, self.max_workers)
             await self._scale_workers(new_worker_count)
             self._metrics.last_scale_up = current_time
             self._metrics.scale_decisions += 1
-            
+
             logger.info(
                 "Scaled up workers",
                 old_workers=self._current_workers,
                 new_workers=new_worker_count,
                 queue_depth=queue_depth,
                 p95_latency_ms=current_latency,
-                trigger="high_latency" if current_latency > self.scale_up_threshold_ms else "queue_pressure"
+                trigger="high_latency"
+                if current_latency > self.scale_up_threshold_ms
+                else "queue_pressure",
             )
-        
+
         elif should_scale_down:
             new_worker_count = max(self._current_workers - 1, self.min_workers)
             await self._scale_workers(new_worker_count)
             self._metrics.last_scale_down = current_time
             self._metrics.scale_decisions += 1
-            
+
             logger.info(
                 "Scaled down workers",
                 old_workers=self._current_workers,
                 new_workers=new_worker_count,
                 queue_depth=queue_depth,
                 p95_latency_ms=current_latency,
-                trigger="low_utilization"
+                trigger="low_utilization",
             )
-        
+
         if should_scale_up or should_scale_down:
             self._last_scale_decision = current_time
             self._consecutive_high_latency = 0
             self._consecutive_low_latency = 0
-    
+
     async def _scale_workers(self, target_count: int) -> None:
         """Scale workers to target count.
-        
+
         Args:
             target_count: Target number of workers
         """
         current_count = len(self._workers)
-        
+
         if target_count > current_count:
             # Scale up - start new workers
             for i in range(current_count, target_count):
                 worker = asyncio.create_task(self._worker(i))
                 self._workers.append(worker)
-        
+
         elif target_count < current_count:
             # Scale down - cancel excess workers
             workers_to_remove = self._workers[target_count:]
             self._workers = self._workers[:target_count]
-            
+
             for worker in workers_to_remove:
                 worker.cancel()
-            
+
             # Wait for cancelled workers to finish
             if workers_to_remove:
                 await asyncio.gather(*workers_to_remove, return_exceptions=True)
-        
+
         self._current_workers = target_count
         self._metrics.active_workers = len([w for w in self._workers if not w.done()])
-    
+
     async def _metrics_collector(self) -> None:
         """Background task to periodically evaluate scaling and update metrics."""
         while self._running:
             try:
                 await asyncio.sleep(1.0)  # Evaluate every second
-                
+
                 if self._running:
                     await self._evaluate_scaling()
-                    
+
                     # Update active metrics
                     self._metrics.queue_depth = self._task_queue.qsize()
-                    self._metrics.active_workers = len([w for w in self._workers if not w.done()])
-            
+                    self._metrics.active_workers = len(
+                        [w for w in self._workers if not w.done()]
+                    )
+
             except Exception as e:
                 logger.error(f"Metrics collector error: {e}")
-    
-    def get_metrics(self) -> Dict[str, Any]:
+
+    def get_metrics(self) -> dict[str, Any]:
         """Get current queue metrics.
-        
+
         Returns:
             Dictionary with current metrics
         """
@@ -460,12 +467,12 @@ class AdaptiveQueueScheduler:
             "last_scale_down": self._metrics.last_scale_down,
             "active_tasks": len(self._active_tasks),
             "latency_threshold_ms": self.latency_threshold_ms,
-            "is_running": self._running
+            "is_running": self._running,
         }
-    
-    def get_queue_status(self) -> Dict[str, Any]:
+
+    def get_queue_status(self) -> dict[str, Any]:
         """Get detailed queue status.
-        
+
         Returns:
             Dictionary with queue status
         """
@@ -478,12 +485,15 @@ class AdaptiveQueueScheduler:
             "consecutive_high_latency": self._consecutive_high_latency,
             "consecutive_low_latency": self._consecutive_low_latency,
             "last_scale_decision": self._last_scale_decision,
-            "cooldown_remaining": max(0, self.scale_cooldown_seconds - (time.time() - self._last_scale_decision))
+            "cooldown_remaining": max(
+                0,
+                self.scale_cooldown_seconds - (time.time() - self._last_scale_decision),
+            ),
         }
 
 
 # Global queue scheduler instance
-_queue_scheduler: Optional[AdaptiveQueueScheduler] = None
+_queue_scheduler: AdaptiveQueueScheduler | None = None
 
 
 def get_queue_scheduler() -> AdaptiveQueueScheduler:
