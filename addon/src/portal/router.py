@@ -14,6 +14,7 @@ from pydantic import BaseModel
 
 from ..core.logging_config import get_logger
 from ..models.domain import GrantSource
+from ..services.audit_logger import get_audit_logger
 from ..services.grant_manager import get_grant_manager
 from ..services.theme_manager import get_theme_manager
 from ..services.voucher_service import get_voucher_service
@@ -125,34 +126,90 @@ async def authenticate(request: AuthenticateRequest) -> dict[str, Any]:
             },
         )
 
-    # Check if voucher is valid and active
+    # Check if voucher is valid and active (FR-018: expired credential rejection)
     if not voucher.is_valid():
+        # Determine specific rejection reason for better user messaging
+        now = datetime.now(UTC)
+        rejection_reason = "not active"
+
+        if voucher.status != "active":
+            rejection_reason = f"status is {voucher.status.value}"
+        elif voucher.expires_at and now > voucher.expires_at:
+            rejection_reason = "has expired"
+
         logger.warning(
-            "Voucher not valid",
+            "Expired/invalid voucher rejected",
             voucher_id=voucher.voucher_id,
+            voucher_code=request.voucher_code[:4] + "***",
             status=voucher.status.value,
+            expires_at=voucher.expires_at.isoformat() if voucher.expires_at else None,
+            reason=rejection_reason,
         )
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={
-                "status": "error",
-                "message": "Voucher has expired or is not active",
+
+        # Audit log the rejection (FR-018: audit expired credential attempts)
+        audit_logger = get_audit_logger()
+        await audit_logger.log_portal_access(
+            result="rejected_expired",
+            details={
+                "success": False,
+                "voucher_code": request.voucher_code[:4] + "***",
+                "device_mac": request.device_mac,
+                "rejection_reason": f"Voucher {rejection_reason}",
+                "voucher_id": voucher.voucher_id,
             },
         )
 
-    # Check usage limits
-    if voucher.max_uses != -1 and voucher.uses_count >= voucher.max_uses:
-        logger.warning(
-            "Voucher usage limit reached",
-            voucher_id=voucher.voucher_id,
-            uses_count=voucher.uses_count,
-            max_uses=voucher.max_uses,
-        )
+        # User-friendly error message
+        if "expired" in rejection_reason:
+            message = (
+                "This voucher has expired and cannot be used. "
+                "Please contact the property manager for a new access code."
+            )
+        else:
+            message = (
+                "This voucher is not currently active. "
+                "Please check with the property manager."
+            )
+
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={
                 "status": "error",
-                "message": "Voucher usage limit reached",
+                "message": message,
+            },
+        )
+
+    # Check usage limits (FR-018: prevent reuse of exhausted vouchers)
+    if voucher.max_uses != -1 and voucher.uses_count >= voucher.max_uses:
+        logger.warning(
+            "Voucher usage limit exceeded",
+            voucher_id=voucher.voucher_id,
+            voucher_code=request.voucher_code[:4] + "***",
+            uses_count=voucher.uses_count,
+            max_uses=voucher.max_uses,
+        )
+
+        # Audit log the rejection
+        audit_logger = get_audit_logger()
+        await audit_logger.log_portal_access(
+            result="rejected_usage_limit",
+            details={
+                "success": False,
+                "voucher_code": request.voucher_code[:4] + "***",
+                "device_mac": request.device_mac,
+                "rejection_reason": f"Usage limit exceeded ({voucher.uses_count}/{voucher.max_uses})",
+                "voucher_id": voucher.voucher_id,
+            },
+        )
+
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "status": "error",
+                "message": (
+                    "This voucher has already been used and cannot be reused. "
+                    "Please request a new access code from the property manager."
+                ),
             },
         )
 
@@ -208,6 +265,19 @@ async def authenticate(request: AuthenticateRequest) -> dict[str, Any]:
             grant_id=grant.grant_id,
             voucher_id=voucher.voucher_id,
             status=grant.status.value,
+        )
+
+        # Audit log successful authentication (FR-018: audit all access attempts)
+        audit_logger = get_audit_logger()
+        await audit_logger.log_portal_access(
+            result="success",
+            details={
+                "success": True,
+                "voucher_code": request.voucher_code[:4] + "***",
+                "device_mac": request.device_mac,
+                "grant_id": grant.grant_id,
+                "voucher_id": voucher.voucher_id,
+            },
         )
 
         return {

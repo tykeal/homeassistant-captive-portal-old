@@ -47,7 +47,7 @@ SPDX-License-Identifier: Apache-2.0
 - [x] T027 Implement theme_manager (fallback + validation)
 - [x] T028 Implement startup provisioning watcher for new Rental Control events (stub event ingestion) (FR-001)
 - [x] T030A Implement captive portal splash/login endpoint (serves themed page & processes credential submission) (FR-009)
-- [ ] T030B Implement expired credential rejection logic (check status/expiry, audit log) (FR-018)
+- [x] T030B Implement expired credential rejection logic (check status/expiry, audit log) (FR-018)
 - [ ] T030C Implement automatic expiry scheduler & grace period enforcement (FR-003)
 
 
