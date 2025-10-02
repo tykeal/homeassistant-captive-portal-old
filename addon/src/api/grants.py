@@ -293,3 +293,62 @@ async def ingest_rental_control_event(event_data: dict) -> dict:
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=str(e),
         ) from e
+
+
+@router.patch("/{grant_id}/expire")
+async def expire_grant(grant_id: str) -> dict:
+    """Manually expire a grant (for testing expired credential rejection).
+
+    This endpoint immediately expires a grant by setting its end_time to now
+    and updating its status to expired. Useful for testing T018B expired
+    credential rejection logic.
+
+    Args:
+        grant_id: Grant identifier
+
+    Returns:
+        Updated grant with expired status
+
+    Raises:
+        HTTPException: 404 if grant not found
+    """
+    grant_manager = get_grant_manager()
+
+    try:
+        # Get the grant
+        grant = await grant_manager.get_grant_by_id(grant_id)
+        if not grant:
+            raise ValueError(f"Grant {grant_id} not found")
+
+        # Manually set to expired
+        from datetime import UTC, datetime
+
+        from ..storage.database import get_db_session
+        from ..storage.repository import GrantRepository
+
+        grant.end_time = datetime.now(UTC)
+        grant.status = GrantStatus.EXPIRED
+        grant.modified_at = datetime.now(UTC)
+
+        # Save the expired grant
+        async with get_db_session() as session:
+            grant_repo = GrantRepository(session)
+            expired_grant = await grant_repo.update(grant)
+
+        logger.info(
+            "Grant manually expired",
+            grant_id=grant_id,
+        )
+
+        return expired_grant.model_dump(mode="json")
+
+    except ValueError as e:
+        logger.warning(
+            "Failed to expire grant",
+            grant_id=grant_id,
+            error=str(e),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        ) from e
