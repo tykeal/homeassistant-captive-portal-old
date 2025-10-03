@@ -4,6 +4,7 @@
 """Shared test configuration and fixtures."""
 
 import asyncio
+import os
 import tempfile
 from collections.abc import Generator
 from unittest.mock import MagicMock
@@ -64,11 +65,29 @@ def mock_controller() -> MagicMock:
 
 
 @pytest.fixture
-def test_client(test_config: AddonConfig) -> Generator[TestClient]:
+def test_client(test_config: AddonConfig, temp_database: str) -> Generator[TestClient]:
     """Provide FastAPI test client with actual app."""
+    # Set global config for tests
+    import src.core.config as config_module
+    import src.storage.database as db_module
+
+    config_module.config = test_config
+
+    # Set up test database path
+    os.environ["DB_PATH"] = temp_database
+
+    # Reset database manager to pick up new DB_PATH
+    db_module._db_manager = None
+
     # Create the FastAPI app
     app = create_app()
 
     # Create test client
     with TestClient(app) as client:
         yield client
+
+    # Cleanup: reset config and database manager after test
+    config_module.config = None
+    db_module._db_manager = None
+    if "DB_PATH" in os.environ:
+        del os.environ["DB_PATH"]
