@@ -9,6 +9,11 @@ from typing import Any
 from ..core.logging_config import get_logger
 from ..models.domain import AccessGrant, GrantSource, GrantStatus
 from ..services.audit_logger import get_audit_logger
+from ..services.logging_utils import (
+    log_controller_operation,
+    log_lifecycle_transition,
+    log_performance_metric,
+)
 from ..services.metrics_exporter import get_metrics_exporter
 from ..services.retry_policy import get_retry_policy
 from ..storage.database import get_db_session
@@ -100,6 +105,25 @@ class GrantManager:
         # Log activation if immediate
         if grant.status == GrantStatus.ACTIVE:
             await self.audit_logger.log_grant_activated(grant=grant, **audit_context)
+            # Structured lifecycle transition logging (T034)
+            log_lifecycle_transition(
+                grant_id=grant.grant_id,
+                from_status=None,
+                to_status=GrantStatus.ACTIVE,
+                reason="Immediate activation (start_time <= now)",
+                booking_id=booking_id,
+                source=source.value,
+            )
+        else:
+            # Structured lifecycle transition logging (T034)
+            log_lifecycle_transition(
+                grant_id=grant.grant_id,
+                from_status=None,
+                to_status=GrantStatus.PENDING,
+                reason="Scheduled activation (start_time in future)",
+                booking_id=booking_id,
+                source=source.value,
+            )
 
         logger.info(
             "Grant created",
@@ -226,9 +250,29 @@ class GrantManager:
                     provision_start, success=True
                 )
 
+                # Log performance metric (T034)
+                log_performance_metric(
+                    "provision_latency",
+                    value=provision_latency,
+                    unit="ms",
+                    threshold=1000.0,  # Alert if > 1 second
+                    grant_id=grant.grant_id,
+                    operation="provision",
+                )
+
                 if result.get("status") == "success":
                     provisioned_voucher_id = result.get("controller_voucher_id")
                     provision_success = True
+
+                    # Structured controller operation logging (T034)
+                    log_controller_operation(
+                        operation="provision",
+                        controller_type="tp-omada",  # TODO: Get from controller
+                        success=True,
+                        duration_ms=provision_latency,
+                        grant_id=grant.grant_id,
+                        controller_voucher_id=provisioned_voucher_id,
+                    )
                     logger.info(
                         "Network access provisioned successfully",
                         grant_id=grant.grant_id,
@@ -244,8 +288,18 @@ class GrantManager:
 
             except Exception as e:
                 # Record failed provision (T033)
-                self.metrics.record_provision_end(
+                provision_latency = self.metrics.record_provision_end(
                     provision_start, success=False, error=str(e)
+                )
+
+                # Structured controller operation logging (T034)
+                log_controller_operation(
+                    operation="provision",
+                    controller_type="tp-omada",
+                    success=False,
+                    duration_ms=provision_latency,
+                    error=str(e),
+                    grant_id=grant.grant_id,
                 )
 
                 logger.error(
@@ -275,6 +329,16 @@ class GrantManager:
         # Record activation metrics (T033)
         self.metrics.metrics.record_grant_activated(
             provision_latency_ms=provision_latency if provision_success else None
+        )
+
+        # Structured lifecycle transition logging (T034)
+        log_lifecycle_transition(
+            grant_id=updated_grant.grant_id,
+            from_status=GrantStatus.PENDING,
+            to_status=GrantStatus.ACTIVE,
+            reason="Manual activation" if controller_voucher_id else "Auto activation",
+            provision_success=provision_success,
+            controller_voucher_id=provisioned_voucher_id,
         )
 
         # Log activation
