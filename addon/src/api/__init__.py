@@ -6,6 +6,7 @@
 from .audit import router as audit_router
 from .grants import router as grants_router
 from .health import router as health_router
+from .system import router as system_router
 from .theme import router as theme_router
 from .vouchers import router as vouchers_router
 
@@ -15,4 +16,5 @@ __all__ = [
     "theme_router",
     "audit_router",
     "health_router",
+    "system_router",
 ]

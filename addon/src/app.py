@@ -12,6 +12,7 @@ from .api import (
     audit_router,
     grants_router,
     health_router,
+    system_router,
     theme_router,
     vouchers_router,
 )
@@ -19,6 +20,7 @@ from .core.config import get_config
 from .core.logging_config import configure_logging, get_logger
 from .portal import portal_router
 from .services.event_ingestion import get_event_ingestion_service
+from .services.expiry_scheduler import get_expiry_scheduler
 from .storage.database import initialize_database
 
 logger = get_logger(__name__)
@@ -43,12 +45,20 @@ async def lifespan(app: FastAPI):
     await event_service.start()
     logger.info("Event ingestion service started")
 
+    # Start expiry scheduler for automatic grant expiry
+    expiry_scheduler = get_expiry_scheduler()
+    await expiry_scheduler.start()
+    logger.info("Expiry scheduler started")
+
     yield
 
     # Shutdown
     logger.info("Shutting down captive portal addon")
 
-    # Stop event ingestion service
+    # Stop services
+    await expiry_scheduler.stop()
+    logger.info("Expiry scheduler stopped")
+
     await event_service.stop()
     logger.info("Event ingestion service stopped")
 
@@ -78,6 +88,7 @@ def create_app() -> FastAPI:
     app.include_router(theme_router)
     app.include_router(audit_router)
     app.include_router(health_router)
+    app.include_router(system_router)
 
     logger.info("FastAPI application configured")
 
