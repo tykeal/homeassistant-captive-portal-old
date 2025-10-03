@@ -204,11 +204,14 @@ class GrantManager:
         user_id: str | None = None,
         **audit_context,
     ) -> AccessGrant:
-        """Extend a grant to a new end time.
+        """Extend a grant to a new end time (FR-004, FR-012).
+
+        Extends grant duration with validation and audit logging.
+        Can extend controller voucher if already provisioned.
 
         Args:
             grant: Grant to extend
-            new_end_time: New end time
+            new_end_time: New end time (must be after current end_time)
             reason: Reason for extension
             user_id: User extending the grant
             **audit_context: Additional audit context
@@ -217,16 +220,30 @@ class GrantManager:
             Updated grant
 
         Raises:
-            ValueError: If grant cannot be extended
+            ValueError: If grant cannot be extended or invalid parameters
         """
         if grant.status not in [GrantStatus.PENDING, GrantStatus.ACTIVE]:
             raise ValueError(f"Cannot extend grant with status: {grant.status}")
 
+        # Validate new_end_time is after current end_time
         if new_end_time <= grant.end_time:
-            raise ValueError("New end time must be after current end time")
+            raise ValueError(
+                f"New end time ({new_end_time.isoformat()}) must be after "
+                f"current end time ({grant.end_time.isoformat()})"
+            )
 
         # Store old end time for audit
         old_end_time = grant.end_time
+
+        logger.info(
+            "Extending grant",
+            grant_id=grant.grant_id,
+            booking_id=grant.booking_id,
+            old_end_time=old_end_time.isoformat(),
+            new_end_time=new_end_time.isoformat(),
+            reason=reason,
+            user_id=user_id,
+        )
 
         # Update grant
         grant.extend_grant(new_end_time, reason)
@@ -234,29 +251,73 @@ class GrantManager:
         # Save to database
         async with get_db_session() as session:
             repository = GrantRepository(session)
-            await repository.update(grant)
+            updated_grant = await repository.update(grant)
 
-        # Log extension
+        # Extend controller voucher if already provisioned
+        controller_extended = False
+        if updated_grant.controller_voucher_id:
+            try:
+                from ..controllers.factory import get_controller
+
+                controller = get_controller()
+
+                logger.info(
+                    "Extending controller voucher",
+                    grant_id=updated_grant.grant_id,
+                    controller_voucher_id=updated_grant.controller_voucher_id,
+                    new_end_time=new_end_time.isoformat(),
+                )
+
+                result = await controller.extend_grant(
+                    controller_voucher_id=updated_grant.controller_voucher_id,
+                    new_end_time=new_end_time,
+                    reason=reason,
+                )
+
+                if result.get("status") == "success":
+                    controller_extended = True
+                    logger.info(
+                        "Controller voucher extended successfully",
+                        grant_id=updated_grant.grant_id,
+                    )
+                else:
+                    logger.warning(
+                        "Controller extension completed with non-success status",
+                        grant_id=updated_grant.grant_id,
+                        result=result,
+                    )
+
+            except Exception as e:
+                logger.error(
+                    "Failed to extend controller voucher",
+                    grant_id=updated_grant.grant_id,
+                    controller_voucher_id=updated_grant.controller_voucher_id,
+                    error=str(e),
+                )
+                # Continue - grant is extended in database
+
+        # Log extension (FR-008)
         await self.audit_logger.log_grant_extended(
-            grant=grant,
+            grant=updated_grant,
             old_end_time=old_end_time,
+            new_end_time=new_end_time,
             reason=reason,
             user_id=user_id,
+            controller_extended=controller_extended,
             **audit_context,
         )
 
         logger.info(
-            "Grant extended",
-            grant_id=grant.grant_id,
-            booking_id=grant.booking_id,
-            guest_name=grant.guest_name,
+            "Grant extended successfully",
+            grant_id=updated_grant.grant_id,
             old_end_time=old_end_time.isoformat(),
             new_end_time=new_end_time.isoformat(),
             reason=reason,
             extended_by=user_id,
+            controller_extended=controller_extended,
         )
 
-        return grant
+        return updated_grant
 
     async def shorten_grant(
         self,
@@ -267,7 +328,10 @@ class GrantManager:
         user_id: str | None = None,
         **audit_context,
     ) -> AccessGrant:
-        """Shorten a grant or terminate immediately.
+        """Shorten a grant or terminate immediately (FR-004, FR-012, FR-013).
+
+        Supports both scheduled shortening and immediate termination.
+        Validates new_end_time and clamps to now if in the past.
 
         Args:
             grant: Grant to shorten
@@ -281,7 +345,7 @@ class GrantManager:
             Updated grant
 
         Raises:
-            ValueError: If grant cannot be shortened
+            ValueError: If grant cannot be shortened or invalid parameters
         """
         if grant.status not in [GrantStatus.PENDING, GrantStatus.ACTIVE]:
             raise ValueError(f"Cannot shorten grant with status: {grant.status}")
@@ -289,11 +353,37 @@ class GrantManager:
         if not immediate and not new_end_time:
             raise ValueError("Must provide new_end_time or set immediate=True")
 
+        # Clamp future end times that are not shortening (FR-013)
+        now = datetime.now(UTC)
         if new_end_time and new_end_time >= grant.end_time:
-            raise ValueError("New end time must be before current end time")
+            raise ValueError(
+                f"New end time ({new_end_time.isoformat()}) must be before "
+                f"current end time ({grant.end_time.isoformat()})"
+            )
+
+        # Clamp past times to now with warning (FR-013)
+        if new_end_time and new_end_time < now:
+            logger.warning(
+                "Shortening new_end_time is in past, clamping to now",
+                grant_id=grant.grant_id,
+                requested_end_time=new_end_time.isoformat(),
+                clamped_to=now.isoformat(),
+            )
+            new_end_time = now
 
         # Store old end time for audit
         old_end_time = grant.end_time
+
+        logger.info(
+            "Shortening grant",
+            grant_id=grant.grant_id,
+            booking_id=grant.booking_id,
+            old_end_time=old_end_time.isoformat(),
+            new_end_time=new_end_time.isoformat() if new_end_time else None,
+            immediate=immediate,
+            reason=reason,
+            user_id=user_id,
+        )
 
         # Update grant
         grant.shorten_grant(new_end_time, reason, immediate)
@@ -301,12 +391,13 @@ class GrantManager:
         # Save to database
         async with get_db_session() as session:
             repository = GrantRepository(session)
-            await repository.update(grant)
+            updated_grant = await repository.update(grant)
 
-        # Log shortening
+        # Log shortening (FR-008)
         await self.audit_logger.log_grant_shortened(
-            grant=grant,
+            grant=updated_grant,
             old_end_time=old_end_time,
+            new_end_time=new_end_time,
             reason=reason,
             immediate=immediate,
             user_id=user_id,
@@ -316,14 +407,12 @@ class GrantManager:
         # If immediate, also log revocation
         if immediate:
             await self.audit_logger.log_grant_revoked(
-                grant=grant, reason=reason, user_id=user_id, **audit_context
+                grant=updated_grant, reason=reason, user_id=user_id, **audit_context
             )
 
         logger.info(
-            "Grant shortened",
-            grant_id=grant.grant_id,
-            booking_id=grant.booking_id,
-            guest_name=grant.guest_name,
+            "Grant shortened successfully",
+            grant_id=updated_grant.grant_id,
             old_end_time=old_end_time.isoformat(),
             new_end_time=new_end_time.isoformat() if new_end_time else None,
             immediate=immediate,
@@ -331,7 +420,7 @@ class GrantManager:
             shortened_by=user_id,
         )
 
-        return grant
+        return updated_grant
 
     async def revoke_grant(
         self,
