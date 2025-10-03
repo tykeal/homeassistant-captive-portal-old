@@ -114,11 +114,11 @@ Task: "Contract test: POST /api/theme"
 ```
 
 ## Validation Checklist
-- [ ] All contract endpoints have tests (T008–T013)
-- [ ] All entities modeled (T019)
-- [ ] Adaptive queue tests exist before implementation (T014)
-- [ ] Retry/pending states covered (T015)
-- [ ] Theme fallback tested (T017)
-- [ ] Forced termination & audit logging tested (T018)
-- [ ] No implementation tasks lack preceding failing tests
-- [ ] Each parallel [P] task touches distinct files
+- [x] All contract endpoints have tests (T008–T013)
+- [x] All entities modeled (T019)
+- [x] Adaptive queue tests exist before implementation (T014)
+- [x] Retry/pending states covered (T015)
+- [x] Theme fallback tested (T017)
+- [x] Forced termination & audit logging tested (T018)
+- [x] No implementation tasks lack preceding failing tests
+- [x] Each parallel [P] task touches distinct files
