@@ -120,7 +120,18 @@ async def extend_grant(grant_id: str, request: GrantExtendRequest) -> dict:
 
 @router.patch("/{grant_id}/shorten")
 async def shorten_grant(grant_id: str, request: GrantShortenRequest) -> dict:
-    """Shorten or immediately terminate an existing grant."""
+    """Shorten or immediately terminate an existing grant.
+
+    FR-013: Force terminate (immediate revoke) an active grant
+    FR-019: Allow revocation prior to natural expiry
+
+    Args:
+        grant_id: Grant identifier
+        request: Shortening parameters
+
+    Returns:
+        Updated grant JSON
+    """
     grant_manager = get_grant_manager()
 
     try:
@@ -130,15 +141,25 @@ async def shorten_grant(grant_id: str, request: GrantShortenRequest) -> dict:
             raise ValueError(f"Grant {grant_id} not found")
 
         if request.immediate:
-            # Immediate termination (revoke)
+            # Immediate termination (revoke) - FR-013, FR-019
+            logger.info(
+                "Processing immediate grant revocation",
+                grant_id=grant_id,
+                reason=request.reason,
+            )
+
             updated_grant = await grant_manager.revoke_grant(
                 grant=grant,
                 reason=request.reason,
+                immediate=True,
+                user_id=None,  # TODO: Extract from auth context when implemented
             )
+
             logger.info(
-                "Grant terminated immediately",
+                "Grant terminated immediately (forced termination)",
                 grant_id=grant_id,
                 reason=request.reason,
+                controller_revoked=bool(updated_grant.controller_voucher_id),
             )
         else:
             # Scheduled shortening
@@ -148,11 +169,25 @@ async def shorten_grant(grant_id: str, request: GrantShortenRequest) -> dict:
                     detail="new_end_time required for scheduled shortening",
                 )
 
+            # FR-013: Normal shortening clamps to now with warning
+            from datetime import UTC, datetime
+
+            now = datetime.now(UTC)
+            if request.new_end_time < now:
+                logger.warning(
+                    "Shortening new_end_time is in past, clamping to now",
+                    grant_id=grant_id,
+                    requested_end_time=request.new_end_time.isoformat(),
+                    clamped_to=now.isoformat(),
+                )
+                request.new_end_time = now
+
             updated_grant = await grant_manager.shorten_grant(
                 grant=grant,
                 new_end_time=request.new_end_time,
                 reason=request.reason,
             )
+
             logger.info(
                 "Grant shortened",
                 grant_id=grant_id,

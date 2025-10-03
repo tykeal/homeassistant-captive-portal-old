@@ -51,7 +51,7 @@ SPDX-License-Identifier: Apache-2.0
 - [x] T030C Implement automatic expiry scheduler & grace period enforcement (FR-003)
 
 
-- [ ] T029 Implement forced termination path (revocation + audit + controller call)
+- [x] T029 Implement forced termination path (revocation + audit + controller call)
 - [ ] T030 Implement extension & shortening logic with clamp + audit entries
 
 ## Phase 3.4: Integration
