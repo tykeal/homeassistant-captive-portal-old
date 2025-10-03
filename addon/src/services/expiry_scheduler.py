@@ -174,12 +174,45 @@ class ExpiryScheduler:
                         grace_period_minutes=self.grace_period_minutes,
                     )
 
-                    # TODO: Revoke controller access (T031 - controller integration)
-                    # For now, just mark as expired
-                    # When controller is integrated:
-                    # if grant.controller_voucher_id:
-                    #     await controller.revoke_grant(grant.controller_voucher_id)
-                    #     revoked_count += 1
+                    # Revoke controller access if provisioned (T031)
+                    if grant.controller_voucher_id:
+                        try:
+                            from ..controllers.factory import get_controller
+
+                            controller = get_controller()
+
+                            logger.info(
+                                "Revoking controller access for expired grant",
+                                grant_id=grant.grant_id,
+                                controller_voucher_id=grant.controller_voucher_id,
+                            )
+
+                            result = await controller.revoke_grant(
+                                controller_voucher_id=grant.controller_voucher_id,
+                                reason="Automatic expiry after grace period",
+                            )
+
+                            if result.get("status") == "success":
+                                revoked_count += 1
+                                logger.info(
+                                    "Controller access revoked successfully",
+                                    grant_id=grant.grant_id,
+                                )
+                            else:
+                                logger.warning(
+                                    "Controller revocation completed with non-success",
+                                    grant_id=grant.grant_id,
+                                    result=result,
+                                )
+
+                        except Exception as e:
+                            logger.error(
+                                "Failed to revoke controller access",
+                                grant_id=grant.grant_id,
+                                controller_voucher_id=grant.controller_voucher_id,
+                                error=str(e),
+                            )
+                            # Continue - grant is marked expired in database
 
                 except Exception as e:
                     failed_count += 1

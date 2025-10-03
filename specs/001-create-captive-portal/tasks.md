@@ -55,7 +55,7 @@ SPDX-License-Identifier: Apache-2.0
 - [x] T030 Implement extension & shortening logic with clamp + audit entries
 
 ## Phase 3.4: Integration
-- [ ] T031 Wire controller adapter into grant_manager (provision, revoke, extend)
+- [x] T031 Wire controller adapter into grant_manager (provision, revoke, extend)
 - [ ] T032 Add retry/backoff policy (controller unreachable) with metrics
 - [ ] T033 Add metrics exporter (active_grants, queue_depth, provision_latency, failed_provisions)
 - [ ] T034 Add structured logging (grants lifecycle, queue scaling decisions)
