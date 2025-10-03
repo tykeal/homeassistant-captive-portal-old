@@ -57,7 +57,7 @@ SPDX-License-Identifier: Apache-2.0
 ## Phase 3.4: Integration
 - [x] T031 Wire controller adapter into grant_manager (provision, revoke, extend)
 - [x] T032 Add retry/backoff policy (controller unreachable) with metrics
-- [ ] T033 Add metrics exporter (active_grants, queue_depth, provision_latency, failed_provisions)
+- [x] T033 Add metrics exporter (active_grants, queue_depth, provision_latency, failed_provisions)
 - [ ] T034 Add structured logging (grants lifecycle, queue scaling decisions)
 - [ ] T035 Add theme asset loader & default theme bundle
 - [ ] T036 Add HA addon config validation at startup (reject invalid theme/controller config)
