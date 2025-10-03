@@ -1,11 +1,11 @@
 <!--
 Sync Impact Report
-Version change: v1.0.0 → v1.1.0
-Modified sections: Development Workflow & Quality Gates
+Version change: v1.1.0 → v1.1.1
+Modified sections: Development Workflow & Quality Gates (clarified pre-commit enforcement)
 Added sections: (none)
 Removed sections: (none)
 Templates requiring updates:
-  .specify/templates/plan-template.md ✅ (version reference updated to v1.1.0)
+  .specify/templates/plan-template.md ✅ (no direct version reference; no change needed)
   .specify/templates/spec-template.md ✅ (no direct version reference; no change needed)
   .specify/templates/tasks-template.md ✅ (no direct reference; no change needed)
 Follow-up TODOs: None
@@ -80,8 +80,11 @@ aggregated in a single NOTICE or LICENSE metadata location.
 6. CI Gates (blocking): formatting, SPDX scan, tests pass, license compliance, static analysis (if configured).
 7. Documentation: New externally visible behavior MUST update README/addon usage docs before merge.
 8. Release Artifacts: Versioned changelog entries summarizing feature, security, and compatibility notes.
-9. Pre-commit Enforcement: Local git hooks (e.g., pre-commit) MUST NOT be bypassed (no use of --no-verify) except via a
-   time-bound documented exception referencing an issue; disabling hooks without approval is a policy violation.
+9. Pre-commit Enforcement: Pre-commit hooks SHALL NEVER be disabled or bypassed when committing changes. The use of
+   --no-verify or any equivalent bypass mechanism is STRICTLY PROHIBITED except via a time-bound documented exception
+   explicitly approved by a maintainer and referencing an open issue with a remediation plan. Any commit bypassing
+   pre-commit hooks without prior approval is a policy violation and MUST be reverted. All commits MUST pass all
+   pre-commit checks before being pushed to any branch.
 
 ## Governance
 
@@ -102,4 +105,4 @@ aggregated in a single NOTICE or LICENSE metadata location.
    block release.
 6. Archival: Superseded versions retained in VCS history; no in-place edits to historical versions.
 
-**Version**: v1.1.0 | **Ratified**: 2025-09-28 | **Last Amended**: 2025-10-01
+**Version**: v1.1.1 | **Ratified**: 2025-09-28 | **Last Amended**: 2025-01-26
