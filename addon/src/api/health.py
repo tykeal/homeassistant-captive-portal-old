@@ -16,7 +16,16 @@ router = APIRouter(prefix="/api", tags=["health"])
 
 @router.get("/health")
 async def health_check() -> HealthResponse:
-    """Health check endpoint for monitoring and orchestration."""
+    """Health check endpoint for monitoring and orchestration (T037).
+
+    Provides comprehensive health status including:
+    - Queue depth and processing status
+    - Controller connectivity and operational status
+    - Active and pending grants counts
+
+    Returns:
+        Health response with status and detailed metrics
+    """
     try:
         # Get queue status
         queued_ops = get_queued_operations()
@@ -26,16 +35,38 @@ async def health_check() -> HealthResponse:
         grant_manager = get_grant_manager()
         grant_stats = await grant_manager.get_stats()
 
+        # Check controller health (T037: controller status sample)
+        from ..controllers.omada import OmadaController
+        from ..core.config import get_config
+
+        config = get_config()
+        controller = OmadaController(
+            controller_url=str(config.controller.url),
+            site_id=config.controller.site_name,  # Using site_name as site_id
+            username=config.controller.username,
+            password=config.controller.password,
+        )
+
+        controller_healthy = False
+        try:
+            controller_healthy = await controller.health_check()
+        except Exception as controller_error:
+            logger.warning(
+                "Controller health check failed", error=str(controller_error)
+            )
+
         # Determine overall health
         health_status = "healthy"
+        controller_status = "operational" if controller_healthy else "unreachable"
 
         # Check queue depth
         queue_depth = queue_metrics.get("queue_depth", 0)
         if queue_depth > 100:
             health_status = "degraded"
 
-        # Controller status based on queue health
-        controller_status = "operational" if health_status == "healthy" else "unknown"
+        # If controller is down, overall status is degraded
+        if not controller_healthy:
+            health_status = "degraded"
 
         return HealthResponse(
             status=health_status,
@@ -45,6 +76,7 @@ async def health_check() -> HealthResponse:
                 "active_grants": grant_stats.get("current_active", 0),
                 "pending_grants": grant_stats.get("pending", 0),
                 "queue_metrics": queue_metrics,
+                "controller_healthy": controller_healthy,
             },
         )
 
