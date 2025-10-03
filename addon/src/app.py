@@ -16,7 +16,7 @@ from .api import (
     theme_router,
     vouchers_router,
 )
-from .core.config import get_config
+from .core.config import AddonConfig, get_config
 from .core.logging_config import configure_logging, get_logger
 from .portal import portal_router
 from .services.event_ingestion import get_event_ingestion_service
@@ -26,15 +26,84 @@ from .storage.database import initialize_database
 logger = get_logger(__name__)
 
 
+def validate_startup_config(config: AddonConfig) -> None:
+    """Validate addon configuration at startup (T036).
+
+    Performs comprehensive validation of controller and theme configuration
+    to ensure all required settings are present and valid before starting services.
+
+    Args:
+        config: Addon configuration to validate
+
+    Raises:
+        ValueError: If configuration is invalid
+    """
+    # Validate controller configuration
+    if not config.controller.url:
+        raise ValueError("Controller URL is required")
+
+    if not config.controller.username or not config.controller.password:
+        raise ValueError("Controller credentials (username/password) are required")
+
+    # Validate controller type
+    if config.controller.type not in ("omada",):
+        raise ValueError(
+            f"Unsupported controller type: {config.controller.type}. "
+            "Supported types: omada"
+        )
+
+    # Validate theme configuration
+    if not config.theme.portal_title or len(config.theme.portal_title.strip()) == 0:
+        raise ValueError("Theme portal_title cannot be empty")
+
+    # Validate hex color format for theme colors
+    for color_name, color_value in [
+        ("background_color", config.theme.background_color),
+        ("primary_color", config.theme.primary_color),
+    ]:
+        if not color_value.startswith("#") or len(color_value) != 7:
+            raise ValueError(
+                f"Theme {color_name} must be in hex format (#rrggbb), "
+                f"got: {color_value}"
+            )
+        try:
+            int(color_value[1:], 16)
+        except ValueError as e:
+            raise ValueError(
+                f"Theme {color_name} has invalid hex value: {color_value}"
+            ) from e
+
+    # Validate optional logo URL if present
+    if config.theme.logo_url:
+        logo_str = str(config.theme.logo_url)
+        if not logo_str.startswith(("http://", "https://")):
+            raise ValueError(
+                f"Theme logo_url must be a valid HTTP/HTTPS URL, got: {logo_str}"
+            )
+
+    logger.debug(
+        "Configuration validation passed",
+        controller_type=config.controller.type,
+        controller_url=str(config.controller.url),
+        portal_title=config.theme.portal_title,
+    )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager for startup and shutdown tasks."""
     # Startup
     logger.info("Starting captive portal addon")
 
-    # Initialize configuration
-    config = get_config()
-    configure_logging(log_level=config.log_level, json_format=True)
+    try:
+        # Initialize and validate configuration (T036)
+        config = get_config()
+        validate_startup_config(config)
+        configure_logging(log_level=config.log_level, json_format=True)
+        logger.info("Configuration validated successfully")
+    except (ValueError, RuntimeError) as e:
+        logger.error("Configuration validation failed", error=str(e))
+        raise RuntimeError(f"Invalid configuration: {e}") from e
 
     # Initialize database
     await initialize_database()
