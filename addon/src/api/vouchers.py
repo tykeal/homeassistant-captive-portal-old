@@ -3,14 +3,21 @@
 
 """Vouchers API router."""
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
+from ..core.auth import require_auth
 from ..core.logging_config import get_logger
 from ..services.voucher_service import get_voucher_service
 from .models import VoucherCreateRequest
 
 logger = get_logger(__name__)
-router = APIRouter(prefix="/api/vouchers", tags=["vouchers"])
+router = APIRouter(
+    prefix="/api/vouchers",
+    tags=["vouchers"],
+    dependencies=[
+        Depends(require_auth)
+    ],  # T048: Require auth for all voucher endpoints
+)
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
