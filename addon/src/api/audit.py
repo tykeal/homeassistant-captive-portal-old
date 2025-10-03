@@ -5,15 +5,20 @@
 
 from datetime import datetime
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
+from ..core.auth import require_auth
 from ..core.logging_config import get_logger
 from ..models.domain import EventType
 from ..services.audit_logger import get_audit_logger
 from .models import PaginatedResponse
 
 logger = get_logger(__name__)
-router = APIRouter(prefix="/api/audit", tags=["audit"])
+router = APIRouter(
+    prefix="/api/audit",
+    tags=["audit"],
+    dependencies=[Depends(require_auth)],  # T048: Require auth for audit log access
+)
 
 
 @router.get("")

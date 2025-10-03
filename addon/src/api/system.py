@@ -3,13 +3,18 @@
 
 """System API router for administrative operations."""
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from ..core.auth import require_auth
 from ..core.logging_config import get_logger
 from ..services.expiry_scheduler import get_expiry_scheduler
 
 logger = get_logger(__name__)
-router = APIRouter(prefix="/api/system", tags=["system"])
+router = APIRouter(
+    prefix="/api/system",
+    tags=["system"],
+    dependencies=[Depends(require_auth)],  # T048: Require auth for system operations
+)
 
 
 @router.post("/process-expiry")

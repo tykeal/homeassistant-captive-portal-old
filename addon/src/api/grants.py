@@ -5,8 +5,9 @@
 
 from datetime import UTC, datetime
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
+from ..core.auth import require_auth
 from ..core.logging_config import get_logger
 from ..models.domain import GrantSource, GrantStatus
 from ..services.event_ingestion import get_event_ingestion_service
@@ -14,7 +15,11 @@ from ..services.grant_manager import get_grant_manager
 from .models import GrantCreateRequest, GrantExtendRequest, GrantShortenRequest
 
 logger = get_logger(__name__)
-router = APIRouter(prefix="/api/grants", tags=["grants"])
+router = APIRouter(
+    prefix="/api/grants",
+    tags=["grants"],
+    dependencies=[Depends(require_auth)],  # T048: Require auth for all grant endpoints
+)
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)

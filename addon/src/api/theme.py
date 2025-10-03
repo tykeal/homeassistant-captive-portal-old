@@ -3,14 +3,19 @@
 
 """Theme API router."""
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
+from ..core.auth import require_auth
 from ..core.logging_config import get_logger
 from ..services.theme_manager import get_theme_manager
 from .models import ThemeUpdateRequest
 
 logger = get_logger(__name__)
-router = APIRouter(prefix="/api/theme", tags=["theme"])
+router = APIRouter(
+    prefix="/api/theme",
+    tags=["theme"],
+    dependencies=[Depends(require_auth)],  # T048: Require auth for theme management
+)
 
 
 @router.get("")
