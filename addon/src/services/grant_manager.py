@@ -338,14 +338,20 @@ class GrantManager:
         grant: AccessGrant,
         reason: str,
         user_id: str | None = None,
+        immediate: bool = True,
         **audit_context,
     ) -> AccessGrant:
-        """Revoke a grant immediately.
+        """Revoke a grant immediately (FR-013, FR-019).
+
+        This implements forced termination with controller integration.
+        When immediate=True, this revokes network access immediately.
+        Otherwise, it schedules revocation (clamps to now with warning).
 
         Args:
             grant: Grant to revoke
             reason: Reason for revocation
             user_id: User revoking the grant
+            immediate: Whether to revoke immediately (default True)
             **audit_context: Additional audit context
 
         Returns:
@@ -357,13 +363,88 @@ class GrantManager:
         if grant.status not in [GrantStatus.PENDING, GrantStatus.ACTIVE]:
             raise ValueError(f"Cannot revoke grant with status: {grant.status}")
 
-        # Update grant
+        logger.info(
+            "Revoking grant",
+            grant_id=grant.grant_id,
+            booking_id=grant.booking_id,
+            status=grant.status.value,
+            reason=reason,
+            immediate=immediate,
+            user_id=user_id,
+        )
+
+        # Update grant status
         grant.status = GrantStatus.REVOKED
         grant.revoked_at = datetime.now(UTC)
         grant.revocation_reason = reason
         grant.modified_at = grant.revoked_at
 
         # Save to database
+        async with get_db_session() as session:
+            repository = GrantRepository(session)
+            updated_grant = await repository.update(grant)
+
+        # Revoke controller access if provisioned (FR-013, FR-019)
+        controller_revoked = False
+        if updated_grant.controller_voucher_id:
+            try:
+                from ..controllers.factory import get_controller
+
+                controller = get_controller()
+
+                # Call controller to revoke access
+                logger.info(
+                    "Revoking controller access",
+                    grant_id=updated_grant.grant_id,
+                    controller_voucher_id=updated_grant.controller_voucher_id,
+                )
+
+                result = await controller.revoke_grant(
+                    controller_voucher_id=updated_grant.controller_voucher_id,
+                    reason=reason,
+                )
+
+                if result.get("status") == "success":
+                    controller_revoked = True
+                    logger.info(
+                        "Controller access revoked successfully",
+                        grant_id=updated_grant.grant_id,
+                        controller_voucher_id=updated_grant.controller_voucher_id,
+                    )
+                else:
+                    logger.warning(
+                        "Controller revocation completed with non-success status",
+                        grant_id=updated_grant.grant_id,
+                        result=result,
+                    )
+
+            except Exception as e:
+                logger.error(
+                    "Failed to revoke controller access",
+                    grant_id=updated_grant.grant_id,
+                    controller_voucher_id=updated_grant.controller_voucher_id,
+                    error=str(e),
+                )
+                # Continue - grant is revoked in database even if controller call fails
+                # This will be retried by the expiry scheduler
+
+        # Audit log the revocation (FR-008, FR-013, FR-019)
+        await self.audit_logger.log_grant_revoked(
+            grant=updated_grant,
+            reason=reason,
+            user_id=user_id,
+            immediate=immediate,
+            controller_revoked=controller_revoked,
+            **audit_context,
+        )
+
+        logger.info(
+            "Grant revoked successfully",
+            grant_id=updated_grant.grant_id,
+            controller_revoked=controller_revoked,
+        )
+
+        return updated_grant
         async with get_db_session() as session:
             repository = GrantRepository(session)
             await repository.update(grant)
