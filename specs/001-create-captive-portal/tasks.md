@@ -65,8 +65,8 @@ SPDX-License-Identifier: Apache-2.0
 - [x] T038 Integrate uv workflow into CI (lock update check)
 
 ## Phase 3.5: Polish
-- [ ] T039 [P] Unit tests for queue scaling edge conditions
-- [ ] T040 [P] Unit tests for theme fallback logic
+- [x] T039 [P] Unit tests for queue scaling edge conditions
+- [x] T040 [P] Unit tests for theme fallback logic
 - [ ] T041 [P] Performance test for burst provisioning latency p95 threshold
 - [ ] T042 Security review pass (audit logging completeness, no credential leakage)
 - [ ] T043 [P] Documentation: README section for addon usage & configuration
@@ -82,8 +82,8 @@ SPDX-License-Identifier: Apache-2.0
 - [ ] T053 [P] Test: log redaction (no raw secrets in lifecycle logs)
 - [ ] T054 [P] Metrics assertion test (active_grants, queue_depth, provision_latency exported) (FR-020 observability)
 - [ ] T055 [P] Test: queue scaling decision log entries present & structured
-- [ ] T056 Unit tests: grant_manager lifecycle state transitions (pending→active→expired/force revoke)
-- [ ] T057 Unit tests: voucher expiry boundary conditions
+- [x] T056 Unit tests: grant_manager lifecycle state transitions (pending→active→expired/force revoke)
+- [x] T057 Unit tests: voucher expiry boundary conditions
 - [ ] T058 Performance test: portal page render <300ms p95 (FR-007/FR-009 non-functional)
 - [ ] T059 Implement graceful shutdown: drain queue & mark in-flight tasks
 - [ ] T060 [P] Integration test: graceful shutdown preserves in-flight provisioning
