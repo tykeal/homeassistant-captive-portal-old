@@ -9,6 +9,7 @@ from typing import Any
 from ..core.logging_config import get_logger
 from ..models.domain import AccessGrant, GrantSource, GrantStatus
 from ..services.audit_logger import get_audit_logger
+from ..services.retry_policy import get_retry_policy
 from ..storage.database import get_db_session
 from ..storage.repository import GrantRepository
 
@@ -192,13 +193,23 @@ class GrantManager:
                     booking_id=grant.booking_id,
                 )
 
-                # Call controller to create voucher/grant access
-                result = await controller.provision_grant(
+                # Call controller with retry policy (T032)
+                retry_policy = get_retry_policy()
+
+                async def provision_operation() -> dict[str, Any]:
+                    """Provision grant on controller."""
+                    return await controller.provision_grant(
+                        grant_id=grant.grant_id,
+                        guest_name=grant.guest_name,
+                        start_time=grant.start_time,
+                        end_time=grant.end_time,
+                        device_mac=None,
+                    )
+
+                result = await retry_policy.execute_with_retry(
+                    operation=provision_operation,
+                    operation_name="provision_grant",
                     grant_id=grant.grant_id,
-                    guest_name=grant.guest_name,
-                    start_time=grant.start_time,
-                    end_time=grant.end_time,
-                    device_mac=None,  # Will be captured on first connection
                 )
 
                 if result.get("status") == "success":
