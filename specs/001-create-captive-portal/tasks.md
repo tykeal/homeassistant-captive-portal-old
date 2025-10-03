@@ -52,7 +52,7 @@ SPDX-License-Identifier: Apache-2.0
 
 
 - [x] T029 Implement forced termination path (revocation + audit + controller call)
-- [ ] T030 Implement extension & shortening logic with clamp + audit entries
+- [x] T030 Implement extension & shortening logic with clamp + audit entries
 
 ## Phase 3.4: Integration
 - [ ] T031 Wire controller adapter into grant_manager (provision, revoke, extend)
