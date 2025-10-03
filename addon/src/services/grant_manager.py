@@ -140,15 +140,18 @@ class GrantManager:
         controller_voucher_id: str | None = None,
         **audit_context,
     ) -> AccessGrant:
-        """Activate a pending grant.
+        """Activate a pending grant and provision network access (T031).
+
+        Provisions network access via controller adapter if not already provisioned.
+        Updates grant status to ACTIVE and records activation timestamp.
 
         Args:
             grant: Grant to activate
-            controller_voucher_id: Controller voucher ID if provisioned
+            controller_voucher_id: Controller voucher ID if already provisioned
             **audit_context: Additional audit context
 
         Returns:
-            Updated grant
+            Updated grant with ACTIVE status
 
         Raises:
             ValueError: If grant cannot be activated
@@ -165,36 +168,100 @@ class GrantManager:
         if now > grant.end_time:
             raise ValueError("Grant has already expired")
 
+        logger.info(
+            "Activating grant",
+            grant_id=grant.grant_id,
+            booking_id=grant.booking_id,
+            start_time=grant.start_time.isoformat(),
+            end_time=grant.end_time.isoformat(),
+        )
+
+        # Provision network access via controller if not already provisioned (T031)
+        provisioned_voucher_id = controller_voucher_id
+        provision_success = False
+
+        if not provisioned_voucher_id:
+            try:
+                from ..controllers.factory import get_controller
+
+                controller = get_controller()
+
+                logger.info(
+                    "Provisioning network access",
+                    grant_id=grant.grant_id,
+                    booking_id=grant.booking_id,
+                )
+
+                # Call controller to create voucher/grant access
+                result = await controller.provision_grant(
+                    grant_id=grant.grant_id,
+                    guest_name=grant.guest_name,
+                    start_time=grant.start_time,
+                    end_time=grant.end_time,
+                    device_mac=None,  # Will be captured on first connection
+                )
+
+                if result.get("status") == "success":
+                    provisioned_voucher_id = result.get("controller_voucher_id")
+                    provision_success = True
+                    logger.info(
+                        "Network access provisioned successfully",
+                        grant_id=grant.grant_id,
+                        controller_voucher_id=provisioned_voucher_id,
+                    )
+                else:
+                    logger.warning(
+                        "Controller provisioning completed with non-success status",
+                        grant_id=grant.grant_id,
+                        result=result,
+                    )
+                    # Continue with activation - will retry later
+
+            except Exception as e:
+                logger.error(
+                    "Failed to provision network access",
+                    grant_id=grant.grant_id,
+                    error=str(e),
+                )
+                # Continue with activation - grant goes to ACTIVE but without controller_voucher_id
+                # This will be retried by background provisioning watcher
+
         # Update grant
         grant.status = GrantStatus.ACTIVE
         grant.activated_at = now
-        grant.controller_voucher_id = controller_voucher_id
+        grant.controller_voucher_id = provisioned_voucher_id
         grant.modified_at = now
 
-        # Clear any previous errors
-        grant.last_error = None
-        grant.retry_count = 0
+        # Clear any previous errors if provisioning succeeded
+        if provision_success:
+            grant.last_error = None
+            grant.retry_count = 0
 
         # Save to database
         async with get_db_session() as session:
             repository = GrantRepository(session)
-            await repository.update(grant)
+            updated_grant = await repository.update(grant)
 
         # Log activation
         await self.audit_logger.log_grant_activated(
-            grant=grant, controller_voucher_id=controller_voucher_id, **audit_context
+            grant=updated_grant,
+            controller_voucher_id=provisioned_voucher_id,
+            provision_success=provision_success,
+            **audit_context,
         )
 
         logger.info(
-            "Grant activated",
-            grant_id=grant.grant_id,
-            booking_id=grant.booking_id,
-            guest_name=grant.guest_name,
-            controller_voucher_id=controller_voucher_id,
-            activated_at=grant.activated_at.isoformat(),
+            "Grant activated successfully",
+            grant_id=updated_grant.grant_id,
+            booking_id=updated_grant.booking_id,
+            controller_voucher_id=provisioned_voucher_id,
+            provision_success=provision_success,
+            activated_at=updated_grant.activated_at.isoformat()
+            if updated_grant.activated_at
+            else None,
         )
 
-        return grant
+        return updated_grant
 
     async def extend_grant(
         self,
