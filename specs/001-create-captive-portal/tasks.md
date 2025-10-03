@@ -74,7 +74,7 @@ SPDX-License-Identifier: Apache-2.0
 - [ ] T045 Add CHANGELOG entry initial release notes
 - [ ] T046 Remove duplication / dead code scan
 - [ ] T047 Manual validation using quickstart scenarios (to be defined) & update quickstart.md stub
-- [ ] T048 Implement admin authentication/authorization layer (token or HA context) (FR-005 security)
+- [x] T048 Implement admin authentication/authorization layer (token or HA context) (FR-005 security)
 - [ ] T049 [P] Security test: unauthorized access to admin API endpoints rejected (401/403)
 - [ ] T050 Implement rate limiting & credential attempt lockout (portal splash) (FR-009 security)
 - [ ] T051 [P] Test: rate limiting triggers and lockout reset after cooldown
