@@ -9,6 +9,7 @@ from typing import Any
 from ..core.logging_config import get_logger
 from ..models.domain import AccessGrant, GrantSource, GrantStatus
 from ..services.audit_logger import get_audit_logger
+from ..services.metrics_exporter import get_metrics_exporter
 from ..services.retry_policy import get_retry_policy
 from ..storage.database import get_db_session
 from ..storage.repository import GrantRepository
@@ -22,6 +23,7 @@ class GrantManager:
     def __init__(self):
         """Initialize grant manager."""
         self.audit_logger = get_audit_logger()
+        self.metrics = get_metrics_exporter()
 
     async def create_grant(
         self,
@@ -86,6 +88,9 @@ class GrantManager:
         async with get_db_session() as session:
             repository = GrantRepository(session)
             await repository.create(grant)
+
+        # Record metrics (T033)
+        self.metrics.metrics.record_grant_created()
 
         # Log creation
         await self.audit_logger.log_grant_created(
@@ -180,6 +185,7 @@ class GrantManager:
         # Provision network access via controller if not already provisioned (T031)
         provisioned_voucher_id = controller_voucher_id
         provision_success = False
+        provision_latency = 0.0  # Track provision latency (T033)
 
         if not provisioned_voucher_id:
             try:
@@ -192,6 +198,9 @@ class GrantManager:
                     grant_id=grant.grant_id,
                     booking_id=grant.booking_id,
                 )
+
+                # Track provision latency (T033)
+                provision_start = self.metrics.record_provision_start()
 
                 # Call controller with retry policy (T032)
                 retry_policy = get_retry_policy()
@@ -212,6 +221,11 @@ class GrantManager:
                     grant_id=grant.grant_id,
                 )
 
+                # Record provision metrics (T033)
+                provision_latency = self.metrics.record_provision_end(
+                    provision_start, success=True
+                )
+
                 if result.get("status") == "success":
                     provisioned_voucher_id = result.get("controller_voucher_id")
                     provision_success = True
@@ -229,6 +243,11 @@ class GrantManager:
                     # Continue with activation - will retry later
 
             except Exception as e:
+                # Record failed provision (T033)
+                self.metrics.record_provision_end(
+                    provision_start, success=False, error=str(e)
+                )
+
                 logger.error(
                     "Failed to provision network access",
                     grant_id=grant.grant_id,
@@ -252,6 +271,11 @@ class GrantManager:
         async with get_db_session() as session:
             repository = GrantRepository(session)
             updated_grant = await repository.update(grant)
+
+        # Record activation metrics (T033)
+        self.metrics.metrics.record_grant_activated(
+            provision_latency_ms=provision_latency if provision_success else None
+        )
 
         # Log activation
         await self.audit_logger.log_grant_activated(
@@ -551,6 +575,9 @@ class GrantManager:
             repository = GrantRepository(session)
             updated_grant = await repository.update(grant)
 
+        # Record revocation metrics (T033)
+        self.metrics.metrics.record_grant_revoked()
+
         # Revoke controller access if provisioned (FR-013, FR-019)
         controller_revoked = False
         if updated_grant.controller_voucher_id:
@@ -660,10 +687,13 @@ class GrantManager:
         # Save to database
         async with get_db_session() as session:
             repository = GrantRepository(session)
-            await repository.update(grant)
+            updated_grant = await repository.update(grant)
+
+        # Record expiry metrics (T033)
+        self.metrics.metrics.record_grant_expired()
 
         # Log expiration
-        await self.audit_logger.log_grant_expired(grant=grant, **audit_context)
+        await self.audit_logger.log_grant_expired(grant=updated_grant, **audit_context)
 
         logger.info(
             "Grant expired",
