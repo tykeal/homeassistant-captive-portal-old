@@ -68,7 +68,7 @@ SPDX-License-Identifier: Apache-2.0
 - [x] T039 [P] Unit tests for queue scaling edge conditions
 - [x] T040 [P] Unit tests for theme fallback logic
 - [x] T041 [P] Performance test for burst provisioning latency p95 threshold
-- [ ] T042 Security review pass (audit logging completeness, no credential leakage)
+- [x] T042 Security review pass (audit logging completeness, no credential leakage)
 - [ ] T043 [P] Documentation: README section for addon usage & configuration
 - [ ] T044 [P] Documentation: controller adapter extension guide
 - [ ] T045 Add CHANGELOG entry initial release notes
