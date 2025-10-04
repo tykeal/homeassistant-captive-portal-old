@@ -10,7 +10,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from src.portal.router import create_portal_router
+from src.portal import router as portal_router
 from src.services.theme_manager import ThemeManager
 
 
@@ -71,10 +71,8 @@ def theme_manager(tmp_path):
 def test_app(theme_manager, mock_storage, mock_audit):
     """Create a test FastAPI app with portal router."""
     app = FastAPI()
-    router = create_portal_router(
-        theme_manager=theme_manager, storage=mock_storage, audit_logger=mock_audit
-    )
-    app.include_router(router)
+    # The router is already configured, just include it
+    app.include_router(portal_router.router)
     return app
 
 

@@ -9,7 +9,7 @@ from io import StringIO
 
 import pytest
 
-from src.services.queue_scheduler import QueueScheduler
+from src.services.queue_scheduler import AdaptiveQueueScheduler
 
 
 @pytest.fixture
@@ -36,7 +36,9 @@ def log_capture():
 @pytest.fixture
 async def queue_scheduler():
     """Create a queue scheduler for testing."""
-    scheduler = QueueScheduler(min_workers=2, max_workers=5, latency_threshold_ms=400)
+    scheduler = AdaptiveQueueScheduler(
+        min_workers=2, max_workers=5, latency_threshold_ms=400
+    )
     await scheduler.start()
     yield scheduler
     await scheduler.shutdown()
@@ -197,7 +199,9 @@ async def test_queue_scaling_logs_are_searchable():
 @pytest.mark.asyncio
 async def test_queue_scheduler_tracks_latency():
     """Test that queue scheduler tracks operation latency."""
-    scheduler = QueueScheduler(min_workers=2, max_workers=5, latency_threshold_ms=400)
+    scheduler = AdaptiveQueueScheduler(
+        min_workers=2, max_workers=5, latency_threshold_ms=400
+    )
     await scheduler.start()
 
     async def timed_task():
@@ -224,7 +228,7 @@ async def test_queue_scheduler_tracks_latency():
 @pytest.mark.asyncio
 async def test_queue_scaling_decision_logged_on_threshold_breach():
     """Test that scaling decision is logged when latency threshold is breached."""
-    scheduler = QueueScheduler(
+    scheduler = AdaptiveQueueScheduler(
         min_workers=2,
         max_workers=5,
         latency_threshold_ms=100,  # Low threshold for testing
