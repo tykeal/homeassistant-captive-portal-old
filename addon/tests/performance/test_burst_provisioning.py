@@ -11,7 +11,7 @@ import pytest
 
 from src.models.domain import AccessGrant, GrantStatus
 from src.services.grant_manager import GrantManager
-from src.services.queue_scheduler import QueueScheduler
+from src.services.queue_scheduler import AdaptiveQueueScheduler
 
 
 @pytest.fixture
@@ -51,7 +51,7 @@ def mock_audit():
 @pytest.fixture
 async def grant_manager(mock_controller, mock_storage, mock_audit):
     """Create a grant manager with mocked dependencies."""
-    queue_scheduler = QueueScheduler(
+    queue_scheduler = AdaptiveQueueScheduler(
         min_workers=2, max_workers=5, latency_threshold_ms=400
     )
     manager = GrantManager(
