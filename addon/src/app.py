@@ -21,6 +21,8 @@ from .core.logging_config import configure_logging, get_logger
 from .portal import portal_router
 from .services.event_ingestion import get_event_ingestion_service
 from .services.expiry_scheduler import get_expiry_scheduler
+from .services.grant_manager import get_grant_manager
+from .services.queue_integration import get_queued_operations
 from .storage.database import initialize_database
 
 logger = get_logger(__name__)
@@ -121,15 +123,38 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    # Shutdown
+    # Shutdown (T059: graceful shutdown - drain queue & mark in-flight tasks)
     logger.info("Shutting down captive portal addon")
 
-    # Stop services
+    # Stop accepting new provisioning requests
+    logger.info("Stopping grant manager (no new grants)")
+    grant_manager = get_grant_manager()
+    if hasattr(grant_manager, "stop_accepting_new_grants"):
+        await grant_manager.stop_accepting_new_grants()
+
+    # Drain the queue - wait for in-flight provisioning tasks to complete
+    logger.info("Draining queue - waiting for in-flight provisioning to complete")
+    queued_ops = get_queued_operations()
+
+    try:
+        # Give in-flight tasks up to 30 seconds to complete
+        await queued_ops.drain(timeout_seconds=30)
+        logger.info("Queue drained successfully")
+    except Exception as e:
+        logger.warning(
+            "Queue drain timeout or error - some tasks may be incomplete",
+            error=str(e),
+        )
+
+    # Stop scheduler services
     await expiry_scheduler.stop()
     logger.info("Expiry scheduler stopped")
 
     await event_service.stop()
     logger.info("Event ingestion service stopped")
+
+    # Final cleanup
+    logger.info("Graceful shutdown complete")
 
 
 def create_app() -> FastAPI:
