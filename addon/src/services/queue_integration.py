@@ -257,6 +257,55 @@ class QueuedOperations:
             "queue_status": status,
         }
 
+    async def drain(self, timeout_seconds: int = 30) -> None:
+        """Drain the queue by waiting for in-flight tasks to complete.
+
+        Used during graceful shutdown to ensure provisioning tasks complete.
+
+        Args:
+            timeout_seconds: Maximum time to wait for tasks to complete
+
+        Raises:
+            TimeoutError: If tasks don't complete within timeout
+        """
+        logger.info(
+            "Draining queue - waiting for in-flight tasks",
+            timeout_seconds=timeout_seconds,
+        )
+
+        # Stop accepting new tasks
+        if hasattr(self.scheduler, "stop_accepting_new_tasks"):
+            await self.scheduler.stop_accepting_new_tasks()
+
+        # Wait for queue to empty with timeout
+        start_time = asyncio.get_event_loop().time()
+
+        while True:
+            status = self.scheduler.get_queue_status()
+            queue_depth = status.get("queue_depth", 0)
+            active_tasks = status.get("active_tasks", 0)
+
+            if queue_depth == 0 and active_tasks == 0:
+                logger.info("Queue drained successfully")
+                return
+
+            elapsed = asyncio.get_event_loop().time() - start_time
+            if elapsed >= timeout_seconds:
+                logger.warning(
+                    "Queue drain timeout",
+                    remaining_queue_depth=queue_depth,
+                    remaining_active_tasks=active_tasks,
+                )
+                raise TimeoutError(
+                    f"Queue drain timeout after {timeout_seconds}s. "
+                    f"Remaining: {queue_depth} queued, {active_tasks} active"
+                )
+
+            # Wait a bit before checking again
+            await asyncio.sleep(0.5)
+
+        logger.info("Queue drain completed")
+
 
 # Global queued operations instance
 _queued_operations: QueuedOperations | None = None
