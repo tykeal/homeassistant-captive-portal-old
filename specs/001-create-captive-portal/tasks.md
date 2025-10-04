@@ -67,7 +67,7 @@ SPDX-License-Identifier: Apache-2.0
 ## Phase 3.5: Polish
 - [x] T039 [P] Unit tests for queue scaling edge conditions
 - [x] T040 [P] Unit tests for theme fallback logic
-- [ ] T041 [P] Performance test for burst provisioning latency p95 threshold
+- [x] T041 [P] Performance test for burst provisioning latency p95 threshold
 - [ ] T042 Security review pass (audit logging completeness, no credential leakage)
 - [ ] T043 [P] Documentation: README section for addon usage & configuration
 - [ ] T044 [P] Documentation: controller adapter extension guide
@@ -76,17 +76,17 @@ SPDX-License-Identifier: Apache-2.0
 - [ ] T047 Manual validation using quickstart scenarios (to be defined) & update quickstart.md stub
 - [x] T048 Implement admin authentication/authorization layer (token or HA context) (FR-005 security)
 - [x] T049 [P] Security test: unauthorized access to admin API endpoints rejected (401/403)
-- [ ] T050 Implement rate limiting & credential attempt lockout (portal splash) (FR-009 security)
-- [ ] T051 [P] Test: rate limiting triggers and lockout reset after cooldown
-- [ ] T052 Implement log redaction for credentials/secrets
-- [ ] T053 [P] Test: log redaction (no raw secrets in lifecycle logs)
-- [ ] T054 [P] Metrics assertion test (active_grants, queue_depth, provision_latency exported) (FR-020 observability)
-- [ ] T055 [P] Test: queue scaling decision log entries present & structured
+- [x] T050 Implement rate limiting & credential attempt lockout (portal splash) (FR-009 security)
+- [x] T051 [P] Test: rate limiting triggers and lockout reset after cooldown
+- [x] T052 Implement log redaction for credentials/secrets
+- [x] T053 [P] Test: log redaction (no raw secrets in lifecycle logs)
+- [x] T054 [P] Metrics assertion test (active_grants, queue_depth, provision_latency exported) (FR-020 observability)
+- [x] T055 [P] Test: queue scaling decision log entries present & structured
 - [x] T056 Unit tests: grant_manager lifecycle state transitions (pending→active→expired/force revoke)
 - [x] T057 Unit tests: voucher expiry boundary conditions
-- [ ] T058 Performance test: portal page render <300ms p95 (FR-007/FR-009 non-functional)
-- [ ] T059 Implement graceful shutdown: drain queue & mark in-flight tasks
-- [ ] T060 [P] Integration test: graceful shutdown preserves in-flight provisioning
+- [x] T058 Performance test: portal page render <300ms p95 (FR-007/FR-009 non-functional)
+- [x] T059 Implement graceful shutdown: drain queue & mark in-flight tasks
+- [x] T060 [P] Integration test: graceful shutdown preserves in-flight provisioning
 - [ ] T061 Documentation: adaptive queue algorithm & security model (README)
 
 
