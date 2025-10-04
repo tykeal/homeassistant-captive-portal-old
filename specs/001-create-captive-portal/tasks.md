@@ -71,7 +71,7 @@ SPDX-License-Identifier: Apache-2.0
 - [x] T042 Security review pass (audit logging completeness, no credential leakage)
 - [ ] T043 [P] Documentation: README section for addon usage & configuration
 - [ ] T044 [P] Documentation: controller adapter extension guide
-- [ ] T045 Add CHANGELOG entry initial release notes
+- [x] T045 Add CHANGELOG entry initial release notes
 - [x] T046 Remove duplication / dead code scan
 - [ ] T047 Manual validation using quickstart scenarios (to be defined) & update quickstart.md stub
 - [x] T048 Implement admin authentication/authorization layer (token or HA context) (FR-005 security)
