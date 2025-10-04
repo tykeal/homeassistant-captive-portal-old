@@ -49,6 +49,7 @@ class EventType(str, Enum):
     VOUCHER_USED = "voucher_used"
     VOUCHER_DEACTIVATED = "voucher_deactivated"
     PORTAL_ACCESS = "portal_access"
+    PORTAL_RATE_LIMIT = "portal_rate_limit"
     THEME_UPDATED = "theme_updated"
     CONFIG_CHANGED = "config_changed"
     CONTROLLER_ERROR = "controller_error"

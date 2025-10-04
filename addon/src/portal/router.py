@@ -13,9 +13,10 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
 from ..core.logging_config import get_logger
-from ..models.domain import GrantSource
+from ..models.domain import EventType, GrantSource
 from ..services.audit_logger import get_audit_logger
 from ..services.grant_manager import get_grant_manager
+from ..services.rate_limiter import get_rate_limiter
 from ..services.theme_manager import get_theme_manager
 from ..services.voucher_service import get_voucher_service
 from ..storage.database import get_db_session
@@ -83,27 +84,69 @@ async def splash_page(request: Request) -> HTMLResponse:
 
 
 @router.post("/authenticate")
-async def authenticate(request: AuthenticateRequest) -> dict[str, Any]:
+async def authenticate(
+    auth_request: AuthenticateRequest, request: Request
+) -> dict[str, Any]:
     """Authenticate user with voucher code and provision network access.
 
     This endpoint validates the voucher code, creates a grant, and
     provisions network access through the controller.
 
     FR-009: Validate credentials and transition to authorized state
+    Implements rate limiting to prevent brute force attacks.
 
     Args:
-        request: Authentication request with voucher code
+        auth_request: Authentication request with voucher code
+        request: FastAPI request object (for client IP)
 
     Returns:
         Success response with grant_id or error response
 
     Raises:
-        HTTPException: 401 on invalid credentials, 500 on system error
+        HTTPException: 401 on invalid credentials, 429 on rate limit, 500 on system error
     """
+    # Get client IP for rate limiting
+    client_ip = request.client.host if request.client else "unknown"
+
+    # Check rate limit (FR-009 security)
+    rate_limiter = get_rate_limiter()
+    is_allowed, rate_info = await rate_limiter.check_rate_limit(client_ip)
+
+    if not is_allowed:
+        logger.warning(
+            "Portal authentication blocked by rate limit",
+            client_ip=client_ip,
+            lockout_info=rate_info,
+        )
+
+        # Audit log the rate limit event
+        audit_logger = get_audit_logger()
+        await audit_logger.log_event(
+            event_type=EventType.PORTAL_RATE_LIMIT,
+            details={
+                "client_ip": client_ip,
+                "locked_out": rate_info.get("locked_out"),
+                "remaining_seconds": rate_info.get("remaining_seconds"),
+            },
+        )
+
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail={
+                "status": "error",
+                "message": (
+                    f"Too many authentication attempts. "
+                    f"Please try again in {rate_info.get('remaining_seconds', 300)} seconds."
+                ),
+                "retry_after": rate_info.get("remaining_seconds", 300),
+            },
+        )
+
     logger.info(
         "Portal authentication attempt",
-        voucher_code=request.voucher_code[:4] + "***",  # Log partial code
-        device_mac=request.device_mac,
+        voucher_code=auth_request.voucher_code[:4] + "***",  # Log partial code
+        device_mac=auth_request.device_mac,
+        client_ip=client_ip,
     )
 
     voucher_service = get_voucher_service()
@@ -111,12 +154,16 @@ async def authenticate(request: AuthenticateRequest) -> dict[str, Any]:
     # Lookup voucher by code
     async with get_db_session() as session:
         voucher_repo = VoucherRepository(session)
-        voucher = await voucher_repo.get_by_code(request.voucher_code)
+        voucher = await voucher_repo.get_by_code(auth_request.voucher_code)
 
     if not voucher:
+        # Record failed attempt
+        await rate_limiter.record_attempt(client_ip, success=False)
+
         logger.warning(
             "Invalid voucher code",
-            voucher_code=request.voucher_code[:4] + "***",
+            voucher_code=auth_request.voucher_code[:4] + "***",
+            client_ip=client_ip,
         )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -128,6 +175,9 @@ async def authenticate(request: AuthenticateRequest) -> dict[str, Any]:
 
     # Check if voucher is valid and active (FR-018: expired credential rejection)
     if not voucher.is_valid():
+        # Record failed attempt
+        await rate_limiter.record_attempt(client_ip, success=False)
+
         # Determine specific rejection reason for better user messaging
         now = datetime.now(UTC)
         rejection_reason = "not active"
@@ -140,7 +190,7 @@ async def authenticate(request: AuthenticateRequest) -> dict[str, Any]:
         logger.warning(
             "Expired/invalid voucher rejected",
             voucher_id=voucher.voucher_id,
-            voucher_code=request.voucher_code[:4] + "***",
+            voucher_code=auth_request.voucher_code[:4] + "***",
             status=voucher.status.value,
             expires_at=voucher.expires_at.isoformat() if voucher.expires_at else None,
             reason=rejection_reason,
@@ -152,8 +202,8 @@ async def authenticate(request: AuthenticateRequest) -> dict[str, Any]:
             result="rejected_expired",
             details={
                 "success": False,
-                "voucher_code": request.voucher_code[:4] + "***",
-                "device_mac": request.device_mac,
+                "voucher_code": auth_request.voucher_code[:4] + "***",
+                "device_mac": auth_request.device_mac,
                 "rejection_reason": f"Voucher {rejection_reason}",
                 "voucher_id": voucher.voucher_id,
             },
@@ -181,10 +231,13 @@ async def authenticate(request: AuthenticateRequest) -> dict[str, Any]:
 
     # Check usage limits (FR-018: prevent reuse of exhausted vouchers)
     if voucher.max_uses != -1 and voucher.uses_count >= voucher.max_uses:
+        # Record failed attempt
+        await rate_limiter.record_attempt(client_ip, success=False)
+
         logger.warning(
             "Voucher usage limit exceeded",
             voucher_id=voucher.voucher_id,
-            voucher_code=request.voucher_code[:4] + "***",
+            voucher_code=auth_request.voucher_code[:4] + "***",
             uses_count=voucher.uses_count,
             max_uses=voucher.max_uses,
         )
@@ -195,8 +248,8 @@ async def authenticate(request: AuthenticateRequest) -> dict[str, Any]:
             result="rejected_usage_limit",
             details={
                 "success": False,
-                "voucher_code": request.voucher_code[:4] + "***",
-                "device_mac": request.device_mac,
+                "voucher_code": auth_request.voucher_code[:4] + "***",
+                "device_mac": auth_request.device_mac,
                 "rejection_reason": f"Usage limit exceeded ({voucher.uses_count}/{voucher.max_uses})",
                 "voucher_id": voucher.voucher_id,
             },
@@ -239,7 +292,7 @@ async def authenticate(request: AuthenticateRequest) -> dict[str, Any]:
             start_time=start_time,
             end_time=end_time,
             source=GrantSource.VOUCHER,
-            device_mac=request.device_mac,
+            device_mac=auth_request.device_mac,
         )
 
         # Try to activate the grant immediately
@@ -267,14 +320,17 @@ async def authenticate(request: AuthenticateRequest) -> dict[str, Any]:
             status=grant.status.value,
         )
 
+        # Record successful attempt (clears rate limit history)
+        await rate_limiter.record_attempt(client_ip, success=True)
+
         # Audit log successful authentication (FR-018: audit all access attempts)
         audit_logger = get_audit_logger()
         await audit_logger.log_portal_access(
             result="success",
             details={
                 "success": True,
-                "voucher_code": request.voucher_code[:4] + "***",
-                "device_mac": request.device_mac,
+                "voucher_code": auth_request.voucher_code[:4] + "***",
+                "device_mac": auth_request.device_mac,
                 "grant_id": grant.grant_id,
                 "voucher_id": voucher.voucher_id,
             },
@@ -288,9 +344,12 @@ async def authenticate(request: AuthenticateRequest) -> dict[str, Any]:
         }
 
     except Exception as e:
+        # Record failed attempt on system error
+        await rate_limiter.record_attempt(client_ip, success=False)
+
         logger.error(
             "Portal authentication failed",
-            voucher_code=request.voucher_code[:4] + "***",
+            voucher_code=auth_request.voucher_code[:4] + "***",
             error=str(e),
         )
         raise HTTPException(
