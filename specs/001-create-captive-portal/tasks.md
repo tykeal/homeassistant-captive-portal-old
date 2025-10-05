@@ -69,8 +69,8 @@ SPDX-License-Identifier: Apache-2.0
 - [x] T040 [P] Unit tests for theme fallback logic
 - [x] T041 [P] Performance test for burst provisioning latency p95 threshold
 - [x] T042 Security review pass (audit logging completeness, no credential leakage)
-- [ ] T043 [P] Documentation: README section for addon usage & configuration
-- [ ] T044 [P] Documentation: controller adapter extension guide
+- [x] T043 [P] Documentation: README section for addon usage & configuration
+- [x] T044 [P] Documentation: controller adapter extension guide
 - [x] T045 Add CHANGELOG entry initial release notes
 - [x] T046 Remove duplication / dead code scan
 - [ ] T047 Manual validation using quickstart scenarios (to be defined) & update quickstart.md stub
@@ -87,7 +87,7 @@ SPDX-License-Identifier: Apache-2.0
 - [x] T058 Performance test: portal page render <300ms p95 (FR-007/FR-009 non-functional)
 - [x] T059 Implement graceful shutdown: drain queue & mark in-flight tasks
 - [x] T060 [P] Integration test: graceful shutdown preserves in-flight provisioning
-- [ ] T061 Documentation: adaptive queue algorithm & security model (README)
+- [x] T061 Documentation: adaptive queue algorithm & security model (README)
 
 
 ## Dependencies
