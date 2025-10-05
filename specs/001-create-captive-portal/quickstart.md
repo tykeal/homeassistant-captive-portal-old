@@ -7,6 +7,43 @@ SPDX-License-Identifier: Apache-2.0
 **Feature**: Rental Guest Network Access
 **Purpose**: Manual validation scenarios for end-to-end functionality testing
 **Last Updated**: 2025-01-26
+**Status**: Ready for validation (T047)
+
+## Validation Status
+
+These scenarios are designed for manual execution to validate the addon in a real Home Assistant environment with an actual TP-Omada controller. The automated test suite (Phases 3.2-3.5) provides comprehensive coverage of core functionality, but these scenarios validate:
+
+- Real controller integration (not mocked)
+- Home Assistant addon lifecycle (install, configure, restart)
+- Actual network device authentication
+- End-to-end user workflows
+
+### Validation Checklist
+
+Execute each scenario below and check off when validated:
+
+- [ ] Scenario 1: Rental Control Grant Lifecycle
+- [ ] Scenario 2: Manual Voucher Creation
+- [ ] Scenario 3: Theme Customization
+- [ ] Scenario 4: Network Controller Unreachable
+- [ ] Scenario 5: Burst Provisioning (Adaptive Queue)
+- [ ] Scenario 6: Expired Credential Reuse Prevention
+- [ ] Scenario 7: Grant Stay Modification (Extension & Contraction)
+- [ ] Scenario 8: Multi-Controller Compatibility (Future)
+- [ ] Performance Benchmarks
+- [ ] Security Checklist
+
+**Instructions for Validation**:
+1. Set up a test Home Assistant instance (VM or dedicated hardware)
+2. Install TP-Omada controller (or use existing)
+3. Install Rental Control integration (or use test data)
+4. Install this addon from local build
+5. Execute each scenario in order
+6. Document results (pass/fail, observations, issues)
+7. Update this checklist
+8. File issues for any failures
+
+**Expected Outcome**: All scenarios should pass before marking T047 complete.
 
 ## Prerequisites
 
