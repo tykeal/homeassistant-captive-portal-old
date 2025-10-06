@@ -470,6 +470,46 @@ class AdaptiveQueueScheduler:
             "is_running": self._running,
         }
 
+    # Compatibility methods for tests (T066, T067)
+    async def submit(
+        self,
+        coro: Callable[[], Awaitable[Any]],
+        task_id: str | None = None,
+        priority: TaskPriority = TaskPriority.NORMAL,
+        max_retries: int = 3,
+        context: dict[str, Any] | None = None,
+    ) -> None:
+        """Submit a task to the queue (compatibility alias for submit_task).
+
+        Args:
+            coro: Coroutine to execute
+            task_id: Unique task identifier (generated if not provided)
+            priority: Task priority
+            max_retries: Maximum retry attempts
+            context: Additional task context
+        """
+        if task_id is None:
+            import uuid
+
+            task_id = f"task_{uuid.uuid4().hex[:8]}"
+        return await self.submit_task(task_id, coro, priority, max_retries, context)
+
+    async def shutdown(self, timeout: int = 30) -> None:
+        """Shutdown the queue scheduler (compatibility method for tests).
+
+        Args:
+            timeout: Maximum time to wait for shutdown (unused, kept for compatibility)
+        """
+        await self.stop()
+
+    def get_queue_health(self) -> dict[str, Any]:
+        """Get queue health status (compatibility alias for get_queue_status).
+
+        Returns:
+            Dictionary with queue health/status
+        """
+        return self.get_queue_status()
+
     def get_queue_status(self) -> dict[str, Any]:
         """Get detailed queue status.
 
