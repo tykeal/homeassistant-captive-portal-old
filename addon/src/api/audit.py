@@ -74,11 +74,16 @@ async def export_audit_events(
     start_date: datetime | None = None,
     end_date: datetime | None = None,
     format: str = "json",
-) -> dict:
+):
     """Export audit events for reporting or compliance.
 
-    Supports JSON and CSV formats (CSV implementation TODO).
+    Supports JSON and CSV formats.
     """
+    import csv
+    from io import StringIO
+
+    from fastapi.responses import Response
+
     audit_logger = get_audit_logger()
 
     # Convert event_type string to EventType if provided
@@ -97,15 +102,32 @@ async def export_audit_events(
         end_date=end_date,
     )
 
-    if format == "json":
+    if format == "csv":
+        # CSV export implementation
+        output = StringIO()
+        if events:
+            # Get field names from first event
+            first_event_dict = events[0].model_dump(mode="json")
+            fieldnames = list(first_event_dict.keys())
+
+            writer = csv.DictWriter(output, fieldnames=fieldnames)
+            writer.writeheader()
+
+            for event in events:
+                writer.writerow(event.model_dump(mode="json"))
+
+        csv_content = output.getvalue()
+        return Response(
+            content=csv_content,
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": f"attachment; filename=audit_export_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.csv"
+            },
+        )
+    else:
+        # JSON export (default)
         return {
             "events": [event.model_dump(mode="json") for event in events],
             "total": len(events),
             "exported_at": datetime.utcnow().isoformat(),
-        }
-    else:
-        # CSV export TODO
-        return {
-            "error": "CSV export not yet implemented",
-            "supported_formats": ["json"],
         }
