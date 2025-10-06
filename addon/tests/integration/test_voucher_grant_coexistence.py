@@ -12,7 +12,7 @@ class TestVoucherGrantCoexistence:
 
     @pytest.mark.asyncio
     async def test_voucher_grant_creation_coexistence(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test that voucher-based grants and Rental Control grants can coexist."""
         # Create a Rental Control grant
@@ -24,7 +24,9 @@ class TestVoucherGrantCoexistence:
             "source": "rental_control",
         }
 
-        rental_response = test_client.post("/api/grants", json=rental_grant_request)
+        rental_response = test_client.post(
+            "/api/grants", json=rental_grant_request, headers=auth_headers
+        )
         assert rental_response.status_code == 201
         rental_grant = rental_response.json()
 
@@ -36,7 +38,9 @@ class TestVoucherGrantCoexistence:
             "max_uses": 1,
         }
 
-        voucher_response = test_client.post("/api/vouchers", json=voucher_request)
+        voucher_response = test_client.post(
+            "/api/vouchers", json=voucher_request, headers=auth_headers
+        )
         assert voucher_response.status_code == 201
         voucher = voucher_response.json()
 
@@ -64,7 +68,7 @@ class TestVoucherGrantCoexistence:
 
     @pytest.mark.asyncio
     async def test_audit_logging_different_sources(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test that audit logs correctly distinguish between grant sources."""
         # Create grants from different sources
@@ -83,14 +87,18 @@ class TestVoucherGrantCoexistence:
         }
 
         # Create both
-        rental_response = test_client.post("/api/grants", json=rental_request)
-        voucher_response = test_client.post("/api/vouchers", json=voucher_request)
+        rental_response = test_client.post(
+            "/api/grants", json=rental_request, headers=auth_headers
+        )
+        voucher_response = test_client.post(
+            "/api/vouchers", json=voucher_request, headers=auth_headers
+        )
 
         assert rental_response.status_code == 201
         assert voucher_response.status_code == 201
 
         # Check audit logs
-        audit_response = test_client.get("/api/audit")
+        audit_response = test_client.get("/api/audit", headers=auth_headers)
         assert audit_response.status_code == 200
 
         audit_data = audit_response.json()
@@ -114,7 +122,7 @@ class TestVoucherGrantCoexistence:
 
     @pytest.mark.asyncio
     async def test_concurrent_access_different_sources(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test concurrent network access from different grant sources."""
         # Create overlapping grants from different sources
@@ -133,11 +141,15 @@ class TestVoucherGrantCoexistence:
         }
 
         # Create rental grant
-        rental_response = test_client.post("/api/grants", json=rental_request)
+        rental_response = test_client.post(
+            "/api/grants", json=rental_request, headers=auth_headers
+        )
         assert rental_response.status_code == 201
 
         # Create voucher
-        voucher_response = test_client.post("/api/vouchers", json=voucher_request)
+        voucher_response = test_client.post(
+            "/api/vouchers", json=voucher_request, headers=auth_headers
+        )
         assert voucher_response.status_code == 201
         voucher = voucher_response.json()
 
@@ -154,7 +166,9 @@ class TestVoucherGrantCoexistence:
         assert voucher_grant_response.status_code == 201
 
         # Get list of active grants
-        grants_response = test_client.get("/api/grants?status=active")
+        grants_response = test_client.get(
+            "/api/grants?status=active", headers=auth_headers
+        )
         assert grants_response.status_code == 200
 
         active_grants = grants_response.json()["grants"]
@@ -168,7 +182,7 @@ class TestVoucherGrantCoexistence:
 
     @pytest.mark.asyncio
     async def test_voucher_reuse_with_existing_rental_grants(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test voucher reuse scenarios when rental grants exist."""
         # Create multi-use voucher
@@ -179,7 +193,9 @@ class TestVoucherGrantCoexistence:
             "max_uses": 3,
         }
 
-        voucher_response = test_client.post("/api/vouchers", json=voucher_request)
+        voucher_response = test_client.post(
+            "/api/vouchers", json=voucher_request, headers=auth_headers
+        )
         assert voucher_response.status_code == 201
         voucher = voucher_response.json()
 
@@ -192,7 +208,9 @@ class TestVoucherGrantCoexistence:
             "source": "rental_control",
         }
 
-        rental_response = test_client.post("/api/grants", json=rental_request)
+        rental_response = test_client.post(
+            "/api/grants", json=rental_request, headers=auth_headers
+        )
         assert rental_response.status_code == 201
 
         # Use voucher multiple times
@@ -224,7 +242,9 @@ class TestVoucherGrantCoexistence:
         assert fourth_response.status_code == 400  # Bad request - voucher exhausted
 
     @pytest.mark.asyncio
-    async def test_expiry_handling_mixed_sources(self, test_client: TestClient) -> None:
+    async def test_expiry_handling_mixed_sources(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test expiry handling for grants from different sources."""
         # Create short-lived grants from both sources
         rental_request = {
@@ -242,12 +262,16 @@ class TestVoucherGrantCoexistence:
         }
 
         # Create rental grant (should be expired)
-        rental_response = test_client.post("/api/grants", json=rental_request)
+        rental_response = test_client.post(
+            "/api/grants", json=rental_request, headers=auth_headers
+        )
         assert rental_response.status_code == 201
         rental_grant_id = rental_response.json()["grant_id"]
 
         # Create voucher
-        voucher_response = test_client.post("/api/vouchers", json=voucher_request)
+        voucher_response = test_client.post(
+            "/api/vouchers", json=voucher_request, headers=auth_headers
+        )
         assert voucher_response.status_code == 201
         voucher = voucher_response.json()
 
@@ -269,8 +293,12 @@ class TestVoucherGrantCoexistence:
         assert expiry_response.status_code == 200
 
         # Check that both grants are properly expired
-        rental_check = test_client.get(f"/api/grants/{rental_grant_id}")
-        voucher_check = test_client.get(f"/api/grants/{voucher_grant_id}")
+        rental_check = test_client.get(
+            f"/api/grants/{rental_grant_id}", headers=auth_headers
+        )
+        voucher_check = test_client.get(
+            f"/api/grants/{voucher_grant_id}", headers=auth_headers
+        )
 
         assert rental_check.status_code == 200
         assert voucher_check.status_code == 200
@@ -283,7 +311,9 @@ class TestVoucherGrantCoexistence:
         assert voucher_final["status"] == "expired"
 
     @pytest.mark.asyncio
-    async def test_metrics_separated_by_source(self, test_client: TestClient) -> None:
+    async def test_metrics_separated_by_source(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test that metrics properly separate grants by source."""
         # Create grants from both sources
         rental_request = {
@@ -301,8 +331,10 @@ class TestVoucherGrantCoexistence:
         }
 
         # Create both
-        test_client.post("/api/grants", json=rental_request)
-        voucher_response = test_client.post("/api/vouchers", json=voucher_request)
+        test_client.post("/api/grants", json=rental_request, headers=auth_headers)
+        voucher_response = test_client.post(
+            "/api/vouchers", json=voucher_request, headers=auth_headers
+        )
         voucher = voucher_response.json()
 
         voucher_use_request = {
@@ -311,10 +343,12 @@ class TestVoucherGrantCoexistence:
             "device_mac": "ff:aa:bb:cc:dd:ee",
         }
 
-        test_client.post("/api/grants/voucher", json=voucher_use_request)
+        test_client.post(
+            "/api/grants/voucher", json=voucher_use_request, headers=auth_headers
+        )
 
         # Check metrics
-        metrics_response = test_client.get("/metrics")
+        metrics_response = test_client.get("/metrics", headers=auth_headers)
         assert metrics_response.status_code == 200
 
         metrics_text = metrics_response.text
