@@ -12,7 +12,7 @@ class TestGrantsAPI:
 
     @pytest.mark.asyncio
     async def test_post_grants_provision_from_rental_control(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test POST /api/grants provision grant from Rental Control event.
 
@@ -28,7 +28,9 @@ class TestGrantsAPI:
         }
 
         # POST to create grant
-        response = test_client.post("/api/grants", json=grant_request)
+        response = test_client.post(
+            "/api/grants", json=grant_request, headers=auth_headers
+        )
 
         # Should return 201 Created with grant details
         assert response.status_code == 201
@@ -56,7 +58,7 @@ class TestGrantsAPI:
 
     @pytest.mark.asyncio
     async def test_post_grants_immediate_activation(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test POST /api/grants for immediate activation scenario.
 
@@ -70,26 +72,34 @@ class TestGrantsAPI:
             "source": "rental_control",
         }
 
-        response = test_client.post("/api/grants", json=grant_request)
+        response = test_client.post(
+            "/api/grants", json=grant_request, headers=auth_headers
+        )
 
         assert response.status_code == 201
         grant_data = response.json()
         assert grant_data["status"] == "active"  # Should activate immediately
 
     @pytest.mark.asyncio
-    async def test_post_grants_validation_errors(self, test_client: TestClient) -> None:
+    async def test_post_grants_validation_errors(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test POST /api/grants validation error handling."""
         # Missing required fields
         invalid_request = {"booking_id": "test"}
 
-        response = test_client.post("/api/grants", json=invalid_request)
+        response = test_client.post(
+            "/api/grants", json=invalid_request, headers=auth_headers
+        )
 
         assert response.status_code == 422  # Validation error
         error_data = response.json()
         assert "detail" in error_data
 
     @pytest.mark.asyncio
-    async def test_post_grants_duplicate_booking(self, test_client: TestClient) -> None:
+    async def test_post_grants_duplicate_booking(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test POST /api/grants with duplicate booking ID."""
         grant_request = {
             "booking_id": "booking_duplicate",
@@ -100,15 +110,21 @@ class TestGrantsAPI:
         }
 
         # First request should succeed
-        response1 = test_client.post("/api/grants", json=grant_request)
+        response1 = test_client.post(
+            "/api/grants", json=grant_request, headers=auth_headers
+        )
         assert response1.status_code == 201
 
         # Second request with same booking_id should fail
-        response2 = test_client.post("/api/grants", json=grant_request)
+        response2 = test_client.post(
+            "/api/grants", json=grant_request, headers=auth_headers
+        )
         assert response2.status_code == 409  # Conflict
 
     @pytest.mark.asyncio
-    async def test_patch_grants_extend(self, test_client: TestClient) -> None:
+    async def test_patch_grants_extend(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test PATCH /api/grants/{id}/extend for grant extension."""
         # First create a grant
         grant_request = {
@@ -119,7 +135,9 @@ class TestGrantsAPI:
             "source": "rental_control",
         }
 
-        create_response = test_client.post("/api/grants", json=grant_request)
+        create_response = test_client.post(
+            "/api/grants", json=grant_request, headers=auth_headers
+        )
         assert create_response.status_code == 201
         grant_id = create_response.json()["grant_id"]
 
@@ -130,7 +148,7 @@ class TestGrantsAPI:
         }
 
         response = test_client.patch(
-            f"/api/grants/{grant_id}/extend", json=extend_request
+            f"/api/grants/{grant_id}/extend", json=extend_request, headers=auth_headers
         )
 
         assert response.status_code == 200
@@ -141,7 +159,7 @@ class TestGrantsAPI:
 
     @pytest.mark.asyncio
     async def test_patch_grants_extend_validation(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test PATCH /api/grants/{id}/extend validation."""
         # Create grant first
@@ -153,7 +171,9 @@ class TestGrantsAPI:
             "source": "rental_control",
         }
 
-        create_response = test_client.post("/api/grants", json=grant_request)
+        create_response = test_client.post(
+            "/api/grants", json=grant_request, headers=auth_headers
+        )
         grant_id = create_response.json()["grant_id"]
 
         # Try to extend to past time (should fail)
@@ -163,13 +183,13 @@ class TestGrantsAPI:
         }
 
         response = test_client.patch(
-            f"/api/grants/{grant_id}/extend", json=invalid_extend
+            f"/api/grants/{grant_id}/extend", json=invalid_extend, headers=auth_headers
         )
         assert response.status_code == 422  # Validation error
 
     @pytest.mark.asyncio
     async def test_patch_grants_extend_nonexistent(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test PATCH /api/grants/{id}/extend for non-existent grant."""
         extend_request = {
@@ -178,12 +198,14 @@ class TestGrantsAPI:
         }
 
         response = test_client.patch(
-            "/api/grants/nonexistent/extend", json=extend_request
+            "/api/grants/nonexistent/extend", json=extend_request, headers=auth_headers
         )
         assert response.status_code == 404  # Not found
 
     @pytest.mark.asyncio
-    async def test_patch_grants_shorten(self, test_client: TestClient) -> None:
+    async def test_patch_grants_shorten(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test PATCH /api/grants/{id}/shorten for immediate force termination."""
         # Create active grant first
         grant_request = {
@@ -194,7 +216,9 @@ class TestGrantsAPI:
             "source": "rental_control",
         }
 
-        create_response = test_client.post("/api/grants", json=grant_request)
+        create_response = test_client.post(
+            "/api/grants", json=grant_request, headers=auth_headers
+        )
         assert create_response.status_code == 201
         grant_id = create_response.json()["grant_id"]
 
@@ -202,7 +226,9 @@ class TestGrantsAPI:
         shorten_request = {"reason": "Guest violated terms", "immediate": True}
 
         response = test_client.patch(
-            f"/api/grants/{grant_id}/shorten", json=shorten_request
+            f"/api/grants/{grant_id}/shorten",
+            json=shorten_request,
+            headers=auth_headers,
         )
 
         assert response.status_code == 200
@@ -214,7 +240,7 @@ class TestGrantsAPI:
 
     @pytest.mark.asyncio
     async def test_patch_grants_shorten_scheduled(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test PATCH /api/grants/{id}/shorten for scheduled termination."""
         # Create grant
@@ -226,7 +252,9 @@ class TestGrantsAPI:
             "source": "rental_control",
         }
 
-        create_response = test_client.post("/api/grants", json=grant_request)
+        create_response = test_client.post(
+            "/api/grants", json=grant_request, headers=auth_headers
+        )
         grant_id = create_response.json()["grant_id"]
 
         # Schedule termination for specific time
@@ -237,7 +265,9 @@ class TestGrantsAPI:
         }
 
         response = test_client.patch(
-            f"/api/grants/{grant_id}/shorten", json=shorten_request
+            f"/api/grants/{grant_id}/shorten",
+            json=shorten_request,
+            headers=auth_headers,
         )
 
         assert response.status_code == 200
