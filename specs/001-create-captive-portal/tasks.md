@@ -117,13 +117,13 @@ Task: "Contract test: POST /api/theme"
 
 ### Authentication/Authorization Fixes (35+ failures)
 - [x] T062 Fix test authentication setup in conftest.py - add auth token/credentials for admin API tests
-- [ ] T063 [P] Update grant API contract tests to include authentication headers
-- [ ] T064 [P] Update theme API contract tests to include authentication headers
-- [ ] T065 [P] Update voucher-grant coexistence tests to include authentication headers
+- [x] T063 [P] Update grant API contract tests to include authentication headers
+- [x] T064 [P] Update theme API contract tests to include authentication headers
+- [x] T065 [P] Update voucher-grant coexistence tests to include authentication headers
 
 ### Queue Scheduler API Fixes (15+ failures)
-- [ ] T066 Add `submit()` method alias to AdaptiveQueueScheduler (delegates to `submit_task()`)
-- [ ] T067 Add `shutdown()` method to AdaptiveQueueScheduler for graceful shutdown support
+- [x] T066 Add `submit()` method alias to AdaptiveQueueScheduler (delegates to `submit_task()`)
+- [x] T067 Add `shutdown()` method to AdaptiveQueueScheduler for graceful shutdown support
 - [ ] T068 [P] Update test_queue_scaling_logs.py to match actual scheduler API
 - [ ] T069 [P] Update test_graceful_shutdown.py to use correct shutdown method
 - [ ] T070 [P] Update test_burst_provisioning.py to use correct queue scheduler API
