@@ -12,4 +12,3 @@ venv
 
 # Generated files that can be recreated
 addon/coverage.xml
-addon/uv.lock
