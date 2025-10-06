@@ -11,7 +11,9 @@ class TestThemeAPI:
     """Contract tests for theme management API."""
 
     @pytest.mark.asyncio
-    async def test_post_theme_update(self, test_client: TestClient) -> None:
+    async def test_post_theme_update(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test POST /api/theme for theme configuration update."""
         theme_request = {
             "portal_title": "Updated Guest Portal",
@@ -20,7 +22,9 @@ class TestThemeAPI:
             "logo_url": "https://example.com/logo.png",
         }
 
-        response = test_client.post("/api/theme", json=theme_request)
+        response = test_client.post(
+            "/api/theme", json=theme_request, headers=auth_headers
+        )
 
         assert response.status_code == 200
         theme_data = response.json()
@@ -33,9 +37,11 @@ class TestThemeAPI:
         assert "updated_at" in theme_data
 
     @pytest.mark.asyncio
-    async def test_get_theme_current(self, test_client: TestClient) -> None:
+    async def test_get_theme_current(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test GET /api/theme for current theme configuration."""
-        response = test_client.get("/api/theme")
+        response = test_client.get("/api/theme", headers=auth_headers)
 
         assert response.status_code == 200
         theme_data = response.json()
@@ -54,7 +60,9 @@ class TestThemeAPI:
                 assert theme_data[field] is not None
 
     @pytest.mark.asyncio
-    async def test_post_theme_validation(self, test_client: TestClient) -> None:
+    async def test_post_theme_validation(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test POST /api/theme validation for invalid theme data."""
         # Invalid color format
         invalid_theme = {
@@ -63,7 +71,9 @@ class TestThemeAPI:
             "primary_color": "#28a745",
         }
 
-        response = test_client.post("/api/theme", json=invalid_theme)
+        response = test_client.post(
+            "/api/theme", json=invalid_theme, headers=auth_headers
+        )
         assert response.status_code == 422
 
         # Invalid URL format
@@ -74,20 +84,26 @@ class TestThemeAPI:
             "logo_url": "not-a-url",
         }
 
-        response = test_client.post("/api/theme", json=invalid_theme)
+        response = test_client.post(
+            "/api/theme", json=invalid_theme, headers=auth_headers
+        )
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_post_theme_partial_update(self, test_client: TestClient) -> None:
+    async def test_post_theme_partial_update(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test POST /api/theme with partial theme update."""
         # Get current theme first
-        get_response = test_client.get("/api/theme")
+        get_response = test_client.get("/api/theme", headers=auth_headers)
         current_theme = get_response.json()
 
         # Update only the title
         partial_update = {"portal_title": "Partially Updated Portal"}
 
-        response = test_client.post("/api/theme", json=partial_update)
+        response = test_client.post(
+            "/api/theme", json=partial_update, headers=auth_headers
+        )
 
         assert response.status_code == 200
         updated_theme = response.json()
@@ -100,7 +116,9 @@ class TestThemeAPI:
         assert updated_theme["primary_color"] == current_theme["primary_color"]
 
     @pytest.mark.asyncio
-    async def test_post_theme_reset_to_default(self, test_client: TestClient) -> None:
+    async def test_post_theme_reset_to_default(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test POST /api/theme/reset for resetting to default theme."""
         response = test_client.post("/api/theme/reset")
 
@@ -114,7 +132,9 @@ class TestThemeAPI:
         assert reset_theme.get("logo_url") is None
 
     @pytest.mark.asyncio
-    async def test_get_theme_preview(self, test_client: TestClient) -> None:
+    async def test_get_theme_preview(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test GET /api/theme/preview for theme preview generation."""
         # Create theme preview with custom settings
         preview_params = {
@@ -123,7 +143,9 @@ class TestThemeAPI:
             "primary_color": "#1976d2",
         }
 
-        response = test_client.get("/api/theme/preview", params=preview_params)
+        response = test_client.get(
+            "/api/theme/preview", params=preview_params, headers=auth_headers
+        )
 
         assert response.status_code == 200
         assert response.headers["content-type"] == "text/html"
@@ -135,7 +157,9 @@ class TestThemeAPI:
         assert "#1976d2" in html_content
 
     @pytest.mark.asyncio
-    async def test_post_theme_with_custom_css(self, test_client: TestClient) -> None:
+    async def test_post_theme_with_custom_css(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test POST /api/theme with custom CSS snippets."""
         theme_with_css = {
             "portal_title": "Custom Styled Portal",
@@ -152,7 +176,9 @@ class TestThemeAPI:
             """,
         }
 
-        response = test_client.post("/api/theme", json=theme_with_css)
+        response = test_client.post(
+            "/api/theme", json=theme_with_css, headers=auth_headers
+        )
 
         assert response.status_code == 200
         theme_data = response.json()
@@ -161,9 +187,13 @@ class TestThemeAPI:
         assert ".portal-container" in theme_data["custom_css"]
 
     @pytest.mark.asyncio
-    async def test_delete_theme_asset(self, test_client: TestClient) -> None:
+    async def test_delete_theme_asset(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test DELETE /api/theme/assets/{filename} for removing theme assets."""
         # This would typically be used to remove uploaded logos, etc.
-        response = test_client.delete("/api/theme/assets/old-logo.png")
+        response = test_client.delete(
+            "/api/theme/assets/old-logo.png", headers=auth_headers
+        )
 
         assert response.status_code in [200, 404]  # 200 if existed, 404 if not found
