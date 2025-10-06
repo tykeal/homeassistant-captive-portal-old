@@ -65,6 +65,15 @@ def mock_controller() -> MagicMock:
 
 
 @pytest.fixture
+def auth_headers() -> dict[str, str]:
+    """Provide authentication headers for admin API tests.
+
+    Returns headers with Bearer token for authenticated requests.
+    """
+    return {"Authorization": "Bearer test_api_key_12345"}
+
+
+@pytest.fixture
 def test_client(test_config: AddonConfig, temp_database: str) -> Generator[TestClient]:
     """Provide FastAPI test client with actual app."""
     # Set global config for tests
@@ -75,6 +84,9 @@ def test_client(test_config: AddonConfig, temp_database: str) -> Generator[TestC
 
     # Set up test database path
     os.environ["DB_PATH"] = temp_database
+
+    # Set up test authentication - use API key mode for tests
+    os.environ["CAPTIVE_PORTAL_API_KEY"] = "test_api_key_12345"
 
     # Reset database manager to pick up new DB_PATH
     db_module._db_manager = None
@@ -91,3 +103,5 @@ def test_client(test_config: AddonConfig, temp_database: str) -> Generator[TestC
     db_module._db_manager = None
     if "DB_PATH" in os.environ:
         del os.environ["DB_PATH"]
+    if "CAPTIVE_PORTAL_API_KEY" in os.environ:
+        del os.environ["CAPTIVE_PORTAL_API_KEY"]
