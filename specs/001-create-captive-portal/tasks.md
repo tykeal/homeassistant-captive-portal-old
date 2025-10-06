@@ -124,21 +124,21 @@ Task: "Contract test: POST /api/theme"
 ### Queue Scheduler API Fixes (15+ failures)
 - [x] T066 Add `submit()` method alias to AdaptiveQueueScheduler (delegates to `submit_task()`)
 - [x] T067 Add `shutdown()` method to AdaptiveQueueScheduler for graceful shutdown support
-- [ ] T068 [P] Update test_queue_scaling_logs.py to match actual scheduler API
-- [ ] T069 [P] Update test_graceful_shutdown.py to use correct shutdown method
-- [ ] T070 [P] Update test_burst_provisioning.py to use correct queue scheduler API
+- [x] T068 [P] Update test_queue_scaling_logs.py to match actual scheduler API
+- [x] T069 [P] Update test_graceful_shutdown.py to use correct shutdown method
+- [x] T070 [P] Update test_burst_provisioning.py to use correct queue scheduler API
 
 ### Database Setup Fixes (5+ failures)
 - [ ] T071 Fix metrics export tests database initialization (temp DB path or in-memory DB)
 - [ ] T072 Update conftest.py to provide proper database path for unit tests
 
 ### Export Format Implementation (1 failure)
-- [ ] T073 Implement CSV export format in audit API export endpoint
-- [ ] T074 Add CSV response with proper content-type header (text/csv)
+- [x] T073 Implement CSV export format in audit API export endpoint
+- [x] T074 Add CSV response with proper content-type header (text/csv)
 
 ### Manager Constructor Fixes (3 errors)
-- [ ] T075 [P] Fix GrantManager initialization in test_burst_provisioning.py (remove/update 'controller' arg)
-- [ ] T076 [P] Fix ThemeManager initialization in test_portal_render.py (remove/update 'theme_dir' arg)
+- [x] T075 [P] Fix GrantManager initialization in test_burst_provisioning.py (remove/update 'controller' arg)
+- [x] T076 [P] Fix ThemeManager initialization in test_portal_render.py (remove/update 'theme_dir' arg)
 
 ### General Test Infrastructure
 - [ ] T077 Add comprehensive test README documenting auth setup, fixtures, and common patterns
