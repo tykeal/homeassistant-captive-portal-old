@@ -24,6 +24,35 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop]:
     loop.close()
 
 
+@pytest.fixture(scope="session", autouse=True)
+def setup_test_database():
+    """Set up a test database path for all tests automatically."""
+    # Create a temporary database file for the entire test session
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
+        db_path = f.name
+
+    # Set the environment variable
+    os.environ["DB_PATH"] = db_path
+
+    # Initialize database tables
+    import asyncio
+
+    from src.storage.database import initialize_database
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(initialize_database())
+    loop.close()
+
+    yield db_path
+
+    # Cleanup
+    if "DB_PATH" in os.environ:
+        del os.environ["DB_PATH"]
+    if os.path.exists(db_path):
+        os.remove(db_path)
+
+
 @pytest.fixture
 def test_config() -> AddonConfig:
     """Provide test configuration."""
