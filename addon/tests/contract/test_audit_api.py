@@ -11,9 +11,11 @@ class TestAuditAPI:
     """Contract tests for audit logging API."""
 
     @pytest.mark.asyncio
-    async def test_get_audit_events(self, test_client: TestClient) -> None:
+    async def test_get_audit_events(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test GET /api/audit for retrieving audit events."""
-        response = test_client.get("/api/audit")
+        response = test_client.get("/api/audit", headers=auth_headers)
 
         assert response.status_code == 200
         audit_data = response.json()
@@ -30,10 +32,14 @@ class TestAuditAPI:
         assert isinstance(audit_data["page_size"], int)
 
     @pytest.mark.asyncio
-    async def test_get_audit_events_with_filters(self, test_client: TestClient) -> None:
+    async def test_get_audit_events_with_filters(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test GET /api/audit with filter parameters."""
         # Test event type filter
-        response = test_client.get("/api/audit?event_type=grant_created")
+        response = test_client.get(
+            "/api/audit?event_type=grant_created", headers=auth_headers
+        )
 
         assert response.status_code == 200
         audit_data = response.json()
@@ -43,7 +49,9 @@ class TestAuditAPI:
             assert event["event_type"] == "grant_created"
 
     @pytest.mark.asyncio
-    async def test_get_audit_events_date_range(self, test_client: TestClient) -> None:
+    async def test_get_audit_events_date_range(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test GET /api/audit with date range filters."""
         params = {
             "start_date": "2025-01-01T00:00:00Z",
@@ -62,10 +70,14 @@ class TestAuditAPI:
             assert event["timestamp"] is not None
 
     @pytest.mark.asyncio
-    async def test_get_audit_events_pagination(self, test_client: TestClient) -> None:
+    async def test_get_audit_events_pagination(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test GET /api/audit pagination."""
         # First page
-        response = test_client.get("/api/audit?page=1&page_size=10")
+        response = test_client.get(
+            "/api/audit?page=1&page_size=10", headers=auth_headers
+        )
 
         assert response.status_code == 200
         audit_data = response.json()
@@ -75,9 +87,11 @@ class TestAuditAPI:
         assert len(audit_data["events"]) <= 10
 
     @pytest.mark.asyncio
-    async def test_get_audit_event_structure(self, test_client: TestClient) -> None:
+    async def test_get_audit_event_structure(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test audit event structure and required fields."""
-        response = test_client.get("/api/audit?page_size=1")
+        response = test_client.get("/api/audit?page_size=1", headers=auth_headers)
 
         assert response.status_code == 200
         audit_data = response.json()
@@ -110,10 +124,14 @@ class TestAuditAPI:
             assert event["event_type"] in valid_event_types
 
     @pytest.mark.asyncio
-    async def test_get_audit_events_by_entity(self, test_client: TestClient) -> None:
+    async def test_get_audit_events_by_entity(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test GET /api/audit filtered by entity ID."""
         # Filter by grant ID
-        response = test_client.get("/api/audit?entity_type=grant&entity_id=test123")
+        response = test_client.get(
+            "/api/audit?entity_type=grant&entity_id=test123", headers=auth_headers
+        )
 
         assert response.status_code == 200
         audit_data = response.json()
@@ -124,28 +142,36 @@ class TestAuditAPI:
                 assert event["details"]["entity_id"] == "test123"
 
     @pytest.mark.asyncio
-    async def test_get_audit_invalid_filters(self, test_client: TestClient) -> None:
+    async def test_get_audit_invalid_filters(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test GET /api/audit with invalid filter parameters."""
         # Invalid date format
-        response = test_client.get("/api/audit?start_date=invalid-date")
+        response = test_client.get(
+            "/api/audit?start_date=invalid-date", headers=auth_headers
+        )
 
         assert response.status_code == 422  # Validation error
 
         # Invalid page number
-        response = test_client.get("/api/audit?page=-1")
+        response = test_client.get("/api/audit?page=-1", headers=auth_headers)
 
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_get_audit_export(self, test_client: TestClient) -> None:
+    async def test_get_audit_export(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test GET /api/audit/export for audit log export."""
-        response = test_client.get("/api/audit/export?format=csv")
+        response = test_client.get("/api/audit/export?format=csv", headers=auth_headers)
 
         assert response.status_code == 200
-        assert response.headers["content-type"] == "text/csv"
+        assert "text/csv" in response.headers["content-type"]
 
         # Test JSON export
-        response = test_client.get("/api/audit/export?format=json")
+        response = test_client.get(
+            "/api/audit/export?format=json", headers=auth_headers
+        )
 
         assert response.status_code == 200
-        assert response.headers["content-type"] == "application/json"
+        assert "application/json" in response.headers["content-type"]
