@@ -113,6 +113,38 @@ Task: "Contract test: GET /api/audit"
 Task: "Contract test: POST /api/theme"
 ```
 
+## Phase 3.6: Test Failure Remediation (55 failures, 16 errors to fix)
+
+### Authentication/Authorization Fixes (35+ failures)
+- [ ] T062 Fix test authentication setup in conftest.py - add auth token/credentials for admin API tests
+- [ ] T063 [P] Update grant API contract tests to include authentication headers
+- [ ] T064 [P] Update theme API contract tests to include authentication headers
+- [ ] T065 [P] Update voucher-grant coexistence tests to include authentication headers
+
+### Queue Scheduler API Fixes (15+ failures)
+- [ ] T066 Add `submit()` method alias to AdaptiveQueueScheduler (delegates to `submit_task()`)
+- [ ] T067 Add `shutdown()` method to AdaptiveQueueScheduler for graceful shutdown support
+- [ ] T068 [P] Update test_queue_scaling_logs.py to match actual scheduler API
+- [ ] T069 [P] Update test_graceful_shutdown.py to use correct shutdown method
+- [ ] T070 [P] Update test_burst_provisioning.py to use correct queue scheduler API
+
+### Database Setup Fixes (5+ failures)
+- [ ] T071 Fix metrics export tests database initialization (temp DB path or in-memory DB)
+- [ ] T072 Update conftest.py to provide proper database path for unit tests
+
+### Export Format Implementation (1 failure)
+- [ ] T073 Implement CSV export format in audit API export endpoint
+- [ ] T074 Add CSV response with proper content-type header (text/csv)
+
+### Manager Constructor Fixes (3 errors)
+- [ ] T075 [P] Fix GrantManager initialization in test_burst_provisioning.py (remove/update 'controller' arg)
+- [ ] T076 [P] Fix ThemeManager initialization in test_portal_render.py (remove/update 'theme_dir' arg)
+
+### General Test Infrastructure
+- [ ] T077 Add comprehensive test README documenting auth setup, fixtures, and common patterns
+- [ ] T078 Run full test suite validation after all fixes
+- [ ] T079 Update test coverage report and identify any new gaps
+
 ## Validation Checklist
 - [x] All contract endpoints have tests (T008–T013)
 - [x] All entities modeled (T019)
@@ -122,3 +154,4 @@ Task: "Contract test: POST /api/theme"
 - [x] Forced termination & audit logging tested (T018)
 - [x] No implementation tasks lack preceding failing tests
 - [x] Each parallel [P] task touches distinct files
+- [ ] All test failures resolved (T062–T079)
