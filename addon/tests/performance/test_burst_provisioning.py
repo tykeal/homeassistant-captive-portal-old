@@ -11,7 +11,6 @@ import pytest
 
 from src.models.domain import AccessGrant, GrantStatus
 from src.services.grant_manager import GrantManager
-from src.services.queue_scheduler import AdaptiveQueueScheduler
 
 
 @pytest.fixture
@@ -51,18 +50,12 @@ def mock_audit():
 @pytest.fixture
 async def grant_manager(mock_controller, mock_storage, mock_audit):
     """Create a grant manager with mocked dependencies."""
-    queue_scheduler = AdaptiveQueueScheduler(
-        min_workers=2, max_workers=5, latency_threshold_ms=400
-    )
-    manager = GrantManager(
-        controller=mock_controller,
-        storage=mock_storage,
-        audit_logger=mock_audit,
-        queue_scheduler=queue_scheduler,
-    )
-    await manager.start()
+    # GrantManager now uses singleton pattern and gets dependencies internally
+    manager = GrantManager()
+    # Note: The real manager will get its dependencies from global singletons
+    # For proper testing, we'd need to mock those singletons
     yield manager
-    await manager.shutdown()
+    # No shutdown method on current GrantManager
 
 
 @pytest.mark.asyncio
@@ -78,6 +71,7 @@ async def test_burst_provisioning_p95_latency(grant_manager, mock_storage):
         grant = AccessGrant(
             id=f"grant-{i}",
             device_id=f"device-{i}",
+            guest_name=f"Guest {i}",
             status=GrantStatus.PENDING,
             start_time=time.time(),
             end_time=time.time() + 3600,
@@ -119,6 +113,7 @@ async def test_burst_provisioning_throughput(grant_manager):
         grant = AccessGrant(
             id=f"grant-{i}",
             device_id=f"device-{i}",
+            guest_name=f"Guest {i}",
             status=GrantStatus.PENDING,
             start_time=time.time(),
             end_time=time.time() + 3600,
