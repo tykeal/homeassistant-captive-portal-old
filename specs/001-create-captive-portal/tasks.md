@@ -129,8 +129,8 @@ Task: "Contract test: POST /api/theme"
 - [x] T070 [P] Update test_burst_provisioning.py to use correct queue scheduler API
 
 ### Database Setup Fixes (5+ failures)
-- [ ] T071 Fix metrics export tests database initialization (temp DB path or in-memory DB)
-- [ ] T072 Update conftest.py to provide proper database path for unit tests
+- [x] T071 Fix metrics export tests database initialization (temp DB path or in-memory DB)
+- [x] T072 Update conftest.py to provide proper database path for unit tests
 
 ### Export Format Implementation (1 failure)
 - [x] T073 Implement CSV export format in audit API export endpoint
@@ -141,9 +141,9 @@ Task: "Contract test: POST /api/theme"
 - [x] T076 [P] Fix ThemeManager initialization in test_portal_render.py (remove/update 'theme_dir' arg)
 
 ### General Test Infrastructure
-- [ ] T077 Add comprehensive test README documenting auth setup, fixtures, and common patterns
-- [ ] T078 Run full test suite validation after all fixes
-- [ ] T079 Update test coverage report and identify any new gaps
+- [x] T077 Add comprehensive test README documenting auth setup, fixtures, and common patterns
+- [x] T078 Run full test suite validation after all fixes
+- [x] T079 Update test coverage report and identify any new gaps
 
 ## Validation Checklist
 - [x] All contract endpoints have tests (T008–T013)
@@ -154,4 +154,4 @@ Task: "Contract test: POST /api/theme"
 - [x] Forced termination & audit logging tested (T018)
 - [x] No implementation tasks lack preceding failing tests
 - [x] Each parallel [P] task touches distinct files
-- [ ] All test failures resolved (T062–T079)
+- [x] All test failures resolved (T062–T079) ✅ PHASE 3.6 COMPLETE
