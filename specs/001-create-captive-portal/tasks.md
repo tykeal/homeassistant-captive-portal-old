@@ -116,7 +116,7 @@ Task: "Contract test: POST /api/theme"
 ## Phase 3.6: Test Failure Remediation (55 failures, 16 errors to fix)
 
 ### Authentication/Authorization Fixes (35+ failures)
-- [ ] T062 Fix test authentication setup in conftest.py - add auth token/credentials for admin API tests
+- [x] T062 Fix test authentication setup in conftest.py - add auth token/credentials for admin API tests
 - [ ] T063 [P] Update grant API contract tests to include authentication headers
 - [ ] T064 [P] Update theme API contract tests to include authentication headers
 - [ ] T065 [P] Update voucher-grant coexistence tests to include authentication headers
