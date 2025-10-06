@@ -55,16 +55,8 @@ def theme_manager(tmp_path):
     """
     (default_theme / "login.html").write_text(template_content.strip())
 
-    # Create theme config
-    config = {
-        "title": "Test Portal",
-        "welcome_message": "Welcome to Guest Network",
-        "brand_color": "#007bff",
-    }
-
-    return ThemeManager(
-        theme_dir=str(theme_dir), default_theme_name="default", config=config
-    )
+    # ThemeManager now uses singleton pattern, no constructor parameters
+    return ThemeManager()
 
 
 @pytest.fixture
