@@ -58,7 +58,7 @@ class TestAuditAPI:
             "end_date": "2025-01-31T23:59:59Z",
         }
 
-        response = test_client.get("/api/audit", params=params)
+        response = test_client.get("/api/audit", params=params, headers=auth_headers)
 
         assert response.status_code == 200
         audit_data = response.json()
