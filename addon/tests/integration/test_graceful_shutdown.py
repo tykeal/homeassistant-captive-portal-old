@@ -72,6 +72,7 @@ def mock_grant_manager(mock_controller, mock_storage, mock_audit_logger):
             return AccessGrant(
                 id=grant_id,
                 device_id=f"device-{grant_id}",
+                guest_name=f"Guest {grant_id}",
                 status=GrantStatus.ACTIVE,
                 start_time=0,
                 end_time=3600,
@@ -123,6 +124,7 @@ async def test_graceful_shutdown_waits_for_in_flight_tasks(
         AccessGrant(
             id=f"grant-{i}",
             device_id=f"device-{i}",
+            guest_name=f"Guest {i}",
             status=GrantStatus.PENDING,
             start_time=0,
             end_time=3600,
@@ -197,6 +199,7 @@ async def test_graceful_shutdown_preserves_completed_work(
         AccessGrant(
             id=f"grant-{i}",
             device_id=f"device-{i}",
+            guest_name=f"Guest {i}",
             status=GrantStatus.PENDING,
             start_time=0,
             end_time=3600,
@@ -278,6 +281,7 @@ async def test_graceful_shutdown_partial_completion(
         AccessGrant(
             id=f"fast-grant-{i}",
             device_id=f"device-{i}",
+            guest_name=f"Fast Guest {i}",
             status=GrantStatus.PENDING,
             start_time=0,
             end_time=3600,
@@ -289,6 +293,7 @@ async def test_graceful_shutdown_partial_completion(
         AccessGrant(
             id=f"slow-grant-{i}",
             device_id=f"device-{i}",
+            guest_name=f"Slow Guest {i}",
             status=GrantStatus.PENDING,
             start_time=0,
             end_time=3600,
