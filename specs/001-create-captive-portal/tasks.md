@@ -170,9 +170,9 @@ Task: "Contract test: POST /api/theme"
 ### Core Business Logic - Phase 3.7.2 (Est: 8 hours)
 - [x] T082: Implement grant extension endpoint
 - [x] T083: Implement grant shortening/termination endpoint
-- [ ] T084: Implement theme GET endpoint
-- [ ] T085: Implement theme reset endpoint
-- [ ] T086: Implement theme preview endpoint
+- [x] T084: Implement theme GET endpoint
+- [x] T085: Implement theme reset endpoint
+- [x] T086: Implement theme preview endpoint
 - [x] T090: Add guest_name to AccessGrant test fixtures
 - [ ] T093: Fix portal template rendering
 
