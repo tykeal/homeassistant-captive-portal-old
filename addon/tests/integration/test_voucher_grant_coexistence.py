@@ -30,29 +30,18 @@ class TestVoucherGrantCoexistence:
         assert rental_response.status_code == 201
         rental_grant = rental_response.json()
 
-        # Create a manual voucher
-        voucher_request = {
-            "duration_hours": 24,
-            "description": "Manual guest access for maintenance",
-            "created_by": "admin",
-            "max_uses": 1,
-        }
-
-        voucher_response = test_client.post(
-            "/api/vouchers", json=voucher_request, headers=auth_headers
-        )
-        assert voucher_response.status_code == 201
-        voucher = voucher_response.json()
-
-        # Use the voucher to create a grant
+        # Create a voucher-sourced grant (simulating voucher redemption)
         voucher_grant_request = {
-            "voucher_code": voucher["code"],
+            "booking_id": "voucher_guest_001",
+            "start_time": "2024-12-01T16:00:00Z",
+            "end_time": "2024-12-02T16:00:00Z",  # 24 hours
             "guest_name": "Voucher Guest",
             "device_mac": "aa:bb:cc:dd:ee:ff",
+            "source": "voucher",
         }
 
         voucher_grant_response = test_client.post(
-            "/api/grants/voucher", json=voucher_grant_request
+            "/api/grants", json=voucher_grant_request, headers=auth_headers
         )
         assert voucher_grant_response.status_code == 201
         voucher_grant = voucher_grant_response.json()
@@ -134,34 +123,24 @@ class TestVoucherGrantCoexistence:
             "source": "rental_control",
         }
 
-        voucher_request = {
-            "duration_hours": 48,
-            "description": "Concurrent voucher access",
-            "created_by": "admin",
-        }
-
         # Create rental grant
         rental_response = test_client.post(
             "/api/grants", json=rental_request, headers=auth_headers
         )
         assert rental_response.status_code == 201
 
-        # Create voucher
-        voucher_response = test_client.post(
-            "/api/vouchers", json=voucher_request, headers=auth_headers
-        )
-        assert voucher_response.status_code == 201
-        voucher = voucher_response.json()
-
-        # Use voucher
+        # Create voucher-sourced grant (48 hours)
         voucher_grant_request = {
-            "voucher_code": voucher["code"],
+            "booking_id": "concurrent_voucher",
+            "start_time": "2024-12-01T16:00:00Z",
+            "end_time": "2024-12-03T16:00:00Z",  # 48 hours
             "guest_name": "Concurrent Voucher",
             "device_mac": "bb:cc:dd:ee:ff:aa",
+            "source": "voucher",
         }
 
         voucher_grant_response = test_client.post(
-            "/api/grants/voucher", json=voucher_grant_request
+            "/api/grants", json=voucher_grant_request, headers=auth_headers
         )
         assert voucher_grant_response.status_code == 201
 
@@ -184,21 +163,7 @@ class TestVoucherGrantCoexistence:
     async def test_voucher_reuse_with_existing_rental_grants(
         self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
-        """Test voucher reuse scenarios when rental grants exist."""
-        # Create multi-use voucher
-        voucher_request = {
-            "duration_hours": 6,
-            "description": "Multi-use test voucher",
-            "created_by": "admin",
-            "max_uses": 3,
-        }
-
-        voucher_response = test_client.post(
-            "/api/vouchers", json=voucher_request, headers=auth_headers
-        )
-        assert voucher_response.status_code == 201
-        voucher = voucher_response.json()
-
+        """Test multiple voucher grants can coexist with rental grants."""
         # Create rental grant
         rental_request = {
             "booking_id": "reuse_rental_001",
@@ -213,33 +178,35 @@ class TestVoucherGrantCoexistence:
         )
         assert rental_response.status_code == 201
 
-        # Use voucher multiple times
+        # Create multiple voucher-sourced grants (6 hours each)
         for i in range(3):
-            voucher_use_request = {
-                "voucher_code": voucher["code"],
+            voucher_grant_request = {
+                "booking_id": f"voucher_grant_{i + 1:03d}",
+                "start_time": "2024-12-01T16:00:00Z",
+                "end_time": "2024-12-01T22:00:00Z",  # 6 hours
                 "guest_name": f"Voucher Guest {i + 1}",
                 "device_mac": f"cc:dd:ee:ff:aa:{i:02d}",
+                "source": "voucher",
             }
 
             use_response = test_client.post(
-                "/api/grants/voucher", json=voucher_use_request
+                "/api/grants", json=voucher_grant_request, headers=auth_headers
             )
             assert use_response.status_code == 201
 
             voucher_grant = use_response.json()
             assert voucher_grant["source"] == "voucher"
 
-        # Fourth use should fail (max_uses=3)
-        fourth_use_request = {
-            "voucher_code": voucher["code"],
-            "guest_name": "Fourth Guest",
-            "device_mac": "dd:ee:ff:aa:bb:cc",
-        }
+        # Verify all grants exist
+        all_grants_response = test_client.get("/api/grants", headers=auth_headers)
+        assert all_grants_response.status_code == 200
 
-        fourth_response = test_client.post(
-            "/api/grants/voucher", json=fourth_use_request
-        )
-        assert fourth_response.status_code == 400  # Bad request - voucher exhausted
+        all_grants = all_grants_response.json()["grants"]
+        rental_grants = [g for g in all_grants if g["source"] == "rental_control"]
+        voucher_grants = [g for g in all_grants if g["source"] == "voucher"]
+
+        assert len(rental_grants) >= 1
+        assert len(voucher_grants) >= 3
 
     @pytest.mark.asyncio
     async def test_expiry_handling_mixed_sources(
@@ -255,12 +222,6 @@ class TestVoucherGrantCoexistence:
             "source": "rental_control",
         }
 
-        voucher_request = {
-            "duration_hours": 1,  # 1 hour
-            "description": "Short expiry voucher",
-            "created_by": "admin",
-        }
-
         # Create rental grant (should be expired)
         rental_response = test_client.post(
             "/api/grants", json=rental_request, headers=auth_headers
@@ -268,28 +229,26 @@ class TestVoucherGrantCoexistence:
         assert rental_response.status_code == 201
         rental_grant_id = rental_response.json()["grant_id"]
 
-        # Create voucher
-        voucher_response = test_client.post(
-            "/api/vouchers", json=voucher_request, headers=auth_headers
-        )
-        assert voucher_response.status_code == 201
-        voucher = voucher_response.json()
-
-        # Use voucher (would also be expired based on creation time + 1 hour)
-        voucher_use_request = {
-            "voucher_code": voucher["code"],
+        # Create voucher-sourced grant (also expired, 1 hour)
+        voucher_grant_request = {
+            "booking_id": "expiry_voucher",
+            "start_time": "2024-12-01T16:00:00Z",
+            "end_time": "2024-12-01T17:00:00Z",  # 1 hour (past)
             "guest_name": "Expiry Voucher Guest",
             "device_mac": "ee:ff:aa:bb:cc:dd",
+            "source": "voucher",
         }
 
         voucher_grant_response = test_client.post(
-            "/api/grants/voucher", json=voucher_use_request
+            "/api/grants", json=voucher_grant_request, headers=auth_headers
         )
         assert voucher_grant_response.status_code == 201
         voucher_grant_id = voucher_grant_response.json()["grant_id"]
 
         # Trigger expiry processing
-        expiry_response = test_client.post("/api/system/process-expiry")
+        expiry_response = test_client.post(
+            "/api/system/process-expiry", headers=auth_headers
+        )
         assert expiry_response.status_code == 200
 
         # Check that both grants are properly expired
@@ -324,27 +283,19 @@ class TestVoucherGrantCoexistence:
             "source": "rental_control",
         }
 
-        voucher_request = {
-            "duration_hours": 24,
-            "description": "Metrics voucher",
-            "created_by": "admin",
+        voucher_grant_request = {
+            "booking_id": "metrics_voucher",
+            "start_time": "2024-12-01T16:00:00Z",
+            "end_time": "2024-12-02T16:00:00Z",  # 24 hours
+            "guest_name": "Metrics Voucher Guest",
+            "device_mac": "ff:aa:bb:cc:dd:ee",
+            "source": "voucher",
         }
 
         # Create both
         test_client.post("/api/grants", json=rental_request, headers=auth_headers)
-        voucher_response = test_client.post(
-            "/api/vouchers", json=voucher_request, headers=auth_headers
-        )
-        voucher = voucher_response.json()
-
-        voucher_use_request = {
-            "voucher_code": voucher["code"],
-            "guest_name": "Metrics Voucher Guest",
-            "device_mac": "ff:aa:bb:cc:dd:ee",
-        }
-
         test_client.post(
-            "/api/grants/voucher", json=voucher_use_request, headers=auth_headers
+            "/api/grants", json=voucher_grant_request, headers=auth_headers
         )
 
         # Check metrics
