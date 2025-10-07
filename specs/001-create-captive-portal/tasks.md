@@ -162,10 +162,10 @@ Task: "Contract test: POST /api/theme"
 **Status**: Planning - See `phase-3.7-tasks.md` for detailed analysis
 **Priority**: High impact → Low complexity first
 
-### Quick Wins - Phase 3.7.1 (Est: 2 hours)
-- [ ] T080: Add auth_headers to voucher API tests (6 failures fixed)
-- [ ] T081: Fix grant status determination logic (5 failures fixed)
-- [ ] T087: Fix audit date range filtering (1 failure fixed)
+### Quick Wins - Phase 3.7.1 (Est: 2 hours) ✅ COMPLETE
+- [x] T080: Add auth_headers to voucher API tests (6 failures fixed)
+- [x] T081: Fix grant status determination logic (5 failures fixed)
+- [x] T087: Fix audit date range filtering (1 failure fixed)
 
 ### Core Business Logic - Phase 3.7.2 (Est: 8 hours)
 - [ ] T082: Implement grant extension endpoint
