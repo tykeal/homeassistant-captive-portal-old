@@ -11,7 +11,9 @@ class TestVouchersAPI:
     """Contract tests for voucher management API."""
 
     @pytest.mark.asyncio
-    async def test_post_vouchers_create(self, test_client: TestClient) -> None:
+    async def test_post_vouchers_create(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test POST /api/vouchers for manual voucher creation."""
         voucher_request = {
             "duration_hours": 24,
@@ -20,7 +22,9 @@ class TestVouchersAPI:
             "max_uses": 1,
         }
 
-        response = test_client.post("/api/vouchers", json=voucher_request)
+        response = test_client.post(
+            "/api/vouchers", json=voucher_request, headers=auth_headers
+        )
 
         assert response.status_code == 201
         voucher_data = response.json()
@@ -53,7 +57,9 @@ class TestVouchersAPI:
         assert voucher_data["code"].isalnum()
 
     @pytest.mark.asyncio
-    async def test_post_vouchers_validation(self, test_client: TestClient) -> None:
+    async def test_post_vouchers_validation(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test POST /api/vouchers validation."""
         # Invalid duration (negative)
         invalid_request = {
@@ -62,7 +68,9 @@ class TestVouchersAPI:
             "created_by": "admin",
         }
 
-        response = test_client.post("/api/vouchers", json=invalid_request)
+        response = test_client.post(
+            "/api/vouchers", json=invalid_request, headers=auth_headers
+        )
         assert response.status_code == 422
 
         # Missing required fields
@@ -71,11 +79,15 @@ class TestVouchersAPI:
             # Missing description and created_by
         }
 
-        response = test_client.post("/api/vouchers", json=incomplete_request)
+        response = test_client.post(
+            "/api/vouchers", json=incomplete_request, headers=auth_headers
+        )
         assert response.status_code == 422
 
     @pytest.mark.asyncio
-    async def test_post_vouchers_unlimited_uses(self, test_client: TestClient) -> None:
+    async def test_post_vouchers_unlimited_uses(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test POST /api/vouchers with unlimited uses."""
         voucher_request = {
             "duration_hours": 4,
@@ -84,16 +96,20 @@ class TestVouchersAPI:
             "max_uses": -1,  # Unlimited
         }
 
-        response = test_client.post("/api/vouchers", json=voucher_request)
+        response = test_client.post(
+            "/api/vouchers", json=voucher_request, headers=auth_headers
+        )
 
         assert response.status_code == 201
         voucher_data = response.json()
         assert voucher_data["max_uses"] == -1
 
     @pytest.mark.asyncio
-    async def test_get_vouchers_list(self, test_client: TestClient) -> None:
+    async def test_get_vouchers_list(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test GET /api/vouchers for listing vouchers."""
-        response = test_client.get("/api/vouchers")
+        response = test_client.get("/api/vouchers", headers=auth_headers)
 
         assert response.status_code == 200
         vouchers_data = response.json()
@@ -104,7 +120,9 @@ class TestVouchersAPI:
         assert isinstance(vouchers_data["total"], int)
 
     @pytest.mark.asyncio
-    async def test_get_voucher_by_id(self, test_client: TestClient) -> None:
+    async def test_get_voucher_by_id(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test GET /api/vouchers/{id} for specific voucher."""
         # Create voucher first
         voucher_request = {
@@ -113,11 +131,13 @@ class TestVouchersAPI:
             "created_by": "admin",
         }
 
-        create_response = test_client.post("/api/vouchers", json=voucher_request)
+        create_response = test_client.post(
+            "/api/vouchers", json=voucher_request, headers=auth_headers
+        )
         voucher_id = create_response.json()["voucher_id"]
 
         # Get voucher by ID
-        response = test_client.get(f"/api/vouchers/{voucher_id}")
+        response = test_client.get(f"/api/vouchers/{voucher_id}", headers=auth_headers)
 
         assert response.status_code == 200
         voucher_data = response.json()
@@ -125,7 +145,9 @@ class TestVouchersAPI:
         assert voucher_data["description"] == "Test voucher"
 
     @pytest.mark.asyncio
-    async def test_delete_voucher(self, test_client: TestClient) -> None:
+    async def test_delete_voucher(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test DELETE /api/vouchers/{id} for voucher deactivation."""
         # Create voucher first
         voucher_request = {
@@ -134,16 +156,22 @@ class TestVouchersAPI:
             "created_by": "admin",
         }
 
-        create_response = test_client.post("/api/vouchers", json=voucher_request)
+        create_response = test_client.post(
+            "/api/vouchers", json=voucher_request, headers=auth_headers
+        )
         voucher_id = create_response.json()["voucher_id"]
 
         # Delete voucher
-        response = test_client.delete(f"/api/vouchers/{voucher_id}")
+        response = test_client.delete(
+            f"/api/vouchers/{voucher_id}", headers=auth_headers
+        )
 
         assert response.status_code == 200
 
         # Verify voucher is deactivated
-        get_response = test_client.get(f"/api/vouchers/{voucher_id}")
+        get_response = test_client.get(
+            f"/api/vouchers/{voucher_id}", headers=auth_headers
+        )
         assert get_response.status_code == 200
         voucher_data = get_response.json()
         assert voucher_data["status"] == "inactive"
