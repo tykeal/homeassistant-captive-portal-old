@@ -18,11 +18,11 @@ class TestGrantsAPI:
 
         Expected flow: pending → active transition.
         """
-        # Rental Control event data
+        # Rental Control event data with future dates
         grant_request = {
             "booking_id": "booking_123",
-            "start_time": "2025-01-01T15:00:00Z",
-            "end_time": "2025-01-01T18:00:00Z",
+            "start_time": "2026-01-01T15:00:00Z",
+            "end_time": "2026-01-01T18:00:00Z",
             "guest_name": "John Doe",
             "source": "rental_control",
         }
@@ -37,7 +37,7 @@ class TestGrantsAPI:
 
         grant_data = response.json()
         assert grant_data["booking_id"] == "booking_123"
-        assert grant_data["status"] == "pending"  # Initial state
+        assert grant_data["status"] == "pending"  # Initial state for future grants
         assert grant_data["guest_name"] == "John Doe"
         assert grant_data["source"] == "rental_control"
         assert "grant_id" in grant_data
@@ -66,7 +66,7 @@ class TestGrantsAPI:
         """
         grant_request = {
             "booking_id": "booking_124",
-            "start_time": "2024-12-01T15:00:00Z",  # Past time
+            "start_time": "2025-10-01T15:00:00Z",  # Past time
             "end_time": "2025-12-31T18:00:00Z",
             "guest_name": "Jane Smith",
             "source": "rental_control",
@@ -103,8 +103,8 @@ class TestGrantsAPI:
         """Test POST /api/grants with duplicate booking ID."""
         grant_request = {
             "booking_id": "booking_duplicate",
-            "start_time": "2025-01-01T15:00:00Z",
-            "end_time": "2025-01-01T18:00:00Z",
+            "start_time": "2026-01-01T15:00:00Z",
+            "end_time": "2026-01-01T18:00:00Z",
             "guest_name": "Test User",
             "source": "rental_control",
         }
@@ -129,8 +129,8 @@ class TestGrantsAPI:
         # First create a grant
         grant_request = {
             "booking_id": "booking_extend",
-            "start_time": "2024-12-01T15:00:00Z",
-            "end_time": "2025-01-01T18:00:00Z",
+            "start_time": "2025-10-01T15:00:00Z",
+            "end_time": "2026-01-01T18:00:00Z",
             "guest_name": "Extend User",
             "source": "rental_control",
         }
@@ -143,7 +143,7 @@ class TestGrantsAPI:
 
         # Extend the grant
         extend_request = {
-            "new_end_time": "2025-01-02T18:00:00Z",  # Extend by 1 day
+            "new_end_time": "2026-01-02T18:00:00Z",  # Extend by 1 day
             "reason": "Guest requested extension",
         }
 
@@ -154,7 +154,7 @@ class TestGrantsAPI:
         assert response.status_code == 200
         updated_grant = response.json()
         assert updated_grant["grant_id"] == grant_id
-        assert updated_grant["end_time"] == "2025-01-02T18:00:00Z"
+        assert updated_grant["end_time"] == "2026-01-02T18:00:00Z"
         assert "modified_at" in updated_grant
 
     @pytest.mark.asyncio
@@ -165,8 +165,8 @@ class TestGrantsAPI:
         # Create grant first
         grant_request = {
             "booking_id": "booking_extend_val",
-            "start_time": "2024-12-01T15:00:00Z",
-            "end_time": "2025-01-01T18:00:00Z",
+            "start_time": "2025-10-01T15:00:00Z",
+            "end_time": "2026-01-01T18:00:00Z",
             "guest_name": "Test User",
             "source": "rental_control",
         }
@@ -178,7 +178,7 @@ class TestGrantsAPI:
 
         # Try to extend to past time (should fail)
         invalid_extend = {
-            "new_end_time": "2024-11-01T18:00:00Z",  # Past time
+            "new_end_time": "2025-09-01T18:00:00Z",  # Past time
             "reason": "Invalid extension",
         }
 
@@ -193,7 +193,7 @@ class TestGrantsAPI:
     ) -> None:
         """Test PATCH /api/grants/{id}/extend for non-existent grant."""
         extend_request = {
-            "new_end_time": "2025-01-02T18:00:00Z",
+            "new_end_time": "2026-01-02T18:00:00Z",
             "reason": "Test extension",
         }
 
@@ -210,7 +210,7 @@ class TestGrantsAPI:
         # Create active grant first
         grant_request = {
             "booking_id": "booking_shorten",
-            "start_time": "2024-12-01T15:00:00Z",  # Past time = active
+            "start_time": "2025-10-01T15:00:00Z",  # Past time = active
             "end_time": "2025-12-31T18:00:00Z",
             "guest_name": "Shorten User",
             "source": "rental_control",
@@ -246,7 +246,7 @@ class TestGrantsAPI:
         # Create grant
         grant_request = {
             "booking_id": "booking_scheduled",
-            "start_time": "2024-12-01T15:00:00Z",
+            "start_time": "2025-10-01T15:00:00Z",
             "end_time": "2025-12-31T18:00:00Z",
             "guest_name": "Scheduled User",
             "source": "rental_control",
@@ -259,7 +259,7 @@ class TestGrantsAPI:
 
         # Schedule termination for specific time
         shorten_request = {
-            "new_end_time": "2025-01-15T12:00:00Z",
+            "new_end_time": "2026-01-15T12:00:00Z",
             "reason": "Early checkout",
             "immediate": False,
         }
@@ -272,5 +272,5 @@ class TestGrantsAPI:
 
         assert response.status_code == 200
         updated_grant = response.json()
-        assert updated_grant["end_time"] == "2025-01-15T12:00:00Z"
+        assert updated_grant["end_time"] == "2026-01-15T12:00:00Z"
         assert updated_grant["status"] == "active"  # Still active until end time
