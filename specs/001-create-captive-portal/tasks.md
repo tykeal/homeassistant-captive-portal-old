@@ -155,3 +155,43 @@ Task: "Contract test: POST /api/theme"
 - [x] No implementation tasks lack preceding failing tests
 - [x] Each parallel [P] task touches distinct files
 - [x] All test failures resolved (T062–T079) ✅ PHASE 3.6 COMPLETE
+- [ ] Remaining test failures addressed (T080–T103) 🔄 PHASE 3.7 IN PROGRESS
+
+## Phase 3.7: Remaining Test Failures (64 failures, 122 passing)
+
+**Status**: Planning - See `phase-3.7-tasks.md` for detailed analysis
+**Priority**: High impact → Low complexity first
+
+### Quick Wins - Phase 3.7.1 (Est: 2 hours)
+- [ ] T080: Add auth_headers to voucher API tests (6 failures fixed)
+- [ ] T081: Fix grant status determination logic (5 failures fixed)
+- [ ] T087: Fix audit date range filtering (1 failure fixed)
+
+### Core Business Logic - Phase 3.7.2 (Est: 8 hours)
+- [ ] T082: Implement grant extension endpoint
+- [ ] T083: Implement grant shortening/termination endpoint
+- [ ] T084: Implement theme GET endpoint
+- [ ] T085: Implement theme reset endpoint
+- [ ] T086: Implement theme preview endpoint
+- [ ] T090: Add guest_name to AccessGrant test fixtures
+- [ ] T093: Fix portal template rendering
+
+### Test Infrastructure - Phase 3.7.3 (Est: 4 hours)
+- [ ] T088: Fix metrics export test mocking strategy (8 failures)
+- [ ] T089: Fix log capture in queue scaling tests (4 failures)
+- [ ] T100: Fix voucher-grant coexistence test data (6 failures)
+
+### Advanced Features - Phase 3.7.4 (Est: 12 hours)
+- [ ] T091: Implement forced termination audit logging
+- [ ] T092: Implement splash page credential validation
+- [ ] T094: Implement expired credential reuse prevention
+- [ ] T095: Implement automatic expiry scheduler integration
+- [ ] T096: Complete rental control event ingestion flow
+- [ ] T097: Fix queue scaling integration tests (3 failures)
+- [ ] T098: Fix rate limiting stats endpoint
+- [ ] T099: Implement theme asset loader error handling (7 failures)
+- [ ] T101: Complete controller retry/backoff integration (6 failures)
+- [ ] T102: Fix burst provisioning performance tests (2 failures)
+- [ ] T103: Fix portal render performance tests (3 failures)
+
+**Total Estimated Effort**: ~26 hours for 100% test pass rate
