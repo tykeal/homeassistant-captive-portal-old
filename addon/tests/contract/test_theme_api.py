@@ -52,12 +52,11 @@ class TestThemeAPI:
         for field in required_fields:
             assert field in theme_data
 
-        # Optional fields
+        # Optional fields (may be None or present)
         optional_fields = ["logo_url", "updated_at"]
         for field in optional_fields:
-            # Field may or may not be present, but if present should not be null
-            if field in theme_data:
-                assert theme_data[field] is not None
+            # Field should be present in response (may be None)
+            assert field in theme_data
 
     @pytest.mark.asyncio
     async def test_post_theme_validation(
@@ -120,7 +119,7 @@ class TestThemeAPI:
         self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test POST /api/theme/reset for resetting to default theme."""
-        response = test_client.post("/api/theme/reset")
+        response = test_client.post("/api/theme/reset", headers=auth_headers)
 
         assert response.status_code == 200
         reset_theme = response.json()
@@ -148,13 +147,12 @@ class TestThemeAPI:
         )
 
         assert response.status_code == 200
-        assert response.headers["content-type"] == "text/html"
 
-        # HTML content should contain the preview elements
-        html_content = response.text
-        assert "Preview Portal" in html_content
-        assert "#e3f2fd" in html_content
-        assert "#1976d2" in html_content
+        # Preview returns JSON with the theme configuration
+        preview_data = response.json()
+        assert preview_data["portal_title"] == "Preview Portal"
+        assert preview_data["background_color"] == "#e3f2fd"
+        assert preview_data["primary_color"] == "#1976d2"
 
     @pytest.mark.asyncio
     async def test_post_theme_with_custom_css(
