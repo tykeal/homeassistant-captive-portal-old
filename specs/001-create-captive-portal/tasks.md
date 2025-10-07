@@ -173,7 +173,7 @@ Task: "Contract test: POST /api/theme"
 - [ ] T084: Implement theme GET endpoint
 - [ ] T085: Implement theme reset endpoint
 - [ ] T086: Implement theme preview endpoint
-- [ ] T090: Add guest_name to AccessGrant test fixtures
+- [x] T090: Add guest_name to AccessGrant test fixtures
 - [ ] T093: Fix portal template rendering
 
 ### Test Infrastructure - Phase 3.7.3 (Est: 4 hours)
