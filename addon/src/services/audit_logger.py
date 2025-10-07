@@ -21,6 +21,34 @@ class AuditLogger:
         """Initialize audit logger."""
         pass
 
+    def _extract_log_params(
+        self, context: dict[str, Any]
+    ) -> tuple[str | None, str | None, str | None, dict[str, Any]]:
+        """Extract log_event parameters from context and return remaining details.
+
+        Args:
+            context: Context dictionary that may contain session_id, ip_address,
+                    user_agent, and other fields
+
+        Returns:
+            Tuple of (session_id, ip_address, user_agent, extra_details)
+        """
+        session_id = context.get("session_id")
+        ip_address = context.get("ip_address")
+        user_agent = context.get("user_agent")
+
+        # Build extra details from remaining context fields
+        extra_details = {}
+        for key, value in context.items():
+            if key not in ("session_id", "ip_address", "user_agent"):
+                # Serialize datetime objects
+                if isinstance(value, datetime):
+                    extra_details[key] = value.isoformat()
+                else:
+                    extra_details[key] = value
+
+        return session_id, ip_address, user_agent, extra_details
+
     async def log_event(
         self,
         event_type: EventType,
@@ -97,13 +125,19 @@ class AuditLogger:
             "status": grant.status.value,
         }
 
+        session_id, ip_address, user_agent, extra_details = self._extract_log_params(
+            context
+        )
+
         return await self.log_event(
             event_type=EventType.GRANT_CREATED,
             entity_type="grant",
             entity_id=grant.grant_id,
             details=details,
             user_id=user_id,
-            **context,
+            session_id=session_id,
+            ip_address=ip_address,
+            user_agent=user_agent,
         )
 
     async def log_grant_activated(
@@ -129,18 +163,25 @@ class AuditLogger:
             "controller_voucher_id": controller_voucher_id,
         }
 
+        session_id, ip_address, user_agent, extra_details = self._extract_log_params(
+            context
+        )
+
         return await self.log_event(
             event_type=EventType.GRANT_ACTIVATED,
             entity_type="grant",
             entity_id=grant.grant_id,
             details=details,
-            **context,
+            session_id=session_id,
+            ip_address=ip_address,
+            user_agent=user_agent,
         )
 
     async def log_grant_extended(
         self,
         grant: AccessGrant,
         old_end_time: datetime,
+        new_end_time: datetime,
         reason: str,
         user_id: str | None = None,
         **context,
@@ -150,6 +191,7 @@ class AuditLogger:
         Args:
             grant: Extended grant
             old_end_time: Previous end time
+            new_end_time: New end time
             reason: Reason for extension
             user_id: User who extended the grant
             **context: Additional context
@@ -157,6 +199,10 @@ class AuditLogger:
         Returns:
             Created event log entry
         """
+        session_id, ip_address, user_agent, extra_details = self._extract_log_params(
+            context
+        )
+
         details = {
             "grant_id": grant.grant_id,
             "booking_id": grant.booking_id,
@@ -164,6 +210,7 @@ class AuditLogger:
             "new_end_time": grant.end_time.isoformat(),
             "reason": reason,
             "guest_name": grant.guest_name,
+            **extra_details,
         }
 
         return await self.log_event(
@@ -172,7 +219,9 @@ class AuditLogger:
             entity_id=grant.grant_id,
             details=details,
             user_id=user_id,
-            **context,
+            session_id=session_id,
+            ip_address=ip_address,
+            user_agent=user_agent,
         )
 
     async def log_grant_shortened(
@@ -197,6 +246,10 @@ class AuditLogger:
         Returns:
             Created event log entry
         """
+        session_id, ip_address, user_agent, extra_details = self._extract_log_params(
+            context
+        )
+
         details = {
             "grant_id": grant.grant_id,
             "booking_id": grant.booking_id,
@@ -205,6 +258,7 @@ class AuditLogger:
             "reason": reason,
             "immediate": immediate,
             "guest_name": grant.guest_name,
+            **extra_details,
         }
 
         return await self.log_event(
@@ -213,7 +267,9 @@ class AuditLogger:
             entity_id=grant.grant_id,
             details=details,
             user_id=user_id,
-            **context,
+            session_id=session_id,
+            ip_address=ip_address,
+            user_agent=user_agent,
         )
 
     async def log_grant_revoked(
@@ -239,13 +295,19 @@ class AuditLogger:
             "was_active": grant.status.value,
         }
 
+        session_id, ip_address, user_agent, extra_details = self._extract_log_params(
+            context
+        )
+
         return await self.log_event(
             event_type=EventType.GRANT_REVOKED,
             entity_type="grant",
             entity_id=grant.grant_id,
             details=details,
             user_id=user_id,
-            **context,
+            session_id=session_id,
+            ip_address=ip_address,
+            user_agent=user_agent,
         )
 
     async def log_grant_expired(self, grant: AccessGrant, **context) -> EventLogEntry:
@@ -266,13 +328,19 @@ class AuditLogger:
             "was_active": grant.status.value,
         }
 
+        session_id, ip_address, user_agent, extra_details = self._extract_log_params(
+            context
+        )
+
         return await self.log_event(
             event_type=EventType.GRANT_EXPIRED,
             entity_type="grant",
             entity_id=grant.grant_id,
             details=details,
             user_id="system",
-            **context,
+            session_id=session_id,
+            ip_address=ip_address,
+            user_agent=user_agent,
         )
 
     async def log_voucher_created(
@@ -297,13 +365,19 @@ class AuditLogger:
             "created_by": voucher.created_by,
         }
 
+        session_id, ip_address, user_agent, extra_details = self._extract_log_params(
+            context
+        )
+
         return await self.log_event(
             event_type=EventType.VOUCHER_CREATED,
             entity_type="voucher",
             entity_id=voucher.voucher_id,
             details=details,
             user_id=user_id,
-            **context,
+            session_id=session_id,
+            ip_address=ip_address,
+            user_agent=user_agent,
         )
 
     async def log_voucher_used(
@@ -329,12 +403,18 @@ class AuditLogger:
             "max_uses": voucher.max_uses,
         }
 
+        session_id, ip_address, user_agent, extra_details = self._extract_log_params(
+            context
+        )
+
         return await self.log_event(
             event_type=EventType.VOUCHER_USED,
             entity_type="voucher",
             entity_id=voucher.voucher_id,
             details=details,
-            **context,
+            session_id=session_id,
+            ip_address=ip_address,
+            user_agent=user_agent,
         )
 
     async def log_voucher_deactivated(
@@ -359,13 +439,19 @@ class AuditLogger:
             "max_uses": voucher.max_uses,
         }
 
+        session_id, ip_address, user_agent, extra_details = self._extract_log_params(
+            context
+        )
+
         return await self.log_event(
             event_type=EventType.VOUCHER_DEACTIVATED,
             entity_type="voucher",
             entity_id=voucher.voucher_id,
             details=details,
             user_id=user_id,
-            **context,
+            session_id=session_id,
+            ip_address=ip_address,
+            user_agent=user_agent,
         )
 
     async def log_portal_access(
@@ -383,11 +469,17 @@ class AuditLogger:
         """
         access_details = {"result": result, **(details or {})}
 
+        session_id, ip_address, user_agent, extra_details = self._extract_log_params(
+            context
+        )
+
         return await self.log_event(
             event_type=EventType.PORTAL_ACCESS,
             entity_type="portal",
             details=access_details,
-            **context,
+            session_id=session_id,
+            ip_address=ip_address,
+            user_agent=user_agent,
         )
 
     async def log_theme_updated(
@@ -410,12 +502,18 @@ class AuditLogger:
         """
         details = {"old_theme": old_theme, "new_theme": new_theme}
 
+        session_id, ip_address, user_agent, extra_details = self._extract_log_params(
+            context
+        )
+
         return await self.log_event(
             event_type=EventType.THEME_UPDATED,
             entity_type="theme",
             details=details,
             user_id=user_id,
-            **context,
+            session_id=session_id,
+            ip_address=ip_address,
+            user_agent=user_agent,
         )
 
     async def log_controller_error(
@@ -434,13 +532,19 @@ class AuditLogger:
         """
         details = {"operation": operation, "error": error, "grant_id": grant_id}
 
+        session_id, ip_address, user_agent, extra_details = self._extract_log_params(
+            context
+        )
+
         return await self.log_event(
             event_type=EventType.CONTROLLER_ERROR,
             entity_type="controller",
             entity_id=grant_id,
             details=details,
             user_id="system",
-            **context,
+            session_id=session_id,
+            ip_address=ip_address,
+            user_agent=user_agent,
         )
 
     async def get_events(

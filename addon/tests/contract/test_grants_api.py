@@ -247,7 +247,7 @@ class TestGrantsAPI:
         grant_request = {
             "booking_id": "booking_scheduled",
             "start_time": "2025-10-01T15:00:00Z",
-            "end_time": "2025-12-31T18:00:00Z",
+            "end_time": "2026-12-31T18:00:00Z",  # Long future grant
             "guest_name": "Scheduled User",
             "source": "rental_control",
         }
@@ -257,9 +257,9 @@ class TestGrantsAPI:
         )
         grant_id = create_response.json()["grant_id"]
 
-        # Schedule termination for specific time
+        # Schedule termination for specific time (earlier than original end)
         shorten_request = {
-            "new_end_time": "2026-01-15T12:00:00Z",
+            "new_end_time": "2026-01-15T12:00:00Z",  # Shorten to earlier date
             "reason": "Early checkout",
             "immediate": False,
         }
