@@ -179,7 +179,7 @@ Task: "Contract test: POST /api/theme"
 ### Test Infrastructure - Phase 3.7.3 (Est: 4 hours)
 - [ ] T088: Fix metrics export test mocking strategy (8 failures)
 - [x] T089: Fix log capture in queue scaling tests (4 failures)
-- [ ] T100: Fix voucher-grant coexistence test data (6 failures)
+- [x] T100: Fix voucher-grant coexistence test data (6 failures)
 
 ### Advanced Features - Phase 3.7.4 (Est: 12 hours)
 - [ ] T091: Implement forced termination audit logging
