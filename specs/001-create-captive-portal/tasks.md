@@ -184,7 +184,7 @@ Task: "Contract test: POST /api/theme"
 ### Advanced Features - Phase 3.7.4 (Est: 12 hours)
 - [x] T091: Implement forced termination audit logging
 - [x] T092: Implement splash page credential validation
-- [ ] T094: Implement expired credential reuse prevention
+- [x] T094: Implement expired credential reuse prevention
 - [x] T095: Implement automatic expiry scheduler integration
 - [x] T096: Complete rental control event ingestion flow
 - [ ] T097: Fix queue scaling integration tests (3 failures)
