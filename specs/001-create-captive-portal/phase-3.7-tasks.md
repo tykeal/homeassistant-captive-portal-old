@@ -59,17 +59,17 @@ After completing Phase 3.6 infrastructure fixes, 64 test failures remain. These 
 
 **Priority: Medium** - Feature completion
 
-- [ ] T084: Implement theme GET endpoint
+- [x] T084: Implement theme GET endpoint
   - Issue: Returns empty/default data
   - File: `src/api/theme.py`
   - Fix: Wire theme_manager.get_current_theme()
 
-- [ ] T085: Implement theme reset endpoint
+- [x] T085: Implement theme reset endpoint
   - Issue: Not implemented
   - File: `src/api/theme.py`
   - Fix: Add reset_to_default functionality
 
-- [ ] T086: Implement theme preview endpoint
+- [x] T086: Implement theme preview endpoint
   - Issue: Not implemented
   - File: `src/api/theme.py`
   - Fix: Add preview generation logic
@@ -78,7 +78,7 @@ After completing Phase 3.6 infrastructure fixes, 64 test failures remain. These 
 
 **Priority: Low** - Edge case
 
-- [ ] T087: Fix audit date range filtering
+- [x] T087: Fix audit date range filtering
   - Issue: Date range query not filtering correctly
   - File: `src/services/audit_logger.py`
   - Fix: Verify datetime parsing and comparison logic
