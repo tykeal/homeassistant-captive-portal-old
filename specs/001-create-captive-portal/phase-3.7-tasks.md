@@ -30,7 +30,7 @@ After completing Phase 3.6 infrastructure fixes, 64 test failures remain. These 
 
 **Priority: High** - Quick wins, similar to Phase 3.6 fixes
 
-- [ ] T080: Add auth_headers to test_vouchers_api.py
+- [x] T080: Add auth_headers to test_vouchers_api.py
   - File: `tests/contract/test_vouchers_api.py`
   - Fix: Apply auth_headers fixture to all 6 test methods
   - Similar to: T063-T065
@@ -39,7 +39,7 @@ After completing Phase 3.6 infrastructure fixes, 64 test failures remain. These 
 
 **Priority: High** - Core functionality
 
-- [ ] T081: Fix grant status determination logic
+- [x] T081: Fix grant status determination logic
   - Issue: Grants becoming 'active' when should be 'pending'
   - Root cause: Start time comparison using past test dates
   - Fix: Update test dates to future OR fix status logic in grant_manager.py
