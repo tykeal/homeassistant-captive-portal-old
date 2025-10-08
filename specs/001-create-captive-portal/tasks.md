@@ -182,7 +182,7 @@ Task: "Contract test: POST /api/theme"
 - [x] T100: Fix voucher-grant coexistence test data (6 failures)
 
 ### Advanced Features - Phase 3.7.4 (Est: 12 hours)
-- [ ] T091: Implement forced termination audit logging
+- [x] T091: Implement forced termination audit logging
 - [x] T092: Implement splash page credential validation
 - [ ] T094: Implement expired credential reuse prevention
 - [x] T095: Implement automatic expiry scheduler integration
