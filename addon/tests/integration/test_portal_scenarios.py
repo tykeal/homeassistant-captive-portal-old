@@ -217,10 +217,15 @@ class TestRentalControlEventIngestion:
     ) -> None:
         """Test Rental Control event ingestion creates pending grant then activates at start (T018D)."""
         # Simulate future Rental Control event
+        from datetime import UTC, datetime, timedelta
+
+        future_start = datetime.now(UTC) + timedelta(days=30)
+        future_end = future_start + timedelta(hours=3)
+
         future_event = {
             "booking_id": "future_booking_001",
-            "start_time": "2025-06-01T15:00:00Z",  # Future
-            "end_time": "2025-06-01T18:00:00Z",
+            "start_time": future_start.isoformat().replace("+00:00", "Z"),
+            "end_time": future_end.isoformat().replace("+00:00", "Z"),
             "guest_name": "Future Guest",
             "source": "rental_control",
         }
@@ -234,16 +239,20 @@ class TestRentalControlEventIngestion:
         grant_data = response.json()
         assert grant_data["status"] == "pending"  # Should be pending until start time
 
-        # Simulate time passing to start time (or trigger activation)
+        # Verify the grant will activate at start time (manual activation should fail for future grants)
         activation_response = test_client.post(
             f"/api/grants/{grant_data['grant_id']}/activate", headers=auth_headers
         )
 
-        if activation_response.status_code == 200:
-            # If manual activation supported
-            updated_grant = activation_response.json()
-            assert updated_grant["status"] == "active"
-        else:
-            # If only automatic activation, check that the system would activate at start time
-            # (This would typically be tested with time mocking in a real implementation)
-            assert grant_data["start_time"] == "2025-06-01T15:00:00Z"
+        # Activation should fail because start time is in the future
+        assert activation_response.status_code == 404
+        error_data = activation_response.json()
+        assert "start time" in error_data["detail"].lower()
+
+        # Verify grant remains pending
+        status_response = test_client.get(
+            f"/api/grants/{grant_data['grant_id']}", headers=auth_headers
+        )
+        current_grant = status_response.json()
+        assert current_grant["status"] == "pending"
+        assert current_grant["start_time"] == future_event["start_time"]
