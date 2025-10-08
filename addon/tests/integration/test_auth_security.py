@@ -21,12 +21,20 @@ class TestAuthenticationRequired:
     @pytest.fixture(autouse=True)
     def setup_auth_mode(self, monkeypatch):
         """Set up API key auth mode for these tests."""
+        # Save original auth service
+        original_auth_service = auth._auth_service
+
         # Set API key for testing
         monkeypatch.setenv("CAPTIVE_PORTAL_API_KEY", "test-secret-key-12345")
         # Clear supervisor token to avoid conflicts
         monkeypatch.delenv("SUPERVISOR_TOKEN", raising=False)
         # Reset auth service singleton to pick up new environment
         auth._auth_service = None
+
+        yield
+
+        # Restore original auth service
+        auth._auth_service = original_auth_service
 
     @pytest.fixture
     def auth_client(self):
@@ -99,10 +107,18 @@ class TestAuthDisabledMode:
     @pytest.fixture(autouse=True)
     def setup_no_auth(self, monkeypatch):
         """Clear all auth credentials."""
+        # Save original auth service
+        original_auth_service = auth._auth_service
+
         monkeypatch.delenv("SUPERVISOR_TOKEN", raising=False)
         monkeypatch.delenv("CAPTIVE_PORTAL_API_KEY", raising=False)
         # Reset auth service
         auth._auth_service = None
+
+        yield
+
+        # Restore original auth service
+        auth._auth_service = original_auth_service
 
     @pytest.fixture
     def noauth_client(self):
@@ -119,6 +135,13 @@ class TestAuthDisabledMode:
 
 class TestAuthModes:
     """Test authentication mode detection."""
+
+    @pytest.fixture(autouse=True)
+    def cleanup_auth_service(self):
+        """Clean up auth service after each test."""
+        original_auth_service = auth._auth_service
+        yield
+        auth._auth_service = original_auth_service
 
     def test_supervisor_mode_when_token_present(self, monkeypatch):
         """Test supervisor mode is selected when SUPERVISOR_TOKEN is set."""
@@ -154,9 +177,17 @@ class TestAuthorizationHeaders:
     @pytest.fixture(autouse=True)
     def setup_auth(self, monkeypatch):
         """Enable API key auth."""
+        # Save original auth service
+        original_auth_service = auth._auth_service
+
         monkeypatch.setenv("CAPTIVE_PORTAL_API_KEY", "valid-key")
         monkeypatch.delenv("SUPERVISOR_TOKEN", raising=False)
         auth._auth_service = None
+
+        yield
+
+        # Restore original auth service
+        auth._auth_service = original_auth_service
 
     @pytest.fixture
     def auth_client(self):
