@@ -82,7 +82,18 @@ def test_config() -> AddonConfig:
 def temp_database() -> Generator[str]:
     """Provide temporary database for testing."""
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
-        yield f.name
+        db_path = f.name
+
+    yield db_path
+
+    # Cleanup: delete the database file after the test
+    import os
+
+    if os.path.exists(db_path):
+        try:
+            os.remove(db_path)
+        except Exception:
+            pass  # Ignore cleanup errors
 
 
 @pytest.fixture
@@ -163,7 +174,14 @@ def test_client(
         with TestClient(app) as client:
             yield client
 
-    # Cleanup: reset config and database manager after test
+    # Cleanup: close database connections and reset state
+    if db_module._db_manager is not None:
+        # Close database connections properly
+        cleanup_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(cleanup_loop)
+        cleanup_loop.run_until_complete(db_module._db_manager.close())
+        cleanup_loop.close()
+
     config_module.config = None
     db_module._db_manager = None
     if "DB_PATH" in os.environ:
