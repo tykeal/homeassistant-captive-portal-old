@@ -198,3 +198,41 @@ Task: "Contract test: POST /api/theme"
 - [x] T103: Fix portal render performance tests (3 failures)
 
 **Total Estimated Effort**: ~26 hours for 100% test pass rate
+
+## Phase 3.8: Final Test Remediation (28 failures remaining)
+
+**Status**: In Progress
+**Current**: 28 test failures, 158 passing (down from 32 failures)
+**Goal**: Achieve 100% test pass rate
+
+### Authentication Fixes - Phase 3.8.1 (Quick Win - 13 failures)
+- [ ] T104: Add auth_headers to theme fallback integration tests (7 failures)
+- [ ] T105: Add auth_headers to voucher-grant coexistence tests (6 failures)
+
+### Controller Integration - Phase 3.8.2 (5 failures)
+- [ ] T106: Fix controller retry/backoff test mocking strategy
+- [ ] T107: Fix controller recovery pending-to-active transition
+- [ ] T108: Fix controller permanent failure handling logic
+- [ ] T109: Fix controller failure metrics collection
+
+### Portal Integration - Phase 3.8.3 (5 failures)
+- [ ] T110: Fix forced termination audit logging integration
+- [ ] T111: Fix splash page credential validation flow
+- [ ] T112: Fix expired credential reuse prevention
+- [ ] T113: Fix automatic expiry scheduler grace period
+- [ ] T114: Fix rental control event ingestion activation
+
+### Queue & Shutdown - Phase 3.8.4 (5 failures)
+- [ ] T115: Fix queue scaling burst grant creation test
+- [ ] T116: Fix queue scaling metrics test
+- [ ] T117: Fix queue scaling sustained load test
+- [ ] T118: Fix graceful shutdown completed work preservation
+- [ ] T119: Fix graceful shutdown partial completion
+
+### Final Validation - Phase 3.8.5
+- [ ] T120: Run full test suite and verify 100% pass rate
+- [ ] T121: Update coverage report and ensure >80% coverage
+- [ ] T122: Review all test output for warnings/deprecations
+- [ ] T123: Mark Phase 3.8 complete in tasks.md
+
+**Total Estimated Effort**: ~12 hours for 100% test pass rate

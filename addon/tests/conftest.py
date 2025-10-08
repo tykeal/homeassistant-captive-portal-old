@@ -7,12 +7,13 @@ import asyncio
 import os
 import tempfile
 from collections.abc import Generator
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
 from src.app import create_app
+from src.controllers.base import ProvisionResult
 from src.core.config import AddonConfig, ControllerConfig, ThemeConfig
 
 
@@ -84,12 +85,31 @@ def temp_database() -> Generator[str]:
 def mock_controller() -> MagicMock:
     """Provide mock controller for testing."""
     controller = MagicMock()
-    controller.provision_grant.return_value = {
-        "status": "success",
-        "voucher_id": "test123",
-    }
-    controller.revoke_grant.return_value = {"status": "success"}
-    controller.extend_grant.return_value = {"status": "success"}
+
+    # Return ProvisionResult objects instead of dicts
+    controller.provision_grant = AsyncMock(
+        return_value=ProvisionResult(
+            success=True,
+            controller_voucher_id="test_voucher_123",
+            message="Provisioned successfully",
+        )
+    )
+
+    controller.revoke_grant = AsyncMock(
+        return_value=ProvisionResult(
+            success=True,
+            message="Revoked successfully",
+        )
+    )
+
+    controller.extend_grant = AsyncMock(
+        return_value=ProvisionResult(
+            success=True,
+            controller_voucher_id="test_voucher_123",
+            message="Extended successfully",
+        )
+    )
+
     return controller
 
 
@@ -103,7 +123,9 @@ def auth_headers() -> dict[str, str]:
 
 
 @pytest.fixture
-def test_client(test_config: AddonConfig, temp_database: str) -> Generator[TestClient]:
+def test_client(
+    test_config: AddonConfig, temp_database: str, mock_controller: MagicMock
+) -> Generator[TestClient]:
     """Provide FastAPI test client with actual app."""
     # Set global config for tests
     import src.core.config as config_module
@@ -120,12 +142,14 @@ def test_client(test_config: AddonConfig, temp_database: str) -> Generator[TestC
     # Reset database manager to pick up new DB_PATH
     db_module._db_manager = None
 
-    # Create the FastAPI app
-    app = create_app()
+    # Patch the controller factory to return our mock controller
+    with patch("src.controllers.factory.get_controller", return_value=mock_controller):
+        # Create the FastAPI app
+        app = create_app()
 
-    # Create test client
-    with TestClient(app) as client:
-        yield client
+        # Create test client
+        with TestClient(app) as client:
+            yield client
 
     # Cleanup: reset config and database manager after test
     config_module.config = None

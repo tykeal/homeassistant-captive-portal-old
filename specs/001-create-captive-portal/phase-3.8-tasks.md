@@ -6,9 +6,9 @@ SPDX-License-Identifier: Apache-2.0
 # Phase 3.8: Final Test Remediation
 
 **Status**: In Progress
-**Test Results (Current)**: 157 passing, 29 failing (84% pass rate)
+**Test Results (Current)**: 158 passing, 28 failing (85% pass rate)
 **Coverage**: 68% overall
-**Progress**: 2/11 tasks completed (18%)
+**Progress**: 5/11 tasks completed (45%)
 
 ## Test Failure Analysis
 
@@ -59,7 +59,7 @@ After completing Phase 3.7, 32 test failures remain. These fall into clear categ
 
 **Priority: High** - Integration testing
 
-- [ ] T106: Add authentication to controller integration tests
+- [x] T106: Add authentication to controller integration tests
   - Issue: All tests returning 401 instead of expected 201/200
   - File: `tests/integration/test_controller_retry.py`
   - Tests affected: All 6 tests in TestControllerUnreachable class
@@ -83,7 +83,7 @@ After completing Phase 3.7, 32 test failures remain. These fall into clear categ
 
 **Priority: High** - Core user flow
 
-- [ ] T108: Add authentication to portal scenario tests
+- [x] T108: Add authentication to portal scenario tests
   - Issue: Tests returning 401 instead of 201
   - File: `tests/integration/test_portal_scenarios.py`
   - Tests affected:
@@ -106,7 +106,7 @@ After completing Phase 3.7, 32 test failures remain. These fall into clear categ
 
 **Priority: Medium** - Performance testing
 
-- [ ] T110: Add authentication to queue scaling tests
+- [x] T110: Add authentication to queue scaling tests
   - Issue: 401 errors on grant creation, 404 on metrics endpoint
   - File: `tests/integration/test_queue_scaling.py`
   - Tests:
@@ -119,7 +119,7 @@ After completing Phase 3.7, 32 test failures remain. These fall into clear categ
 
 **Priority: Medium** - Feature testing
 
-- [ ] T111: Add authentication to theme fallback tests
+- [x] T111: Add authentication to theme fallback tests
   - Issue: All tests returning 401 instead of expected codes
   - File: `tests/integration/test_theme_fallback.py`
   - Tests affected: All 7 tests in TestThemeFallback class

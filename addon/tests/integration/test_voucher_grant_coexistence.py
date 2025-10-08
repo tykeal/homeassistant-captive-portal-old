@@ -3,6 +3,8 @@
 
 """Integration tests for voucher and Rental Control derived grant coexistence."""
 
+from datetime import UTC, datetime, timedelta
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -15,11 +17,13 @@ class TestVoucherGrantCoexistence:
         self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test that voucher-based grants and Rental Control grants can coexist."""
-        # Create a Rental Control grant
+        now = datetime.now(UTC)
+
+        # Create a Rental Control grant (currently active)
         rental_grant_request = {
             "booking_id": "coexist_rental_001",
-            "start_time": "2024-12-01T15:00:00Z",
-            "end_time": "2025-01-15T18:00:00Z",
+            "start_time": (now - timedelta(hours=1)).isoformat(),
+            "end_time": (now + timedelta(days=30)).isoformat(),
             "guest_name": "Rental Guest",
             "source": "rental_control",
         }
@@ -30,11 +34,11 @@ class TestVoucherGrantCoexistence:
         assert rental_response.status_code == 201
         rental_grant = rental_response.json()
 
-        # Create a voucher-sourced grant (simulating voucher redemption)
+        # Create a voucher-sourced grant (simulating voucher redemption, currently active)
         voucher_grant_request = {
             "booking_id": "voucher_guest_001",
-            "start_time": "2024-12-01T16:00:00Z",
-            "end_time": "2024-12-02T16:00:00Z",  # 24 hours
+            "start_time": (now - timedelta(minutes=30)).isoformat(),
+            "end_time": (now + timedelta(days=1)).isoformat(),
             "guest_name": "Voucher Guest",
             "device_mac": "aa:bb:cc:dd:ee:ff",
             "source": "voucher",
