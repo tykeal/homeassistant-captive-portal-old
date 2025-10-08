@@ -9,8 +9,8 @@ SPDX-License-Identifier: Apache-2.0
 **Test Results (Final)**: 155 passing, 31 failing (83% pass rate)
 **Test Results (After T099)**: 154 passing, 32 failing (83% pass rate)
 **Test Results (Initial)**: 122 passing, 64 failing (66% pass rate)
-**Coverage**: 41% overall
-**Progress**: 20/22 tasks completed (91%)
+**Coverage**: 44% overall
+**Progress**: 21/22 tasks completed (95%)
 
 **Improvement**: +33 passing tests, -33 failing tests from start of Phase 3.7
 
@@ -194,10 +194,12 @@ After completing Phase 3.6 infrastructure fixes, 64 test failures remain. These 
 
 **Priority: Low** - Resilience testing
 
-- [ ] T101: Complete controller retry/backoff integration
+- [x] T101: Complete controller retry/backoff integration
   - Issue: Controller adapter not fully wired into tests
   - File: `tests/integration/test_controller_retry.py`
   - Fix: Mock controller properly in integration tests
+  - Status: Core functionality implemented - grants stay pending on provision failure
+  - Note: Tests pass but are slow due to retry delays (60+ seconds per test)
 
 ### Category 15: Performance Tests (5 failures)
 
