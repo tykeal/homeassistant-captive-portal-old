@@ -12,7 +12,7 @@ class TestForcedTerminationLogging:
 
     @pytest.mark.asyncio
     async def test_forced_termination_audit_logging(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test forced termination logging (T018)."""
         # Create active grant
@@ -24,7 +24,9 @@ class TestForcedTerminationLogging:
             "source": "rental_control",
         }
 
-        response = test_client.post("/api/grants", json=grant_request)
+        response = test_client.post(
+            "/api/grants", json=grant_request, headers=auth_headers
+        )
         assert response.status_code == 201
         grant_id = response.json()["grant_id"]
 
@@ -35,12 +37,14 @@ class TestForcedTerminationLogging:
         }
 
         term_response = test_client.patch(
-            f"/api/grants/{grant_id}/shorten", json=terminate_request
+            f"/api/grants/{grant_id}/shorten",
+            json=terminate_request,
+            headers=auth_headers,
         )
         assert term_response.status_code == 200
 
         # Check audit logs
-        audit_response = test_client.get("/api/audit")
+        audit_response = test_client.get("/api/audit", headers=auth_headers)
         audit_events = audit_response.json()["events"]
 
         # Find termination event
@@ -59,7 +63,7 @@ class TestSplashPageCredentialValidation:
 
     @pytest.mark.asyncio
     async def test_splash_page_credential_success(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test splash page credential validation success (T018A)."""
         # Create active voucher
@@ -69,7 +73,9 @@ class TestSplashPageCredentialValidation:
             "created_by": "admin",
         }
 
-        voucher_response = test_client.post("/api/vouchers", json=voucher_request)
+        voucher_response = test_client.post(
+            "/api/vouchers", json=voucher_request, headers=auth_headers
+        )
         voucher = voucher_response.json()
 
         # Test successful credential submission
@@ -87,7 +93,7 @@ class TestSplashPageCredentialValidation:
 
     @pytest.mark.asyncio
     async def test_splash_page_credential_failure(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test splash page credential validation failure (T018A)."""
         # Test invalid voucher code
@@ -109,7 +115,7 @@ class TestExpiredCredentialReuse:
 
     @pytest.mark.asyncio
     async def test_expired_credential_reuse_denied(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test expired credential reuse denied (T018B)."""
         # Create expired voucher (short duration)
@@ -119,7 +125,9 @@ class TestExpiredCredentialReuse:
             "created_by": "admin",
         }
 
-        voucher_response = test_client.post("/api/vouchers", json=voucher_request)
+        voucher_response = test_client.post(
+            "/api/vouchers", json=voucher_request, headers=auth_headers
+        )
         voucher = voucher_response.json()
 
         # Use the voucher initially
@@ -133,7 +141,9 @@ class TestExpiredCredentialReuse:
         grant_id = initial_response.json()["grant_id"]
 
         # Manually expire the grant
-        expire_response = test_client.patch(f"/api/grants/{grant_id}/expire")
+        expire_response = test_client.patch(
+            f"/api/grants/{grant_id}/expire", headers=auth_headers
+        )
         assert expire_response.status_code == 200
 
         # Try to reuse the same voucher code after expiry
@@ -158,7 +168,7 @@ class TestAutomaticExpiryScheduler:
 
     @pytest.mark.asyncio
     async def test_automatic_expiry_scheduler_grace_period(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test automatic expiry scheduler revokes grants after grace period (T018C)."""
         # Create grant that should be expired
@@ -170,22 +180,28 @@ class TestAutomaticExpiryScheduler:
             "source": "rental_control",
         }
 
-        response = test_client.post("/api/grants", json=expired_grant_request)
+        response = test_client.post(
+            "/api/grants", json=expired_grant_request, headers=auth_headers
+        )
         assert response.status_code == 201
         grant_id = response.json()["grant_id"]
 
         # Trigger expiry processing
-        expiry_response = test_client.post("/api/system/process-expiry")
+        expiry_response = test_client.post(
+            "/api/system/process-expiry", headers=auth_headers
+        )
         assert expiry_response.status_code == 200
 
         # Check grant status
-        status_response = test_client.get(f"/api/grants/{grant_id}")
+        status_response = test_client.get(
+            f"/api/grants/{grant_id}", headers=auth_headers
+        )
         grant_data = status_response.json()
 
         assert grant_data["status"] == "expired"
 
         # Check audit log for expiry event
-        audit_response = test_client.get("/api/audit")
+        audit_response = test_client.get("/api/audit", headers=auth_headers)
         audit_events = audit_response.json()["events"]
 
         expiry_events = [e for e in audit_events if e["event_type"] == "grant_expired"]
@@ -197,7 +213,7 @@ class TestRentalControlEventIngestion:
 
     @pytest.mark.asyncio
     async def test_rental_control_event_creates_pending_then_activates(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test Rental Control event ingestion creates pending grant then activates at start (T018D)."""
         # Simulate future Rental Control event
@@ -210,7 +226,9 @@ class TestRentalControlEventIngestion:
         }
 
         # Create grant from future event
-        response = test_client.post("/api/grants", json=future_event)
+        response = test_client.post(
+            "/api/grants", json=future_event, headers=auth_headers
+        )
         assert response.status_code == 201
 
         grant_data = response.json()
@@ -218,7 +236,7 @@ class TestRentalControlEventIngestion:
 
         # Simulate time passing to start time (or trigger activation)
         activation_response = test_client.post(
-            f"/api/grants/{grant_data['grant_id']}/activate"
+            f"/api/grants/{grant_data['grant_id']}/activate", headers=auth_headers
         )
 
         if activation_response.status_code == 200:
