@@ -27,8 +27,8 @@ class TestControllerUnreachable:
 
             grant_request = {
                 "booking_id": "unreachable_test_001",
-                "start_time": "2024-12-01T15:00:00Z",  # Past time - would normally activate
-                "end_time": "2025-01-15T18:00:00Z",
+                "start_time": "2025-01-01T00:00:00Z",  # Past time - would normally activate
+                "end_time": "2026-12-31T23:59:59Z",  # Future time - grant is valid
                 "guest_name": "Unreachable Test User",
                 "source": "rental_control",
             }
@@ -67,8 +67,8 @@ class TestControllerUnreachable:
 
             grant_request = {
                 "booking_id": "retry_test_001",
-                "start_time": "2024-12-01T15:00:00Z",
-                "end_time": "2025-01-15T18:00:00Z",
+                "start_time": "2025-01-01T00:00:00Z",
+                "end_time": "2026-12-31T23:59:59Z",
                 "guest_name": "Retry Test User",
                 "source": "rental_control",
             }
@@ -125,8 +125,8 @@ class TestControllerUnreachable:
 
             grant_request = {
                 "booking_id": "recovery_test_001",
-                "start_time": "2024-12-01T15:00:00Z",  # Past time
-                "end_time": "2025-01-15T18:00:00Z",
+                "start_time": "2025-01-01T00:00:00Z",  # Past time
+                "end_time": "2026-12-31T23:59:59Z",
                 "guest_name": "Recovery Test User",
                 "source": "rental_control",
             }
@@ -168,8 +168,8 @@ class TestControllerUnreachable:
 
             grant_request = {
                 "booking_id": "permanent_failure_001",
-                "start_time": "2024-12-01T15:00:00Z",
-                "end_time": "2025-01-15T18:00:00Z",
+                "start_time": "2025-01-01T00:00:00Z",
+                "end_time": "2026-12-31T23:59:59Z",
                 "guest_name": "Permanent Failure User",
                 "source": "rental_control",
             }
@@ -205,7 +205,7 @@ class TestControllerUnreachable:
         with patch("src.controllers.omada.OmadaController.health_check") as mock_health:
             mock_health.return_value = {"status": "healthy", "response_time": 50}
 
-            response = test_client.get("/health", headers=auth_headers)
+            response = test_client.get("/api/health", headers=auth_headers)
             assert response.status_code == 200
 
             health_data = response.json()
@@ -217,7 +217,7 @@ class TestControllerUnreachable:
         with patch("src.controllers.omada.OmadaController.health_check") as mock_health:
             mock_health.side_effect = httpx.ConnectTimeout("Controller unreachable")
 
-            response = test_client.get("/health", headers=auth_headers)
+            response = test_client.get("/api/health", headers=auth_headers)
             assert response.status_code == 503  # Service Unavailable
 
             health_data = response.json()
@@ -237,8 +237,8 @@ class TestControllerUnreachable:
             # Create a grant that will fail
             grant_request = {
                 "booking_id": "metrics_failure_001",
-                "start_time": "2024-12-01T15:00:00Z",
-                "end_time": "2025-01-15T18:00:00Z",
+                "start_time": "2025-01-01T00:00:00Z",
+                "end_time": "2026-12-31T23:59:59Z",
                 "guest_name": "Metrics Test User",
                 "source": "rental_control",
             }
@@ -254,7 +254,7 @@ class TestControllerUnreachable:
             await asyncio.sleep(3)
 
             # Check metrics
-            metrics_response = test_client.get("/metrics", headers=auth_headers)
+            metrics_response = test_client.get("/api/metrics", headers=auth_headers)
             assert metrics_response.status_code == 200
 
             metrics_text = metrics_response.text

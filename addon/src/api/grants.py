@@ -58,6 +58,14 @@ async def create_grant(request: GrantCreateRequest) -> dict:
 
     # Check if grant should activate immediately
     now = datetime.now(UTC)
+    logger.debug(
+        "Checking grant activation",
+        grant_id=grant.grant_id,
+        start_time=grant.start_time.isoformat(),
+        end_time=grant.end_time.isoformat(),
+        now=now.isoformat(),
+        should_activate=grant.start_time <= now and grant.end_time > now,
+    )
     if grant.start_time <= now and grant.end_time > now:
         try:
             # Activate immediately

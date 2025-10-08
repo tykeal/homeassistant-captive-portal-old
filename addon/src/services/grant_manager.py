@@ -79,15 +79,9 @@ class GrantManager:
             device_mac=device_mac,
         )
 
-        # Determine initial status
-        now = datetime.now(UTC)
-        if now >= start_time:
-            # Should be active immediately
-            grant.status = GrantStatus.ACTIVE
-            grant.activated_at = now
-        else:
-            # Pending until start time
-            grant.status = GrantStatus.PENDING
+        # Always start in PENDING status - activation happens via activate_grant()
+        # which handles controller provisioning and proper error handling
+        grant.status = GrantStatus.PENDING
 
         # Save to database
         async with get_db_session() as session:
@@ -102,28 +96,16 @@ class GrantManager:
             grant=grant, user_id=user_id, **audit_context
         )
 
-        # Log activation if immediate
-        if grant.status == GrantStatus.ACTIVE:
-            await self.audit_logger.log_grant_activated(grant=grant, **audit_context)
-            # Structured lifecycle transition logging (T034)
-            log_lifecycle_transition(
-                grant_id=grant.grant_id,
-                from_status=None,
-                to_status=GrantStatus.ACTIVE,
-                reason="Immediate activation (start_time <= now)",
-                booking_id=booking_id,
-                source=source.value,
-            )
-        else:
-            # Structured lifecycle transition logging (T034)
-            log_lifecycle_transition(
-                grant_id=grant.grant_id,
-                from_status=None,
-                to_status=GrantStatus.PENDING,
-                reason="Scheduled activation (start_time in future)",
-                booking_id=booking_id,
-                source=source.value,
-            )
+        # Log initial PENDING status
+        # Structured lifecycle transition logging (T034)
+        log_lifecycle_transition(
+            grant_id=grant.grant_id,
+            from_status=None,
+            to_status=GrantStatus.PENDING,
+            reason="Grant created - awaiting activation",
+            booking_id=booking_id,
+            source=source.value,
+        )
 
         logger.info(
             "Grant created",
@@ -307,10 +289,21 @@ class GrantManager:
                     grant_id=grant.grant_id,
                     error=str(e),
                 )
-                # Continue with activation - grant goes to ACTIVE but without controller_voucher_id
-                # This will be retried by background provisioning watcher
+                # Store error for debugging and retry tracking
+                grant.last_error = str(e)
+                grant.retry_count += 1
+                grant.modified_at = now
 
-        # Update grant
+                # Save grant with error info but keep status as PENDING
+                async with get_db_session() as session:
+                    repository = GrantRepository(session)
+                    await repository.update(grant)
+
+                # Propagate the exception so API knows activation failed
+                raise ValueError(f"Failed to provision grant: {e}") from e
+
+        # Only reach here if provisioning succeeded
+        # Update grant to ACTIVE status
         grant.status = GrantStatus.ACTIVE
         grant.activated_at = now
         grant.controller_voucher_id = provisioned_voucher_id
@@ -437,7 +430,6 @@ class GrantManager:
                 result = await controller.extend_grant(
                     controller_voucher_id=updated_grant.controller_voucher_id,
                     new_end_time=new_end_time,
-                    reason=reason,
                 )
 
                 if result.get("status") == "success":
