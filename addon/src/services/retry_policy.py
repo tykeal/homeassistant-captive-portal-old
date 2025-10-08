@@ -11,6 +11,7 @@ import asyncio
 import random
 from typing import Any
 
+from ..controllers.base import ProvisionResult
 from ..core.logging_config import get_logger
 
 logger = get_logger(__name__)
@@ -82,7 +83,7 @@ class RetryPolicy:
         operation_name: str,
         grant_id: str | None = None,
         **kwargs: Any,
-    ) -> dict[str, Any]:
+    ) -> ProvisionResult:
         """Execute operation with retry and backoff.
 
         Args:

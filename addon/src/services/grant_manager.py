@@ -242,8 +242,8 @@ class GrantManager:
                     operation="provision",
                 )
 
-                if result.get("status") == "success":
-                    provisioned_voucher_id = result.get("controller_voucher_id")
+                if result.success:
+                    provisioned_voucher_id = result.controller_voucher_id
                     provision_success = True
 
                     # Structured controller operation logging (T034)
@@ -432,7 +432,7 @@ class GrantManager:
                     new_end_time=new_end_time,
                 )
 
-                if result.get("status") == "success":
+                if result.success:
                     controller_extended = True
                     logger.info(
                         "Controller voucher extended successfully",
@@ -654,7 +654,7 @@ class GrantManager:
                     reason=reason,
                 )
 
-                if result.get("status") == "success":
+                if result.success:
                     controller_revoked = True
                     logger.info(
                         "Controller access revoked successfully",
