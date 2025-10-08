@@ -214,11 +214,13 @@ class AdaptiveQueueScheduler:
                 except TimeoutError:
                     continue
 
-                self._metrics.queue_depth = self._task_queue.qsize()
-
-                # Track task start
+                # Track task as active IMMEDIATELY after consuming from queue
+                # This prevents race condition where drain() sees queue empty
+                # and no active tasks before task processing actually starts
                 start_time = time.time()
                 self._active_tasks[task.task_id] = start_time
+
+                self._metrics.queue_depth = self._task_queue.qsize()
 
                 try:
                     # Execute the task

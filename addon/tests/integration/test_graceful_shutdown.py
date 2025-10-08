@@ -4,7 +4,7 @@
 """Integration test for graceful shutdown preserving in-flight provisioning."""
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -22,7 +22,8 @@ def mock_controller():
         """Simulate slow provisioning operation."""
         await asyncio.sleep(0.5)  # 500ms to simulate network operation
 
-    controller.provision_grant = MagicMock(side_effect=slow_provision)
+    # Use AsyncMock for async side_effect
+    controller.provision_grant = AsyncMock(side_effect=slow_provision)
     controller.revoke_grant = AsyncMock()
     return controller
 
@@ -78,8 +79,9 @@ def mock_grant_manager(mock_controller, mock_storage, mock_audit_logger):
                 end_time=3600,
             )
 
-    manager.activate_grant = MagicMock(side_effect=activate_grant_mock)
+    manager.activate_grant = AsyncMock(side_effect=activate_grant_mock)
     manager.in_flight_grants = in_flight_grants
+    manager.update_grant_error = AsyncMock()  # Add missing mock method
     return manager
 
 
@@ -218,8 +220,8 @@ async def test_graceful_shutdown_preserves_completed_work(
         completed_grants.append(grant.grant_id)
         return result
 
-    # Override activate to track
-    mock_grant_manager.activate_grant = MagicMock(side_effect=track_completion)
+    # Override activate to track - use AsyncMock for async side_effect
+    mock_grant_manager.activate_grant = AsyncMock(side_effect=track_completion)
 
     # Queue all grants
     for grant in grants:
@@ -313,7 +315,8 @@ async def test_graceful_shutdown_partial_completion(
         grant.status = GrantStatus.ACTIVE
         return grant
 
-    mock_grant_manager.activate_grant = MagicMock(side_effect=variable_speed_activate)
+    # Use AsyncMock for async side_effect
+    mock_grant_manager.activate_grant = AsyncMock(side_effect=variable_speed_activate)
 
     # Queue all
     for grant in fast_grants + slow_grants:
