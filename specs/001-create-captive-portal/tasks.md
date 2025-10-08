@@ -167,14 +167,14 @@ Task: "Contract test: POST /api/theme"
 - [x] T081: Fix grant status determination logic (5 failures fixed)
 - [x] T087: Fix audit date range filtering (1 failure fixed)
 
-### Core Business Logic - Phase 3.7.2 (Est: 8 hours)
+### Core Business Logic - Phase 3.7.2 (Est: 8 hours) ✅ COMPLETE
 - [x] T082: Implement grant extension endpoint
 - [x] T083: Implement grant shortening/termination endpoint
 - [x] T084: Implement theme GET endpoint
 - [x] T085: Implement theme reset endpoint
 - [x] T086: Implement theme preview endpoint
 - [x] T090: Add guest_name to AccessGrant test fixtures
-- [ ] T093: Fix portal template rendering
+- [x] T093: Fix portal template rendering
 
 ### Test Infrastructure - Phase 3.7.3 (Est: 4 hours)
 - [ ] T088: Fix metrics export test mocking strategy (8 failures)
@@ -192,6 +192,6 @@ Task: "Contract test: POST /api/theme"
 - [ ] T099: Implement theme asset loader error handling (7 failures)
 - [ ] T101: Complete controller retry/backoff integration (6 failures)
 - [ ] T102: Fix burst provisioning performance tests (2 failures)
-- [ ] T103: Fix portal render performance tests (3 failures)
+- [x] T103: Fix portal render performance tests (3 failures)
 
 **Total Estimated Effort**: ~26 hours for 100% test pass rate
