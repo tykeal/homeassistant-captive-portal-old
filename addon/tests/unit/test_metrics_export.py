@@ -64,8 +64,8 @@ def test_app(mock_grant_manager, mock_queued_operations):
 
 def test_metrics_endpoint_exists(test_app):
     """Test that /api/metrics endpoint exists."""
-    with patch("src.services.grant_manager.get_grant_manager") as mock_gm:
-        with patch("src.services.queue_integration.get_queued_operations") as mock_qo:
+    with patch("src.api.health.get_grant_manager") as mock_gm:
+        with patch("src.api.health.get_queued_operations") as mock_qo:
             mock_gm.return_value = AsyncMock()
             mock_gm.return_value.get_stats = AsyncMock(
                 return_value={
@@ -94,8 +94,8 @@ def test_metrics_endpoint_exists(test_app):
 
 def test_metrics_exports_active_grants(test_app):
     """Test that active_grants metric is exported."""
-    with patch("src.services.grant_manager.get_grant_manager") as mock_gm:
-        with patch("src.services.queue_integration.get_queued_operations") as mock_qo:
+    with patch("src.api.health.get_grant_manager") as mock_gm:
+        with patch("src.api.health.get_queued_operations") as mock_qo:
             mock_gm.return_value = AsyncMock()
             mock_gm.return_value.get_stats = AsyncMock(
                 return_value={
@@ -131,8 +131,8 @@ def test_metrics_exports_active_grants(test_app):
 
 def test_metrics_exports_queue_depth(test_app):
     """Test that queue_depth metric is exported."""
-    with patch("src.services.grant_manager.get_grant_manager") as mock_gm:
-        with patch("src.services.queue_integration.get_queued_operations") as mock_qo:
+    with patch("src.api.health.get_grant_manager") as mock_gm:
+        with patch("src.api.health.get_queued_operations") as mock_qo:
             mock_gm.return_value = AsyncMock()
             mock_gm.return_value.get_stats = AsyncMock(
                 return_value={
@@ -171,8 +171,8 @@ def test_metrics_exports_provision_latency_placeholder(test_app):
     Note: This tests the metric export structure. Actual latency tracking
     would be implemented in the grant manager or queue scheduler.
     """
-    with patch("src.services.grant_manager.get_grant_manager") as mock_gm:
-        with patch("src.services.queue_integration.get_queued_operations") as mock_qo:
+    with patch("src.api.health.get_grant_manager") as mock_gm:
+        with patch("src.api.health.get_queued_operations") as mock_qo:
             mock_gm.return_value = AsyncMock()
             mock_gm.return_value.get_stats = AsyncMock(
                 return_value={
@@ -207,8 +207,8 @@ def test_metrics_exports_provision_latency_placeholder(test_app):
 
 def test_metrics_exports_all_grant_states(test_app):
     """Test that all grant state metrics are exported."""
-    with patch("src.services.grant_manager.get_grant_manager") as mock_gm:
-        with patch("src.services.queue_integration.get_queued_operations") as mock_qo:
+    with patch("src.api.health.get_grant_manager") as mock_gm:
+        with patch("src.api.health.get_queued_operations") as mock_qo:
             mock_gm.return_value = AsyncMock()
             mock_gm.return_value.get_stats = AsyncMock(
                 return_value={
@@ -246,8 +246,8 @@ def test_metrics_exports_all_grant_states(test_app):
 
 def test_metrics_exports_queue_workers(test_app):
     """Test that queue worker count is exported."""
-    with patch("src.services.grant_manager.get_grant_manager") as mock_gm:
-        with patch("src.services.queue_integration.get_queued_operations") as mock_qo:
+    with patch("src.api.health.get_grant_manager") as mock_gm:
+        with patch("src.api.health.get_queued_operations") as mock_qo:
             mock_gm.return_value = AsyncMock()
             mock_gm.return_value.get_stats = AsyncMock(
                 return_value={
@@ -281,8 +281,8 @@ def test_metrics_exports_queue_workers(test_app):
 
 def test_metrics_format_prometheus_compatible(test_app):
     """Test that metrics format is Prometheus-compatible."""
-    with patch("src.services.grant_manager.get_grant_manager") as mock_gm:
-        with patch("src.services.queue_integration.get_queued_operations") as mock_qo:
+    with patch("src.api.health.get_grant_manager") as mock_gm:
+        with patch("src.api.health.get_queued_operations") as mock_qo:
             mock_gm.return_value = AsyncMock()
             mock_gm.return_value.get_stats = AsyncMock(
                 return_value={
@@ -329,8 +329,8 @@ def test_metrics_format_prometheus_compatible(test_app):
 
 def test_metrics_handles_errors_gracefully(test_app):
     """Test that metrics endpoint handles errors gracefully."""
-    with patch("src.services.grant_manager.get_grant_manager") as mock_gm:
-        with patch("src.services.queue_integration.get_queued_operations") as mock_qo:
+    with patch("src.api.health.get_grant_manager") as mock_gm:
+        with patch("src.api.health.get_queued_operations") as mock_qo:
             # Make grant_manager.get_stats raise an error
             mock_gm.return_value = AsyncMock()
             mock_gm.return_value.get_stats = AsyncMock(
@@ -358,39 +358,50 @@ def test_metrics_handles_errors_gracefully(test_app):
 
 def test_health_endpoint_includes_metrics(test_app):
     """Test that health endpoint includes key metrics."""
-    with patch("src.services.grant_manager.get_grant_manager") as mock_gm:
-        with patch("src.services.queue_integration.get_queued_operations") as mock_qo:
-            mock_gm.return_value = AsyncMock()
-            mock_gm.return_value.get_stats = AsyncMock(
-                return_value={
-                    "total": 100,
-                    "current_active": 45,
-                    "pending": 5,
-                    "expired": 30,
-                    "revoked": 20,
-                }
-            )
-            mock_qo.return_value = AsyncMock()
-            mock_qo.return_value.get_queue_health = AsyncMock(
-                return_value={
-                    "queue_depth": 12,
-                    "active_workers": 3,
-                    "max_workers": 5,
-                    "processing_rate": 8.5,
-                }
-            )
+    with patch("src.api.health.get_grant_manager") as mock_gm:
+        with patch("src.api.health.get_queued_operations") as mock_qo:
+            with patch("src.core.config.get_config") as mock_config:
+                mock_gm.return_value = AsyncMock()
+                mock_gm.return_value.get_stats = AsyncMock(
+                    return_value={
+                        "total": 100,
+                        "current_active": 45,
+                        "pending": 5,
+                        "expired": 30,
+                        "revoked": 20,
+                    }
+                )
+                mock_qo.return_value = AsyncMock()
+                mock_qo.return_value.get_queue_health = AsyncMock(
+                    return_value={
+                        "queue_depth": 12,
+                        "active_workers": 3,
+                        "max_workers": 5,
+                        "processing_rate": 8.5,
+                    }
+                )
 
-            client = TestClient(test_app)
-            response = client.get("/api/health")
+                # Mock the config object
+                from unittest.mock import MagicMock
 
-            assert response.status_code == 200
-            data = response.json()
+                mock_conf = MagicMock()
+                mock_conf.controller.url = "http://localhost:8043"
+                mock_conf.controller.site_name = "default"
+                mock_conf.controller.username = "admin"
+                mock_conf.controller.password = "password"
+                mock_config.return_value = mock_conf
 
-            # Verify metrics are included in health response
-            assert data["queue_depth"] == 12
-            assert data["details"]["active_grants"] == 45
-            assert data["details"]["pending_grants"] == 5
-            assert data["details"]["queue_metrics"]["queue_depth"] == 12
+                client = TestClient(test_app)
+                response = client.get("/api/health")
+
+                assert response.status_code == 200
+                data = response.json()
+
+                # Verify metrics are included in health response
+                assert data["queue_depth"] == 12
+                assert data["details"]["active_grants"] == 45
+                assert data["details"]["pending_grants"] == 5
+                assert data["details"]["queue_metrics"]["queue_depth"] == 12
 
 
 @pytest.mark.asyncio
@@ -400,8 +411,8 @@ async def test_metrics_real_time_updates():
 
     app = FastAPI()
 
-    with patch("src.services.grant_manager.get_grant_manager") as mock_gm:
-        with patch("src.services.queue_integration.get_queued_operations") as mock_qo:
+    with patch("src.api.health.get_grant_manager") as mock_gm:
+        with patch("src.api.health.get_queued_operations") as mock_qo:
             # Initial state
             mock_gm.return_value = AsyncMock()
             mock_gm.return_value.get_stats = AsyncMock(
