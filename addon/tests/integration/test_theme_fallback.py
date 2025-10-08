@@ -13,7 +13,9 @@ class TestThemeFallback:
     """Integration tests for theme asset fallback handling."""
 
     @pytest.mark.asyncio
-    async def test_missing_logo_fallback(self, test_client: TestClient) -> None:
+    async def test_missing_logo_fallback(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test theme fallback when logo asset is missing."""
         # Set theme with invalid logo URL
         theme_request = {
@@ -23,7 +25,9 @@ class TestThemeFallback:
             "logo_url": "https://invalid-domain-that-does-not-exist.com/logo.png",
         }
 
-        response = test_client.post("/api/theme", json=theme_request)
+        response = test_client.post(
+            "/api/theme", json=theme_request, headers=auth_headers
+        )
         assert response.status_code == 200
 
         # Get portal page - should render without errors despite missing logo
@@ -67,7 +71,9 @@ class TestThemeFallback:
             assert "#f5f5f5" in html_content or "#007bff" in html_content
 
     @pytest.mark.asyncio
-    async def test_invalid_css_fallback(self, test_client: TestClient) -> None:
+    async def test_invalid_css_fallback(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test theme rendering when custom CSS is invalid."""
         theme_request = {
             "portal_title": "CSS Test Portal",
@@ -90,7 +96,9 @@ class TestThemeFallback:
             """,
         }
 
-        response = test_client.post("/api/theme", json=theme_request)
+        response = test_client.post(
+            "/api/theme", json=theme_request, headers=auth_headers
+        )
         assert response.status_code == 200
 
         # Portal should still render despite invalid CSS
@@ -109,7 +117,9 @@ class TestThemeFallback:
         assert "submit" in html_content.lower()  # Submit button should be present
 
     @pytest.mark.asyncio
-    async def test_theme_asset_loading_timeout(self, test_client: TestClient) -> None:
+    async def test_theme_asset_loading_timeout(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test theme behavior when assets take too long to load."""
         # Use a URL that will timeout
         theme_request = {
@@ -119,7 +129,9 @@ class TestThemeFallback:
             "logo_url": "https://httpbin.org/delay/30",  # 30 second delay
         }
 
-        response = test_client.post("/api/theme", json=theme_request)
+        response = test_client.post(
+            "/api/theme", json=theme_request, headers=auth_headers
+        )
         assert response.status_code == 200
 
         # Portal should render quickly without waiting for slow assets
@@ -142,7 +154,7 @@ class TestThemeFallback:
 
     @pytest.mark.asyncio
     async def test_theme_preview_with_invalid_params(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test theme preview fallback with invalid parameters."""
         # Request preview with invalid color values
@@ -152,7 +164,9 @@ class TestThemeFallback:
             "primary_color": "#invalid",
         }
 
-        response = test_client.get("/api/theme/preview", params=invalid_params)
+        response = test_client.get(
+            "/api/theme/preview", params=invalid_params, headers=auth_headers
+        )
 
         # Should still return a preview, falling back to valid defaults
         assert response.status_code == 200
@@ -168,7 +182,9 @@ class TestThemeFallback:
         assert "#" in html_content  # Should have some valid hex color
 
     @pytest.mark.asyncio
-    async def test_theme_asset_size_limits(self, test_client: TestClient) -> None:
+    async def test_theme_asset_size_limits(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test theme behavior with oversized assets."""
         # Try to set a theme with a very large image URL
         # (This simulates cases where the asset might be too large)
@@ -179,7 +195,9 @@ class TestThemeFallback:
             "logo_url": "https://httpbin.org/bytes/10485760",  # 10MB response
         }
 
-        response = test_client.post("/api/theme", json=theme_request)
+        response = test_client.post(
+            "/api/theme", json=theme_request, headers=auth_headers
+        )
         assert response.status_code == 200
 
         # Portal should handle oversized assets gracefully
@@ -193,7 +211,9 @@ class TestThemeFallback:
         # Implementation should either skip the asset or have size limits
 
     @pytest.mark.asyncio
-    async def test_default_theme_restore(self, test_client: TestClient) -> None:
+    async def test_default_theme_restore(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test restoration to default theme when current theme is problematic."""
         # Set a problematic theme
         problematic_theme = {
@@ -203,11 +223,13 @@ class TestThemeFallback:
             "logo_url": "javascript:alert('xss')",  # Security issue
         }
 
-        _response = test_client.post("/api/theme", json=problematic_theme)
+        _response = test_client.post(
+            "/api/theme", json=problematic_theme, headers=auth_headers
+        )
         # Theme service should reject dangerous URLs
 
         # Try to reset to default
-        reset_response = test_client.post("/api/theme/reset")
+        reset_response = test_client.post("/api/theme/reset", headers=auth_headers)
         assert reset_response.status_code == 200
 
         reset_theme = reset_response.json()
@@ -219,7 +241,9 @@ class TestThemeFallback:
         assert reset_theme.get("logo_url") is None
 
     @pytest.mark.asyncio
-    async def test_theme_validation_sanitization(self, test_client: TestClient) -> None:
+    async def test_theme_validation_sanitization(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test that theme input is properly validated and sanitized."""
         # Try various XSS and injection attempts
         dangerous_theme = {
@@ -232,7 +256,9 @@ class TestThemeFallback:
             """,
         }
 
-        response = test_client.post("/api/theme", json=dangerous_theme)
+        response = test_client.post(
+            "/api/theme", json=dangerous_theme, headers=auth_headers
+        )
 
         # Should either reject the dangerous content or sanitize it
         if response.status_code == 200:

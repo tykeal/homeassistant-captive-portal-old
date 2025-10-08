@@ -72,7 +72,10 @@ async def preview_theme(
     background_color: str | None = None,
     primary_color: str | None = None,
 ) -> dict:
-    """Preview theme with specified parameters without saving."""
+    """Preview theme with specified parameters without saving.
+
+    Falls back to current/default values if invalid parameters are provided.
+    """
     theme_manager = get_theme_manager()
     current_theme = await theme_manager.get_current_theme(use_fallback=True)
 
@@ -85,19 +88,21 @@ async def preview_theme(
         try:
             theme_manager._validate_color(background_color)
             preview_data["background_color"] = background_color
-        except ValueError as e:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Invalid background_color: {e}",
-            ) from e
+        except ValueError:
+            # Fall back to current value on validation error
+            logger.warning(
+                "Invalid background_color in preview, using current value",
+                invalid_color=background_color,
+            )
     if primary_color:
         try:
             theme_manager._validate_color(primary_color)
             preview_data["primary_color"] = primary_color
-        except ValueError as e:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"Invalid primary_color: {e}",
-            ) from e
+        except ValueError:
+            # Fall back to current value on validation error
+            logger.warning(
+                "Invalid primary_color in preview, using current value",
+                invalid_color=primary_color,
+            )
 
     return preview_data
