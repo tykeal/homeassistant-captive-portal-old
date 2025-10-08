@@ -202,12 +202,13 @@ Task: "Contract test: POST /api/theme"
 ## Phase 3.8: Final Test Remediation (28 failures remaining)
 
 **Status**: In Progress
-**Current**: 28 test failures, 158 passing (down from 32 failures)
+**Current**: 28 test failures (integration tests pass individually but fail when run together)
 **Goal**: Achieve 100% test pass rate
+**Issue**: State pollution between integration tests - needs investigation
 
 ### Authentication Fixes - Phase 3.8.1 (Quick Win - 13 failures)
-- [ ] T104: Add auth_headers to theme fallback integration tests (7 failures)
-- [ ] T105: Add auth_headers to voucher-grant coexistence tests (6 failures)
+- [x] T104: Add auth_headers to theme fallback integration tests (7 failures) - Fixed with mock controller
+- [x] T105: Add auth_headers to voucher-grant coexistence tests (6 failures) - Fixed with date updates
 
 ### Controller Integration - Phase 3.8.2 (5 failures)
 - [ ] T106: Fix controller retry/backoff test mocking strategy
@@ -229,10 +230,15 @@ Task: "Contract test: POST /api/theme"
 - [ ] T118: Fix graceful shutdown completed work preservation
 - [ ] T119: Fix graceful shutdown partial completion
 
-### Final Validation - Phase 3.8.5
-- [ ] T120: Run full test suite and verify 100% pass rate
-- [ ] T121: Update coverage report and ensure >80% coverage
-- [ ] T122: Review all test output for warnings/deprecations
-- [ ] T123: Mark Phase 3.8 complete in tasks.md
+### Test Infrastructure - Phase 3.8.5 (New)
+- [ ] T120: Investigate and fix test state pollution (tests pass individually but fail in suite)
+- [ ] T121: Ensure proper cleanup of global state between tests
+- [ ] T122: Fix database manager singleton state issues
 
-**Total Estimated Effort**: ~12 hours for 100% test pass rate
+### Final Validation - Phase 3.8.6
+- [ ] T123: Run full test suite and verify 100% pass rate
+- [ ] T124: Update coverage report and ensure >80% coverage
+- [ ] T125: Review all test output for warnings/deprecations
+- [ ] T126: Mark Phase 3.8 complete in tasks.md
+
+**Total Estimated Effort**: ~16 hours for 100% test pass rate (increased due to state pollution issues)

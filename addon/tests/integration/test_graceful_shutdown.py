@@ -209,16 +209,17 @@ async def test_graceful_shutdown_preserves_completed_work(
 
     completed_grants = []
 
+    # Save the original side_effect function
+    original_activate_func = mock_grant_manager.activate_grant.side_effect
+
     async def track_completion(grant, **kwargs):
         """Track completed grants."""
-        result = await mock_grant_manager.activate_grant(grant, **kwargs)
+        result = await original_activate_func(grant, **kwargs)
         completed_grants.append(grant.grant_id)
         return result
 
     # Override activate to track
-    original_activate = mock_grant_manager.activate_grant
     mock_grant_manager.activate_grant = MagicMock(side_effect=track_completion)
-    mock_grant_manager.activate_grant._mock_wraps = original_activate
 
     # Queue all grants
     for grant in grants:
