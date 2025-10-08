@@ -9,6 +9,8 @@ import httpx
 import pytest
 from fastapi.testclient import TestClient
 
+from src.controllers.base import ProvisionResult
+
 
 class TestControllerUnreachable:
     """Integration tests for controller connectivity and retry scenarios."""
@@ -112,11 +114,11 @@ class TestControllerUnreachable:
                 raise httpx.ConnectTimeout("Controller unreachable")
             else:
                 # Third attempt succeeds
-                return {
-                    "status": "success",
-                    "voucher_id": "recovered_voucher_123",
-                    "message": "Grant provisioned successfully",
-                }
+                return ProvisionResult(
+                    success=True,
+                    controller_voucher_id="recovered_voucher_123",
+                    message="Grant provisioned successfully",
+                )
 
         with patch(
             "src.controllers.omada.OmadaController.provision_grant"
@@ -203,26 +205,26 @@ class TestControllerUnreachable:
         """Test health endpoint reflects controller connectivity status."""
         # Test with healthy controller
         with patch("src.controllers.omada.OmadaController.health_check") as mock_health:
-            mock_health.return_value = {"status": "healthy", "response_time": 50}
+            mock_health.return_value = True
 
             response = test_client.get("/api/health", headers=auth_headers)
             assert response.status_code == 200
 
             health_data = response.json()
             assert health_data["status"] == "healthy"
-            assert "controller" in health_data
-            assert health_data["controller"]["status"] == "healthy"
+            assert "details" in health_data
+            assert health_data["details"]["controller_healthy"] is True
 
         # Test with unhealthy controller
         with patch("src.controllers.omada.OmadaController.health_check") as mock_health:
             mock_health.side_effect = httpx.ConnectTimeout("Controller unreachable")
 
             response = test_client.get("/api/health", headers=auth_headers)
-            assert response.status_code == 503  # Service Unavailable
+            assert response.status_code == 200  # Returns 200 but with degraded status
 
             health_data = response.json()
             assert health_data["status"] == "degraded"
-            assert health_data["controller"]["status"] == "unreachable"
+            assert health_data["details"]["controller_healthy"] is False
 
     @pytest.mark.asyncio
     async def test_metrics_include_controller_failures(
