@@ -186,7 +186,7 @@ Task: "Contract test: POST /api/theme"
 - [x] T092: Implement splash page credential validation
 - [ ] T094: Implement expired credential reuse prevention
 - [x] T095: Implement automatic expiry scheduler integration
-- [ ] T096: Complete rental control event ingestion flow
+- [x] T096: Complete rental control event ingestion flow
 - [ ] T097: Fix queue scaling integration tests (3 failures)
 - [x] T098: Fix rate limiting stats endpoint
 - [ ] T099: Implement theme asset loader error handling (7 failures)

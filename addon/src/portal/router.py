@@ -7,8 +7,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request, status
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Request, status
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
@@ -83,10 +83,10 @@ async def splash_page(request: Request) -> HTMLResponse:
         )
 
 
-@router.post("/authenticate")
+@router.post("/authenticate", response_model=None)
 async def authenticate(
     auth_request: AuthenticateRequest, request: Request
-) -> dict[str, Any]:
+) -> dict[str, Any] | JSONResponse:
     """Authenticate user with voucher code and provision network access.
 
     This endpoint validates the voucher code, creates a grant, and
@@ -100,10 +100,8 @@ async def authenticate(
         request: FastAPI request object (for client IP)
 
     Returns:
-        Success response with grant_id or error response
-
-    Raises:
-        HTTPException: 401 on invalid credentials, 429 on rate limit, 500 on system error
+        Success dict with grant_id or JSONResponse with error details
+        (status: 401 on invalid credentials, 429 on rate limit, 500 on system error)
     """
     # Get client IP for rate limiting
     client_ip = request.client.host if request.client else "unknown"
@@ -130,9 +128,9 @@ async def authenticate(
             },
         )
 
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail={
+            content={
                 "status": "error",
                 "message": (
                     f"Too many authentication attempts. "
@@ -165,11 +163,49 @@ async def authenticate(
             voucher_code=auth_request.voucher_code[:4] + "***",
             client_ip=client_ip,
         )
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={
+            content={
                 "status": "error",
                 "message": "Invalid voucher code",
+            },
+        )
+
+    # Check usage limits FIRST (FR-018: prevent reuse of exhausted vouchers)
+    # This must come before is_valid() check since voucher becomes inactive after max_uses
+    if voucher.max_uses != -1 and voucher.uses_count >= voucher.max_uses:
+        # Record failed attempt
+        await rate_limiter.record_attempt(client_ip, success=False)
+
+        logger.warning(
+            "Voucher usage limit exceeded",
+            voucher_id=voucher.voucher_id,
+            voucher_code=auth_request.voucher_code[:4] + "***",
+            uses_count=voucher.uses_count,
+            max_uses=voucher.max_uses,
+        )
+
+        # Audit log the rejection
+        audit_logger = get_audit_logger()
+        await audit_logger.log_portal_access(
+            result="rejected_usage_limit",
+            details={
+                "success": False,
+                "voucher_code": auth_request.voucher_code[:4] + "***",
+                "device_mac": auth_request.device_mac,
+                "rejection_reason": f"Usage limit exceeded ({voucher.uses_count}/{voucher.max_uses})",
+                "voucher_id": voucher.voucher_id,
+            },
+        )
+
+        return JSONResponse(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            content={
+                "status": "error",
+                "message": (
+                    "This voucher has already been used and cannot be reused. "
+                    "Please request a new access code from the property manager."
+                ),
             },
         )
 
@@ -221,48 +257,11 @@ async def authenticate(
                 "Please check with the property manager."
             )
 
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={
+            content={
                 "status": "error",
                 "message": message,
-            },
-        )
-
-    # Check usage limits (FR-018: prevent reuse of exhausted vouchers)
-    if voucher.max_uses != -1 and voucher.uses_count >= voucher.max_uses:
-        # Record failed attempt
-        await rate_limiter.record_attempt(client_ip, success=False)
-
-        logger.warning(
-            "Voucher usage limit exceeded",
-            voucher_id=voucher.voucher_id,
-            voucher_code=auth_request.voucher_code[:4] + "***",
-            uses_count=voucher.uses_count,
-            max_uses=voucher.max_uses,
-        )
-
-        # Audit log the rejection
-        audit_logger = get_audit_logger()
-        await audit_logger.log_portal_access(
-            result="rejected_usage_limit",
-            details={
-                "success": False,
-                "voucher_code": auth_request.voucher_code[:4] + "***",
-                "device_mac": auth_request.device_mac,
-                "rejection_reason": f"Usage limit exceeded ({voucher.uses_count}/{voucher.max_uses})",
-                "voucher_id": voucher.voucher_id,
-            },
-        )
-
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail={
-                "status": "error",
-                "message": (
-                    "This voucher has already been used and cannot be reused. "
-                    "Please request a new access code from the property manager."
-                ),
             },
         )
 
@@ -352,13 +351,13 @@ async def authenticate(
             voucher_code=auth_request.voucher_code[:4] + "***",
             error=str(e),
         )
-        raise HTTPException(
+        return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={
+            content={
                 "status": "error",
                 "message": "System error during authentication",
             },
-        ) from e
+        )
 
 
 @router.get("/success", response_class=HTMLResponse)
