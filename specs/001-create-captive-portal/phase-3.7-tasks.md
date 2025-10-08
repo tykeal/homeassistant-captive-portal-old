@@ -45,12 +45,12 @@ After completing Phase 3.6 infrastructure fixes, 64 test failures remain. These 
   - Fix: Update test dates to future OR fix status logic in grant_manager.py
   - Files: `tests/contract/test_grants_api.py`, `src/services/grant_manager.py`
 
-- [ ] T082: Implement grant extension endpoint
+- [x] T082: Implement grant extension endpoint
   - Issue: Endpoint exists but returns errors
   - Files: `src/api/grants.py`, `src/services/grant_manager.py`
   - Methods needed: Grant extension logic
 
-- [ ] T083: Implement grant shortening/termination endpoint
+- [x] T083: Implement grant shortening/termination endpoint
   - Issue: Endpoint exists but returns errors
   - Files: `src/api/grants.py`, `src/services/grant_manager.py`
   - Methods needed: Grant termination logic
