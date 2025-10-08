@@ -195,15 +195,116 @@ Complete remaining business logic:
 
 ### Completed Tasks
 
-(None yet)
+- T104: ProvisionResult handling - already completed in Phase 3.7
+- T105: Theme preview JSON - already completed in Phase 3.7
+- T106: Controller integration auth - already completed in Phase 3.7
+- T108: Portal scenarios auth - already completed in Phase 3.7
+- T110: Queue scaling auth - already completed in Phase 3.7
+- T111: Theme fallback auth - already completed in Phase 3.7
+- T112: Voucher-grant coexistence auth - already completed, tests pass individually
 
 ### In Progress
 
-(None yet)
+- T107: Graceful shutdown - Fixed recursion error, but race condition in queue drain logic remains
+
+### Discovered Issues
+
+#### Test Isolation Problem (Critical)
+
+**Status**: Blocking - prevents accurate test results
+
+All integration tests pass when run individually or in small groups, but 28 tests fail when run as part of the full test suite. This indicates test isolation issues where state from previous tests affects subsequent tests.
+
+**Evidence**:
+- `test_voucher_grant_coexistence.py`: All 6 tests PASS individually, all FAIL in full suite
+- `test_portal_scenarios.py`: All 5 tests PASS individually, all FAIL in full suite
+- `test_queue_scaling.py`: All 3 tests PASS individually, all FAIL in full suite
+- `test_theme_fallback.py`: All 7 tests PASS individually, all FAIL in full suite
+- `test_controller_retry.py`: Mixed results - some pass, some fail in both modes
+
+**Root Causes**:
+1. Database state not properly cleaned between tests
+2. Configuration bleeding between test fixtures
+3. Mock controller state persisting across tests
+4. Async event loop state not reset
+
+**Required Fixes**:
+1. Ensure each test gets a truly isolated database
+2. Reset all global state in conftest fixtures
+3. Fix fixture scope issues (some may need function scope instead of session)
+4. Add proper teardown to clear async state
+
+#### Controller Retry Tests (5 failures)
+
+**Status**: Test design issue
+
+Tests in `test_controller_retry.py` attempt to patch controller methods within the test body, but the `test_client` fixture from conftest.py has already patched the controller factory with a global mock. The test's patches don't take effect because they're patching after the app is already created with the fixture's mock.
+
+**Required Fix**:
+Refactor tests to configure the mock_controller fixture's behavior instead of trying to patch
+
+#### T107: Graceful Shutdown Queue Completion (partial)
+
+**Status**: Partially fixed
+
+- ✅ Fixed: Infinite recursion error in test_graceful_shutdown_preserves_completed_work
+- ❌ Remaining: Race condition where drain() returns before tasks complete
+  - Queue reports 0 depth and 0 active tasks incorrectly
+  - drain() exits immediately
+  - Tasks complete after drain() has already returned
+
+**Required Fix**:
+Investigate queue status tracking in QueueScheduler.get_queue_status()
+
+#### T109: Portal Credential Validation
+
+**Status**: Not investigated yet - blocked by test isolation issues
+
+Cannot reliably test until test isolation is fixed.
 
 ### Next Steps
 
-1. Start with T104 (ProvisionResult fix) - critical blocker
-2. Follow with T106 auth fix to validate controller tests
-3. Complete auth sweep (T108, T110, T111, T112)
-4. Address remaining logic issues (T105, T107, T109)
+**Priority 1: Fix Test Isolation (Estimated: 4-6 hours)**
+
+This is blocking all other work. Without reliable test results, we cannot validate fixes.
+
+1. Investigate database fixture cleanup
+2. Add explicit teardown to test_client fixture
+3. Check for global state in config module
+4. Add test markers to run integration tests in isolation
+
+**Priority 2: Fix Controller Retry Tests (Estimated: 2 hours)**
+
+1. Modify tests to use mock_controller fixture behavior
+2. Add methods to conftest to configure mock responses
+3. Update all 5 controller retry tests
+
+**Priority 3: Complete T107 (Estimated: 2 hours)**
+
+1. Debug QueueScheduler.get_queue_status()
+2. Add proper tracking of active tasks
+3. Fix drain() to wait for actual task completion
+
+**Priority 4: Investigate T109 (Estimated: 2 hours)**
+
+Can only proceed after test isolation is fixed.
+
+### Total Remaining Effort
+
+- Test Isolation Fix: 4-6 hours (CRITICAL)
+- Controller Tests: 2 hours
+- T107 Completion: 2 hours
+- T109 Investigation: 2 hours
+
+**Total**: 10-12 hours
+
+### Recommendation
+
+Given the test isolation issues, the most productive path forward is:
+
+1. Fix test isolation first - this unblocks everything else
+2. Once tests are reliable, fix controller retry tests
+3. Complete T107 and T109
+4. Rerun full suite to verify 100% pass rate
+
+The good news: Most Phase 3.8 tasks are already complete. The bad news: Test isolation issues mask this progress and prevent validation.
