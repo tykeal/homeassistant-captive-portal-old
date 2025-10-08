@@ -188,7 +188,7 @@ Task: "Contract test: POST /api/theme"
 - [ ] T095: Implement automatic expiry scheduler integration
 - [ ] T096: Complete rental control event ingestion flow
 - [ ] T097: Fix queue scaling integration tests (3 failures)
-- [ ] T098: Fix rate limiting stats endpoint
+- [x] T098: Fix rate limiting stats endpoint
 - [ ] T099: Implement theme asset loader error handling (7 failures)
 - [ ] T101: Complete controller retry/backoff integration (6 failures)
 - [ ] T102: Fix burst provisioning performance tests (2 failures)
