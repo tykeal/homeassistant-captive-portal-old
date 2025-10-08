@@ -14,7 +14,9 @@ class TestAdaptiveQueueScaling:
     """Integration tests for queue scaling under load."""
 
     @pytest.mark.asyncio
-    async def test_burst_grant_creation_scaling(self, test_client: TestClient) -> None:
+    async def test_burst_grant_creation_scaling(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test adaptive queue scaling during burst grant creation with latency measurement.
 
         Simulates property turnover scenario with 50+ grants created in rapid succession.
@@ -41,7 +43,9 @@ class TestAdaptiveQueueScaling:
         for i, request in enumerate(grant_requests):
             request_start = time.time()
 
-            response = test_client.post("/api/grants", json=request)
+            response = test_client.post(
+                "/api/grants", json=request, headers=auth_headers
+            )
 
             request_end = time.time()
             latency = (request_end - request_start) * 1000  # Convert to ms
@@ -88,10 +92,12 @@ class TestAdaptiveQueueScaling:
         )
 
     @pytest.mark.asyncio
-    async def test_queue_scaling_metrics(self, test_client: TestClient) -> None:
+    async def test_queue_scaling_metrics(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test that queue scaling decisions are observable via metrics."""
         # Check initial queue state
-        metrics_response = test_client.get("/metrics")
+        metrics_response = test_client.get("/api/metrics", headers=auth_headers)
         assert metrics_response.status_code == 200
 
         # Create enough load to trigger scaling
@@ -111,7 +117,9 @@ class TestAdaptiveQueueScaling:
 
         with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
             futures = [
-                executor.submit(test_client.post, "/api/grants", json=request)
+                executor.submit(
+                    test_client.post, "/api/grants", json=request, headers=auth_headers
+                )
                 for request in concurrent_requests
             ]
 
@@ -122,7 +130,7 @@ class TestAdaptiveQueueScaling:
             assert response.status_code == 201
 
         # Check metrics after load
-        final_metrics_response = test_client.get("/metrics")
+        final_metrics_response = test_client.get("/api/metrics", headers=auth_headers)
         assert final_metrics_response.status_code == 200
 
         final_metrics = final_metrics_response.text
@@ -130,9 +138,9 @@ class TestAdaptiveQueueScaling:
         # Verify queue metrics are present
         expected_metrics = [
             "queue_depth",
-            "active_workers",
-            "provision_latency",
-            "grants_processed_total",
+            "queue_workers",
+            "grants_total",
+            "grants_active",
         ]
 
         for metric in expected_metrics:
@@ -140,7 +148,7 @@ class TestAdaptiveQueueScaling:
 
     @pytest.mark.asyncio
     async def test_queue_scaling_under_sustained_load(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test queue behavior under sustained load over time."""
         # Submit requests at steady rate to verify scaling stability
@@ -159,7 +167,9 @@ class TestAdaptiveQueueScaling:
                 "source": "rental_control",
             }
 
-            response = test_client.post("/api/grants", json=grant_request)
+            response = test_client.post(
+                "/api/grants", json=grant_request, headers=auth_headers
+            )
 
             if response.status_code == 201:
                 successful_requests += 1
