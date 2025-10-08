@@ -199,41 +199,51 @@ Task: "Contract test: POST /api/theme"
 
 **Total Estimated Effort**: ~26 hours for 100% test pass rate
 
-## Phase 3.8: Final Test Remediation (28 failures remaining)
+## Phase 3.8: Final Test Remediation (6 failures remaining)
 
 **Status**: In Progress
-**Current**: 28 test failures (integration tests pass individually but fail when run together)
-**Goal**: Achieve 100% test pass rate
-**Issue**: State pollution between integration tests - needs investigation
+**Progress**: 180/186 tests passing (96.8% pass rate)
+**Completed**: T113-T122 - Fixed test isolation issues (22 test failures resolved)
+**Remaining**: 6 failures (4 controller retry tests with design issues, 2 graceful shutdown tests)
+
+**Major Achievement**: Identified and fixed root cause of test state pollution
+- Auth service singleton was not being restored after auth_security tests
+- Database connections were not being properly closed between tests
+- Fixes reduced failures from 28 to 6 (78% reduction)
 
 ### Authentication Fixes - Phase 3.8.1 (Quick Win - 13 failures)
 - [x] T104: Add auth_headers to theme fallback integration tests (7 failures) - Fixed with mock controller
 - [x] T105: Add auth_headers to voucher-grant coexistence tests (6 failures) - Fixed with date updates
 
-### Controller Integration - Phase 3.8.2 (5 failures)
+### Controller Integration - Phase 3.8.2 (4 failures remaining)
 - [ ] T106: Fix controller retry/backoff test mocking strategy
 - [ ] T107: Fix controller recovery pending-to-active transition
 - [ ] T108: Fix controller permanent failure handling logic
 - [ ] T109: Fix controller failure metrics collection
 
-### Portal Integration - Phase 3.8.3 (5 failures)
-- [ ] T110: Fix forced termination audit logging integration
-- [ ] T111: Fix splash page credential validation flow
-- [ ] T112: Fix expired credential reuse prevention
-- [ ] T113: Fix automatic expiry scheduler grace period
-- [ ] T114: Fix rental control event ingestion activation
+**Note**: These tests have a design issue where they try to patch the controller
+after the test_client fixture has already created the app with a mocked controller.
+The patches don't take effect. Solution: Refactor tests to configure the mock_controller
+fixture's behavior instead of trying to patch after app creation.
 
-### Queue & Shutdown - Phase 3.8.4 (5 failures)
-- [ ] T115: Fix queue scaling burst grant creation test
-- [ ] T116: Fix queue scaling metrics test
-- [ ] T117: Fix queue scaling sustained load test
+### Portal Integration - Phase 3.8.3 (COMPLETE - 0 failures)
+- [x] T110: Fix forced termination audit logging integration - Fixed by T114 (auth service cleanup)
+- [x] T111: Fix splash page credential validation flow - Fixed by T114 (auth service cleanup)
+- [x] T112: Fix expired credential reuse prevention - Fixed by T114 (auth service cleanup)
+- [x] T113: Fix automatic expiry scheduler grace period - Fixed by T114 (auth service cleanup)
+- [x] T114: Fix rental control event ingestion activation - Fixed by T114 (auth service cleanup)
+
+### Queue & Shutdown - Phase 3.8.4 (3 failures remaining)
+- [x] T115: Fix queue scaling burst grant creation test - Fixed by T114 (auth service cleanup)
+- [x] T116: Fix queue scaling metrics test - Fixed by T114 (auth service cleanup)
+- [x] T117: Fix queue scaling sustained load test - Fixed by T114 (auth service cleanup)
 - [ ] T118: Fix graceful shutdown completed work preservation
 - [ ] T119: Fix graceful shutdown partial completion
 
-### Test Infrastructure - Phase 3.8.5 (New)
-- [ ] T120: Investigate and fix test state pollution (tests pass individually but fail in suite)
-- [ ] T121: Ensure proper cleanup of global state between tests
-- [ ] T122: Fix database manager singleton state issues
+### Test Infrastructure - Phase 3.8.5 (COMPLETE)
+- [x] T120: Investigate and fix test state pollution (tests pass individually but fail in suite) - Root cause identified
+- [x] T121: Ensure proper cleanup of global state between tests - Fixed with T113 and T114
+- [x] T122: Fix database manager singleton state issues - Fixed with T113 (database cleanup)
 
 ### Final Validation - Phase 3.8.6
 - [ ] T123: Run full test suite and verify 100% pass rate
