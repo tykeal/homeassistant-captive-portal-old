@@ -25,9 +25,13 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop]:
     loop.close()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope="session")
 def setup_test_database():
-    """Set up a test database path for all tests automatically."""
+    """Set up a test database path for all tests automatically.
+
+    Note: This fixture is no longer autouse. Individual test fixtures
+    (like test_client) create their own temporary databases.
+    """
     # Create a temporary database file for the entire test session
     with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
         db_path = f.name
@@ -141,6 +145,14 @@ def test_client(
 
     # Reset database manager to pick up new DB_PATH
     db_module._db_manager = None
+
+    # Initialize the database for this test
+    import asyncio
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(db_module.initialize_database())
+    loop.close()
 
     # Patch the controller factory to return our mock controller
     with patch("src.controllers.factory.get_controller", return_value=mock_controller):
