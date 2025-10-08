@@ -281,7 +281,7 @@ class AuditLogger:
             grant: Revoked grant
             reason: Reason for revocation
             user_id: User who revoked the grant
-            **context: Additional context
+            **context: Additional context (immediate, controller_revoked, etc.)
 
         Returns:
             Created event log entry
@@ -298,6 +298,12 @@ class AuditLogger:
         session_id, ip_address, user_agent, extra_details = self._extract_log_params(
             context
         )
+
+        # Include immediate and controller_revoked flags if provided (T091)
+        if "immediate" in extra_details:
+            details["immediate"] = extra_details.pop("immediate")
+        if "controller_revoked" in extra_details:
+            details["controller_revoked"] = extra_details.pop("controller_revoked")
 
         return await self.log_event(
             event_type=EventType.GRANT_REVOKED,
