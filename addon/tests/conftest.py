@@ -125,6 +125,8 @@ def mock_controller() -> MagicMock:
         )
     )
 
+    controller.health_check = AsyncMock(return_value=True)
+
     return controller
 
 
