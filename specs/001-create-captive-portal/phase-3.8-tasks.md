@@ -6,9 +6,9 @@ SPDX-License-Identifier: Apache-2.0
 # Phase 3.8: Final Test Remediation
 
 **Status**: In Progress
-**Test Results (Current)**: 156 passing, 30 failing (84% pass rate)
+**Test Results (Current)**: 157 passing, 29 failing (84% pass rate)
 **Coverage**: 68% overall
-**Progress**: 1/11 tasks completed (9%)
+**Progress**: 2/11 tasks completed (18%)
 
 ## Test Failure Analysis
 
@@ -47,7 +47,7 @@ After completing Phase 3.7, 32 test failures remain. These fall into clear categ
 
 **Priority: Medium** - Feature completeness
 
-- [ ] T105: Fix theme preview endpoint JSON response
+- [x] T105: Fix theme preview endpoint JSON response
   - Issue: `json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)`
   - Root cause: Preview endpoint returning non-JSON content
   - File: `src/api/theme.py`
