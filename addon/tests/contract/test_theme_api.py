@@ -148,11 +148,12 @@ class TestThemeAPI:
 
         assert response.status_code == 200
 
-        # Preview returns JSON with the theme configuration
-        preview_data = response.json()
-        assert preview_data["portal_title"] == "Preview Portal"
-        assert preview_data["background_color"] == "#e3f2fd"
-        assert preview_data["primary_color"] == "#1976d2"
+        # Preview returns HTML with the theme applied
+        html_content = response.text
+        assert "Preview Portal" in html_content
+        assert "#e3f2fd" in html_content
+        assert "#1976d2" in html_content
+        assert response.headers["content-type"].startswith("text/html")
 
     @pytest.mark.asyncio
     async def test_post_theme_with_custom_css(
