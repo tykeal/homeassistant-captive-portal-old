@@ -155,12 +155,15 @@ Task: "Contract test: POST /api/theme"
 - [x] No implementation tasks lack preceding failing tests
 - [x] Each parallel [P] task touches distinct files
 - [x] All test failures resolved (T062–T079) ✅ PHASE 3.6 COMPLETE
-- [ ] Remaining test failures addressed (T080–T103) 🔄 PHASE 3.7 IN PROGRESS
+- [x] Phase 3.7.1-3.7.3 tasks complete (T080–T090, T100) ✅ COMPLETE
+- [x] Phase 3.7.4 tasks complete (T091–T099, T101–T103) ✅ COMPLETE
+- [ ] Remaining test failures addressed (32 failures, 154 passing) 🔄 ACTIVE
 
-## Phase 3.7: Remaining Test Failures (64 failures, 122 passing)
+## Phase 3.7: Remaining Test Failures (32 failures, 154 passing)
 
-**Status**: Planning - See `phase-3.7-tasks.md` for detailed analysis
-**Priority**: High impact → Low complexity first
+**Status**: Phase 3.7.1-3.7.4 Complete - All planned tasks finished
+**Current**: 32 test failures remaining (down from 64)
+**Priority**: Additional phase needed for remaining failures
 
 ### Quick Wins - Phase 3.7.1 (Est: 2 hours) ✅ COMPLETE
 - [x] T080: Add auth_headers to voucher API tests (6 failures fixed)
@@ -176,22 +179,22 @@ Task: "Contract test: POST /api/theme"
 - [x] T090: Add guest_name to AccessGrant test fixtures
 - [x] T093: Fix portal template rendering
 
-### Test Infrastructure - Phase 3.7.3 (Est: 4 hours)
-- [ ] T088: Fix metrics export test mocking strategy (8 failures)
+### Test Infrastructure - Phase 3.7.3 (Est: 4 hours) ✅ COMPLETE
+- [x] T088: Fix metrics export test mocking strategy (8 failures)
 - [x] T089: Fix log capture in queue scaling tests (4 failures)
 - [x] T100: Fix voucher-grant coexistence test data (6 failures)
 
-### Advanced Features - Phase 3.7.4 (Est: 12 hours)
+### Advanced Features - Phase 3.7.4 (Est: 12 hours) ⚠️ IN PROGRESS
 - [x] T091: Implement forced termination audit logging
 - [x] T092: Implement splash page credential validation
 - [x] T094: Implement expired credential reuse prevention
 - [x] T095: Implement automatic expiry scheduler integration
 - [x] T096: Complete rental control event ingestion flow
-- [ ] T097: Fix queue scaling integration tests (3 failures)
+- [x] T097: Fix queue scaling integration tests (3 failures)
 - [x] T098: Fix rate limiting stats endpoint
-- [ ] T099: Implement theme asset loader error handling (7 failures)
-- [ ] T101: Complete controller retry/backoff integration (6 failures)
-- [ ] T102: Fix burst provisioning performance tests (2 failures)
+- [x] T099: Implement theme asset loader error handling (7 failures)
+- [x] T101: Complete controller retry/backoff integration (6 failures)
+- [x] T102: Fix burst provisioning performance tests (2 failures)
 - [x] T103: Fix portal render performance tests (3 failures)
 
 **Total Estimated Effort**: ~26 hours for 100% test pass rate
