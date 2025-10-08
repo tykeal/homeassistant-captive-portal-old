@@ -97,7 +97,7 @@ After completing Phase 3.6 infrastructure fixes, 64 test failures remain. These 
 
 **Priority: Low** - Test infrastructure
 
-- [ ] T089: Fix log capture in queue scaling tests
+- [x] T089: Fix log capture in queue scaling tests
   - Issue: Logs not being captured in test buffer
   - File: `tests/unit/test_queue_scaling_logs.py`
   - Fix: Update logging configuration for test mode
@@ -107,7 +107,7 @@ After completing Phase 3.6 infrastructure fixes, 64 test failures remain. These 
 
 **Priority: Medium** - Model validation
 
-- [ ] T090: Add guest_name to AccessGrant test fixtures
+- [x] T090: Add guest_name to AccessGrant test fixtures
   - Issue: ValidationError - guest_name field required
   - File: `tests/integration/test_graceful_shutdown.py`
   - Fix: Update AccessGrant creation to include guest_name
@@ -117,25 +117,25 @@ After completing Phase 3.6 infrastructure fixes, 64 test failures remain. These 
 
 **Priority: Medium** - Integration testing
 
-- [ ] T091: Implement forced termination audit logging
+- [x] T091: Implement forced termination audit logging
   - File: `tests/integration/test_portal_scenarios.py`
   - Dependencies: Grant termination endpoint (T083)
 
-- [ ] T092: Implement splash page credential validation
+- [x] T092: Implement splash page credential validation
   - Issue: Portal authentication flow incomplete
   - Files: `src/portal/router.py`, portal templates
   - Dependencies: Portal rendering (T093)
 
-- [ ] T093: Fix portal template rendering
+- [x] T093: Fix portal template rendering
   - Issue: 404 errors on portal routes
   - File: `src/portal/router.py`
   - Fix: Verify template paths and Jinja2 configuration
 
-- [ ] T094: Implement expired credential reuse prevention
+- [x] T094: Implement expired credential reuse prevention
   - File: Integration test logic
   - Dependencies: Portal auth flow
 
-- [ ] T095: Implement automatic expiry scheduler integration
+- [x] T095: Implement automatic expiry scheduler integration
   - File: `src/services/expiry_scheduler.py`
   - Fix: Wire scheduler into test harness
 
@@ -143,7 +143,7 @@ After completing Phase 3.6 infrastructure fixes, 64 test failures remain. These 
 
 **Priority: Medium** - Feature integration
 
-- [ ] T096: Complete rental control event ingestion flow
+- [x] T096: Complete rental control event ingestion flow
   - Issue: Event processing incomplete
   - File: `src/services/event_ingestion.py`
   - Fix: Implement full pending→active state transition
@@ -152,7 +152,7 @@ After completing Phase 3.6 infrastructure fixes, 64 test failures remain. These 
 
 **Priority: Medium** - Performance testing
 
-- [ ] T097: Fix queue scaling integration tests
+- [x] T097: Fix queue scaling integration tests
   - Issue: Integration with grant manager incomplete
   - File: `tests/integration/test_queue_scaling.py`
   - Fix: Wire queue scheduler into grant provisioning tests
@@ -161,7 +161,7 @@ After completing Phase 3.6 infrastructure fixes, 64 test failures remain. These 
 
 **Priority: Low** - Feature testing
 
-- [ ] T098: Fix rate limiting stats endpoint
+- [x] T098: Fix rate limiting stats endpoint
   - Issue: Stats aggregation incomplete
   - File: `src/services/rate_limiter.py`
   - Fix: Implement stats collection and endpoint
@@ -180,7 +180,7 @@ After completing Phase 3.6 infrastructure fixes, 64 test failures remain. These 
 
 **Priority: Low** - Integration scenarios
 
-- [ ] T100: Fix voucher-grant coexistence test data
+- [x] T100: Fix voucher-grant coexistence test data
   - Issue: Mixed source grant scenarios failing
   - File: `tests/integration/test_voucher_grant_coexistence.py`
   - Fix: Update test data and verify dual-source logic
@@ -203,7 +203,7 @@ After completing Phase 3.6 infrastructure fixes, 64 test failures remain. These 
   - File: `tests/performance/test_burst_provisioning.py`
   - Fix: Update mocks after constructor changes
 
-- [ ] T103: Fix portal render performance tests
+- [x] T103: Fix portal render performance tests
   - Issue: Portal routes returning 404
   - File: `tests/performance/test_portal_render.py`
   - Dependencies: Portal template rendering (T093)
