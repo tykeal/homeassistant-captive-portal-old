@@ -203,7 +203,7 @@ Task: "Contract test: POST /api/theme"
 
 **Status**: In Progress
 **Progress**: 180/186 tests passing (96.8% pass rate)
-**Completed**: T113-T122 - Fixed test isolation issues (22 test failures resolved)
+**Completed**: T104-T105, T113-T122 - Fixed test isolation issues (22 test failures resolved)
 **Remaining**: 6 failures (4 controller retry tests with design issues, 2 graceful shutdown tests)
 
 **Major Achievement**: Identified and fixed root cause of test state pollution
@@ -230,10 +230,10 @@ fixture's behavior instead of trying to patch after app creation.
 - [x] T110: Fix forced termination audit logging integration - Fixed by T114 (auth service cleanup)
 - [x] T111: Fix splash page credential validation flow - Fixed by T114 (auth service cleanup)
 - [x] T112: Fix expired credential reuse prevention - Fixed by T114 (auth service cleanup)
-- [x] T113: Fix automatic expiry scheduler grace period - Fixed by T114 (auth service cleanup)
-- [x] T114: Fix rental control event ingestion activation - Fixed by T114 (auth service cleanup)
+- [x] T113: Fix automatic expiry scheduler grace period - Implemented fixture cleanup
+- [x] T114: Fix rental control event ingestion activation - Implemented auth service state restoration
 
-### Queue & Shutdown - Phase 3.8.4 (3 failures remaining)
+### Queue & Shutdown - Phase 3.8.4 (2 failures remaining)
 - [x] T115: Fix queue scaling burst grant creation test - Fixed by T114 (auth service cleanup)
 - [x] T116: Fix queue scaling metrics test - Fixed by T114 (auth service cleanup)
 - [x] T117: Fix queue scaling sustained load test - Fixed by T114 (auth service cleanup)
