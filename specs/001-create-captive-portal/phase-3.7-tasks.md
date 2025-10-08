@@ -87,7 +87,7 @@ After completing Phase 3.6 infrastructure fixes, 64 test failures remain. These 
 
 **Priority: Medium** - Test quality
 
-- [ ] T088: Fix metrics export test mocking strategy
+- [x] T088: Fix metrics export test mocking strategy
   - Issue: Patches not applying to test client requests
   - File: `tests/unit/test_metrics_export.py`
   - Fix: Refactor to use dependency injection or proper fixture scope
