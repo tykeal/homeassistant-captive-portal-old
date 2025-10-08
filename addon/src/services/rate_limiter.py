@@ -186,6 +186,20 @@ class RateLimiter:
                     max_attempts=self.max_attempts,
                 )
 
+                # Check if lockout should be triggered
+                if attempts_in_window >= self.max_attempts:
+                    lockout_until = now + timedelta(
+                        seconds=self.lockout_duration_seconds
+                    )
+                    self._lockouts[client_ip] = lockout_until
+                    logger.warning(
+                        "Rate limit lockout triggered",
+                        client_ip=client_ip,
+                        attempts=attempts_in_window,
+                        lockout_until=lockout_until.isoformat(),
+                        lockout_duration_seconds=self.lockout_duration_seconds,
+                    )
+
     async def reset_client(self, client_ip: str) -> None:
         """Reset rate limit state for a specific client.
 
