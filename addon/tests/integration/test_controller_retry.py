@@ -15,7 +15,7 @@ class TestControllerUnreachable:
 
     @pytest.mark.asyncio
     async def test_controller_unreachable_grant_remains_pending(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test grant creation when controller is unreachable - should remain in pending state."""
         # Mock controller to simulate network failure
@@ -33,7 +33,9 @@ class TestControllerUnreachable:
                 "source": "rental_control",
             }
 
-            response = test_client.post("/api/grants", json=grant_request)
+            response = test_client.post(
+                "/api/grants", json=grant_request, headers=auth_headers
+            )
 
             # Grant should be created but remain pending due to controller failure
             assert response.status_code == 201
@@ -45,7 +47,9 @@ class TestControllerUnreachable:
             assert mock_provision.call_count >= 1
 
     @pytest.mark.asyncio
-    async def test_controller_retry_with_backoff(self, test_client: TestClient) -> None:
+    async def test_controller_retry_with_backoff(
+        self, test_client: TestClient, auth_headers: dict[str, str]
+    ) -> None:
         """Test retry mechanism with exponential backoff when controller fails."""
         call_times = []
 
@@ -70,7 +74,9 @@ class TestControllerUnreachable:
             }
 
             # Submit grant request
-            response = test_client.post("/api/grants", json=grant_request)
+            response = test_client.post(
+                "/api/grants", json=grant_request, headers=auth_headers
+            )
             assert response.status_code == 201
 
             # Wait for retry attempts
@@ -90,7 +96,7 @@ class TestControllerUnreachable:
 
     @pytest.mark.asyncio
     async def test_controller_recovery_pending_to_active(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test grant activation when controller becomes available after being unreachable."""
         # Track call attempts
@@ -126,7 +132,9 @@ class TestControllerUnreachable:
             }
 
             # Create grant (should start pending)
-            response = test_client.post("/api/grants", json=grant_request)
+            response = test_client.post(
+                "/api/grants", json=grant_request, headers=auth_headers
+            )
             assert response.status_code == 201
             grant_id = response.json()["grant_id"]
 
@@ -136,7 +144,9 @@ class TestControllerUnreachable:
             await asyncio.sleep(8)  # Allow time for retries and recovery
 
             # Check grant status - should eventually become active
-            get_response = test_client.get(f"/api/grants/{grant_id}")
+            get_response = test_client.get(
+                f"/api/grants/{grant_id}", headers=auth_headers
+            )
             assert get_response.status_code == 200
 
             final_grant = get_response.json()
@@ -147,7 +157,7 @@ class TestControllerUnreachable:
 
     @pytest.mark.asyncio
     async def test_controller_permanent_failure_handling(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test handling of grants when controller remains permanently unreachable."""
         with patch(
@@ -164,7 +174,9 @@ class TestControllerUnreachable:
                 "source": "rental_control",
             }
 
-            response = test_client.post("/api/grants", json=grant_request)
+            response = test_client.post(
+                "/api/grants", json=grant_request, headers=auth_headers
+            )
             assert response.status_code == 201
             grant_id = response.json()["grant_id"]
 
@@ -174,7 +186,9 @@ class TestControllerUnreachable:
             await asyncio.sleep(10)
 
             # Grant should remain pending with error details
-            get_response = test_client.get(f"/api/grants/{grant_id}")
+            get_response = test_client.get(
+                f"/api/grants/{grant_id}", headers=auth_headers
+            )
             assert get_response.status_code == 200
 
             grant_data = get_response.json()
@@ -184,14 +198,14 @@ class TestControllerUnreachable:
 
     @pytest.mark.asyncio
     async def test_health_endpoint_controller_status(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test health endpoint reflects controller connectivity status."""
         # Test with healthy controller
         with patch("src.controllers.omada.OmadaController.health_check") as mock_health:
             mock_health.return_value = {"status": "healthy", "response_time": 50}
 
-            response = test_client.get("/health")
+            response = test_client.get("/health", headers=auth_headers)
             assert response.status_code == 200
 
             health_data = response.json()
@@ -203,7 +217,7 @@ class TestControllerUnreachable:
         with patch("src.controllers.omada.OmadaController.health_check") as mock_health:
             mock_health.side_effect = httpx.ConnectTimeout("Controller unreachable")
 
-            response = test_client.get("/health")
+            response = test_client.get("/health", headers=auth_headers)
             assert response.status_code == 503  # Service Unavailable
 
             health_data = response.json()
@@ -212,7 +226,7 @@ class TestControllerUnreachable:
 
     @pytest.mark.asyncio
     async def test_metrics_include_controller_failures(
-        self, test_client: TestClient
+        self, test_client: TestClient, auth_headers: dict[str, str]
     ) -> None:
         """Test that controller failure metrics are tracked and exposed."""
         with patch(
@@ -229,7 +243,9 @@ class TestControllerUnreachable:
                 "source": "rental_control",
             }
 
-            response = test_client.post("/api/grants", json=grant_request)
+            response = test_client.post(
+                "/api/grants", json=grant_request, headers=auth_headers
+            )
             assert response.status_code == 201
 
             # Wait for retry attempts
@@ -238,7 +254,7 @@ class TestControllerUnreachable:
             await asyncio.sleep(3)
 
             # Check metrics
-            metrics_response = test_client.get("/metrics")
+            metrics_response = test_client.get("/metrics", headers=auth_headers)
             assert metrics_response.status_code == 200
 
             metrics_text = metrics_response.text
