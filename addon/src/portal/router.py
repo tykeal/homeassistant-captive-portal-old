@@ -3,9 +3,11 @@
 
 """Portal router for captive portal splash page and authentication."""
 
+import socket
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Form, Request, status
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -28,6 +30,42 @@ router = APIRouter(prefix="/portal", tags=["portal"])
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+
+
+def _validate_logo_url(logo_url: str | None) -> str | None:
+    """Validate that a logo URL is accessible (quick DNS check).
+
+    Args:
+        logo_url: URL to validate
+
+    Returns:
+        The URL if valid and accessible, None otherwise
+    """
+    if not logo_url:
+        return None
+
+    try:
+        # Parse the URL to get hostname
+        parsed = urlparse(logo_url)
+        if not parsed.hostname:
+            return None
+
+        # Quick DNS lookup with timeout to check if domain exists
+        # This prevents showing logos from obviously invalid domains
+        socket.setdefaulttimeout(0.5)  # 500ms timeout
+        socket.gethostbyname(parsed.hostname)
+
+        return logo_url
+
+    except (TimeoutError, socket.gaierror, Exception) as e:
+        logger.warning(
+            "Logo URL validation failed, will not display logo",
+            logo_url=logo_url,
+            error=str(e),
+        )
+        return None
+    finally:
+        socket.setdefaulttimeout(None)  # Reset timeout
 
 
 class AuthenticateRequest(BaseModel):
@@ -54,6 +92,9 @@ async def splash_page(request: Request) -> HTMLResponse:
         # Get current theme with fallback
         theme = await theme_manager.get_current_theme(use_fallback=True)
 
+        # Validate logo URL (quick DNS check) to avoid broken images
+        validated_logo_url = _validate_logo_url(theme.logo_url)
+
         # Render template with theme data
         return templates.TemplateResponse(
             "splash.html",
@@ -62,7 +103,7 @@ async def splash_page(request: Request) -> HTMLResponse:
                 "portal_title": theme.portal_title,
                 "background_color": theme.background_color,
                 "primary_color": theme.primary_color,
-                "logo_url": theme.logo_url,
+                "logo_url": validated_logo_url,
                 "custom_css": theme.custom_css,
             },
         )
@@ -108,6 +149,10 @@ async def splash_page_form_submit(
         # Return error response (simplified for testing)
         theme_manager = get_theme_manager()
         theme = await theme_manager.get_current_theme(use_fallback=True)
+
+        # Validate logo URL
+        validated_logo_url = _validate_logo_url(theme.logo_url)
+
         return templates.TemplateResponse(
             "splash.html",
             {
@@ -115,7 +160,7 @@ async def splash_page_form_submit(
                 "portal_title": theme.portal_title,
                 "background_color": theme.background_color,
                 "primary_color": theme.primary_color,
-                "logo_url": theme.logo_url,
+                "logo_url": validated_logo_url,
                 "custom_css": theme.custom_css,
                 "error": "Please enter a credential",
             },

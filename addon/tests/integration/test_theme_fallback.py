@@ -41,7 +41,7 @@ class TestThemeFallback:
         assert "#f0f0f0" in html_content  # Background color should still apply
         assert "#333333" in html_content  # Primary color should still apply
 
-        # Should not have broken image references
+        # Should not have broken image references (DNS validation filters them out)
         assert (
             'src="https://invalid-domain-that-does-not-exist.com/logo.png"'
             not in html_content
@@ -170,7 +170,7 @@ class TestThemeFallback:
 
         # Should still return a preview, falling back to valid defaults
         assert response.status_code == 200
-        assert response.headers["content-type"] == "text/html"
+        assert "text/html" in response.headers["content-type"]
 
         html_content = response.text
 

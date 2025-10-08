@@ -4,6 +4,7 @@
 """Theme API router."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import HTMLResponse
 
 from ..core.auth import require_auth
 from ..core.logging_config import get_logger
@@ -71,19 +72,31 @@ async def preview_theme(
     portal_title: str | None = None,
     background_color: str | None = None,
     primary_color: str | None = None,
-) -> dict:
+    logo_url: str | None = None,
+    custom_css: str | None = None,
+) -> HTMLResponse:
     """Preview theme with specified parameters without saving.
 
     Falls back to current/default values if invalid parameters are provided.
+    Returns HTML preview of the portal with the theme applied.
     """
+
     theme_manager = get_theme_manager()
     current_theme = await theme_manager.get_current_theme(use_fallback=True)
 
-    # Create preview theme by overlaying parameters
-    preview_data = current_theme.model_dump()
+    # Start with current theme values
+    preview_data = {
+        "portal_title": current_theme.portal_title,
+        "background_color": current_theme.background_color,
+        "primary_color": current_theme.primary_color,
+        "logo_url": current_theme.logo_url,
+        "custom_css": current_theme.custom_css,
+    }
 
+    # Override with provided parameters (with validation)
     if portal_title:
         preview_data["portal_title"] = portal_title
+
     if background_color:
         try:
             theme_manager._validate_color(background_color)
@@ -94,6 +107,7 @@ async def preview_theme(
                 "Invalid background_color in preview, using current value",
                 invalid_color=background_color,
             )
+
     if primary_color:
         try:
             theme_manager._validate_color(primary_color)
@@ -105,4 +119,40 @@ async def preview_theme(
                 invalid_color=primary_color,
             )
 
-    return preview_data
+    if logo_url:
+        try:
+            theme_manager._validate_url(logo_url)
+            preview_data["logo_url"] = logo_url
+        except ValueError:
+            # Fall back to current value on validation error
+            logger.warning(
+                "Invalid logo_url in preview, using current value",
+                invalid_url=logo_url,
+            )
+
+    if custom_css is not None:
+        preview_data["custom_css"] = custom_css
+
+    # Render preview template
+    # Create a mock request object for template rendering
+    from starlette.datastructures import Headers
+    from starlette.requests import Request as StarletteRequest
+
+    from ..portal.router import templates as portal_templates
+
+    scope = {
+        "type": "http",
+        "method": "GET",
+        "path": "/api/theme/preview",
+        "headers": Headers().raw,
+        "query_string": b"",
+    }
+    mock_request = StarletteRequest(scope)
+
+    return portal_templates.TemplateResponse(
+        "splash.html",
+        {
+            "request": mock_request,
+            **preview_data,
+        },
+    )
