@@ -36,17 +36,9 @@ async def health_check() -> HealthResponse:
         grant_stats = await grant_manager.get_stats()
 
         # Check controller health (T037: controller status sample)
-        from ..controllers.omada import OmadaController
-        from ..core.config import get_config
+        from ..controllers.factory import get_controller
 
-        config = get_config()
-        controller = OmadaController(
-            controller_url=str(config.controller.url),
-            site_id=config.controller.site_name,  # Using site_name as site_id
-            username=config.controller.username,
-            password=config.controller.password,
-        )
-
+        controller = get_controller()
         controller_healthy = False
         try:
             controller_healthy = await controller.health_check()
