@@ -218,8 +218,8 @@ Task: "Contract test: POST /api/theme"
 ### Controller Integration - Phase 3.8.2 (4 failures remaining)
 - [x] T106: Fix controller retry/backoff test mocking strategy
 - [x] T107: Fix controller recovery pending-to-active transition
-- [ ] T108: Fix controller permanent failure handling logic
-- [ ] T109: Fix controller failure metrics collection
+- [x] T108: Fix controller permanent failure handling logic
+- [x] T109: Fix controller failure metrics collection
 
 **Note**: These tests have a design issue where they try to patch the controller
 after the test_client fixture has already created the app with a mocked controller.
