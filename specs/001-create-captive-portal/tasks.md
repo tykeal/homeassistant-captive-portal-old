@@ -259,7 +259,7 @@ fixture's behavior instead of trying to patch after app creation.
 **Target**: 100% test pass rate (186/186 tests passing)
 
 ### Controller Metrics Naming - Phase 3.9.1
-- [ ] T127: Add `captive_portal_` prefix to controller metrics in health endpoint
+- [x] T127: Add `captive_portal_` prefix to controller metrics in health endpoint
   - Fix: controller_requests_total → captive_portal_controller_requests_total
   - Fix: controller_failures_total → captive_portal_controller_failures_total
   - Fix: controller_retry_attempts_total → captive_portal_controller_retry_attempts_total
