@@ -216,8 +216,8 @@ Task: "Contract test: POST /api/theme"
 - [x] T105: Add auth_headers to voucher-grant coexistence tests (6 failures) - Fixed with date updates
 
 ### Controller Integration - Phase 3.8.2 (4 failures remaining)
-- [ ] T106: Fix controller retry/backoff test mocking strategy
-- [ ] T107: Fix controller recovery pending-to-active transition
+- [x] T106: Fix controller retry/backoff test mocking strategy
+- [x] T107: Fix controller recovery pending-to-active transition
 - [ ] T108: Fix controller permanent failure handling logic
 - [ ] T109: Fix controller failure metrics collection
 
