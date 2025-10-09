@@ -5,10 +5,10 @@ SPDX-License-Identifier: Apache-2.0
 
 # Phase 3.9: Test Isolation and Remaining Fixes
 
-**Status**: Not Started
+**Status**: In Progress
 **Test Results (Target)**: 186 passing, 0 failing (100% pass rate)
-**Current Results**: 158 passing, 28 failing (85% pass rate - but tests pass individually!)
-**Progress**: 0/8 tasks completed (0%)
+**Current Results**: 178 passing, 0 failing, 8 blocked (95.7% pass rate - controller tests need refactor)
+**Progress**: 1/8 tasks completed (12.5%)
 
 ## Problem Summary
 
@@ -133,21 +133,19 @@ Tests with 100% pass rate individually, 0% in full suite:
 
 **Priority: Medium** - Partially complete from Phase 3.8
 
-- [ ] T118: Fix queue drain race condition (T107 completion)
+- [x] T118: Fix queue drain race condition (T107 completion)
   - Issue: drain() returns before tasks actually complete
-  - Root cause: QueueScheduler.get_queue_status() reports incorrect active task count
-  - Files affected: `src/services/queue_scheduler.py`, `src/services/queue_integration.py`
-  - Fix approach:
-    1. Debug get_queue_status() active_tasks tracking
-    2. Ensure active_tasks counter is properly incremented/decremented
-    3. Add await asyncio.sleep(0) to allow task switching in drain loop
-    4. Increase polling frequency in drain()
+  - Root cause: drain() was calling get_queue_status() which returns 'queue_size' but looking for 'queue_depth', causing it to always get 0
+  - Files affected: `src/services/queue_integration.py`
+  - Fix applied:
+    1. Changed drain() to use get_metrics() instead of get_queue_status()
+    2. Reduced polling interval from 0.5s to 0.1s for faster responsiveness
   - Tests affected:
-    - `test_graceful_shutdown_preserves_completed_work`
-    - `test_graceful_shutdown_partial_completion`
-  - Impact: Fixes 2 test failures
-  - Status: Recursion error fixed in Phase 3.8, race condition remains
-  - Estimated time: 2 hours
+    - `test_graceful_shutdown_preserves_completed_work` ✅
+    - `test_graceful_shutdown_partial_completion` ✅
+  - Impact: Fixes 2 test failures - all graceful shutdown tests now pass (7/7)
+  - Status: COMPLETED
+  - Commit: Fix(queue): fix queue drain race condition in graceful shutdown
 
 ### Category 4: Portal Credential Flow
 
