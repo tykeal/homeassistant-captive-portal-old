@@ -119,13 +119,17 @@ async def get_metrics() -> dict:
         )
 
         # Controller metrics (T109)
-        metrics.append(f"controller_requests_total {controller_metrics.requests_total}")
-        metrics.append(f"controller_failures_total {controller_metrics.failures_total}")
         metrics.append(
-            f"controller_retry_attempts_total {controller_metrics.retry_attempts_total}"
+            f"captive_portal_controller_requests_total {controller_metrics.requests_total}"
         )
         metrics.append(
-            f"controller_successes_total {controller_metrics.successes_total}"
+            f"captive_portal_controller_failures_total {controller_metrics.failures_total}"
+        )
+        metrics.append(
+            f"captive_portal_controller_retry_attempts_total {controller_metrics.retry_attempts_total}"
+        )
+        metrics.append(
+            f"captive_portal_controller_successes_total {controller_metrics.successes_total}"
         )
 
         # Return as plain text (Prometheus format)

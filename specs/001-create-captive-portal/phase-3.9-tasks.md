@@ -7,8 +7,8 @@ SPDX-License-Identifier: Apache-2.0
 
 **Status**: In Progress
 **Test Results (Target)**: 186 passing, 0 failing (100% pass rate)
-**Current Results**: 178 passing, 0 failing, 8 blocked (95.7% pass rate - controller tests need refactor)
-**Progress**: 1/8 tasks completed (12.5%)
+**Current Results**: 178 passing, 2 failing (metrics), 6 blocked (controller tests)
+**Progress**: 2/8 tasks completed (25%)
 
 ## Problem Summary
 
@@ -151,19 +151,16 @@ Tests with 100% pass rate individually, 0% in full suite:
 
 **Priority: Low** - May be fixed by isolation fixes
 
-- [ ] T119: Investigate portal credential validation (T109 investigation)
+- [x] T119: Investigate portal credential validation (T109 investigation)
   - Issue: KeyError: 'code' in portal responses
-  - Root cause: Unknown - blocked by test isolation issues
-  - Files affected: To be determined
-  - Fix approach:
-    1. Re-run tests after isolation fixes
-    2. If still failing, debug portal response structure
-    3. Verify template rendering includes 'code' field
+  - Root cause: Already fixed in Phase 3.8 (likely through test isolation and auth fixes)
+  - Files affected: None - issue was already resolved
   - Tests affected:
-    - `test_splash_page_credential_success`
-    - `test_expired_credential_reuse_denied`
-  - Impact: May already be fixed by isolation fixes, or needs investigation
-  - Estimated time: 2 hours (if needed)
+    - `test_splash_page_credential_success` ✅
+    - `test_expired_credential_reuse_denied` ✅
+  - Impact: No changes needed - tests already passing
+  - Status: COMPLETED (no action required)
+  - Note: This was likely fixed by earlier authentication and isolation fixes
 
 ## Implementation Strategy
 
