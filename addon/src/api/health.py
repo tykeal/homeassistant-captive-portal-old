@@ -92,6 +92,12 @@ async def get_metrics() -> dict:
         grant_manager = get_grant_manager()
         grant_stats = await grant_manager.get_stats()
 
+        # Get controller metrics
+        from ..services.metrics_exporter import get_metrics_exporter
+
+        exporter = get_metrics_exporter()
+        controller_metrics = exporter.controller_metrics
+
         # Format as Prometheus-style metrics
         metrics = []
 
@@ -110,6 +116,16 @@ async def get_metrics() -> dict:
         )
         metrics.append(
             f"captive_portal_queue_workers {queue_metrics.get('active_workers', 0)}"
+        )
+
+        # Controller metrics (T109)
+        metrics.append(f"controller_requests_total {controller_metrics.requests_total}")
+        metrics.append(f"controller_failures_total {controller_metrics.failures_total}")
+        metrics.append(
+            f"controller_retry_attempts_total {controller_metrics.retry_attempts_total}"
+        )
+        metrics.append(
+            f"controller_successes_total {controller_metrics.successes_total}"
         )
 
         # Return as plain text (Prometheus format)

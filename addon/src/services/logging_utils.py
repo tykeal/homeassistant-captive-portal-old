@@ -172,6 +172,8 @@ def log_controller_operation(
 ) -> None:
     """Log controller operation with timing and outcome.
 
+    Also records operation metrics for Prometheus export (T109).
+
     Args:
         operation: Operation name (e.g., "provision", "revoke", "extend")
         controller_type: Type of controller (e.g., "tp-omada", "unifi")
@@ -180,6 +182,14 @@ def log_controller_operation(
         error: Error message if failed
         **context: Additional context (grant_id, controller_voucher_id, etc.)
     """
+    # Record metrics (T109)
+    from ..services.metrics_exporter import get_metrics_exporter
+
+    exporter = get_metrics_exporter()
+    # Note: retry_count would need to be passed in context if available
+    retry_count = context.get("retry_count", 0)
+    exporter.record_controller_operation(operation, success, retry_count)
+
     log_data = {
         "operation": operation,
         "controller_type": controller_type,

@@ -24,6 +24,57 @@ logger = get_logger(__name__)
 
 
 @dataclass
+class ControllerMetrics:
+    """Controller operation metrics for tracking controller interactions."""
+
+    # Counters
+    requests_total: int = 0
+    failures_total: int = 0
+    retry_attempts_total: int = 0
+    successes_total: int = 0
+
+    # Per-operation counters
+    provision_requests: int = 0
+    provision_failures: int = 0
+    revoke_requests: int = 0
+    revoke_failures: int = 0
+    extend_requests: int = 0
+    extend_failures: int = 0
+
+    def record_request(
+        self, operation: str, success: bool, retry_count: int = 0
+    ) -> None:
+        """Record a controller operation request.
+
+        Args:
+            operation: Operation type (provision, revoke, extend)
+            success: Whether the operation succeeded
+            retry_count: Number of retries attempted
+        """
+        self.requests_total += 1
+        self.retry_attempts_total += retry_count
+
+        if success:
+            self.successes_total += 1
+        else:
+            self.failures_total += 1
+
+        # Track per-operation metrics
+        if operation == "provision_grant":
+            self.provision_requests += 1
+            if not success:
+                self.provision_failures += 1
+        elif operation == "revoke_grant":
+            self.revoke_requests += 1
+            if not success:
+                self.revoke_failures += 1
+        elif operation == "extend_grant":
+            self.extend_requests += 1
+            if not success:
+                self.extend_failures += 1
+
+
+@dataclass
 class GrantMetrics:
     """Grant lifecycle metrics."""
 
@@ -271,6 +322,7 @@ class MetricsExporter:
     def __init__(self) -> None:
         """Initialize metrics exporter."""
         self.metrics = GrantMetrics()
+        self.controller_metrics = ControllerMetrics()
         self._start_time = time.time()
 
     def record_provision_start(self) -> float:
@@ -310,6 +362,25 @@ class MetricsExporter:
         )
 
         return latency_ms
+
+    def record_controller_operation(
+        self, operation: str, success: bool, retry_count: int = 0
+    ) -> None:
+        """Record a controller operation.
+
+        Args:
+            operation: Operation type (provision_grant, revoke_grant, extend_grant)
+            success: Whether the operation succeeded
+            retry_count: Number of retries attempted
+        """
+        self.controller_metrics.record_request(operation, success, retry_count)
+
+        logger.debug(
+            "Controller operation recorded",
+            operation=operation,
+            success=success,
+            retry_count=retry_count,
+        )
 
     def get_metrics(self) -> dict[str, Any]:
         """Get current metrics as dictionary.
