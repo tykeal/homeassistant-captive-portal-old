@@ -281,9 +281,10 @@ class QueuedOperations:
         start_time = asyncio.get_event_loop().time()
 
         while True:
-            status = self.scheduler.get_queue_status()
-            queue_depth = status.get("queue_depth", 0)
-            active_tasks = status.get("active_tasks", 0)
+            # Use get_metrics() which has queue_depth and active_tasks
+            metrics = self.scheduler.get_metrics()
+            queue_depth = metrics.get("queue_depth", 0)
+            active_tasks = metrics.get("active_tasks", 0)
 
             if queue_depth == 0 and active_tasks == 0:
                 logger.info("Queue drained successfully")
@@ -302,7 +303,7 @@ class QueuedOperations:
                 )
 
             # Wait a bit before checking again
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(0.1)
 
         logger.info("Queue drain completed")
 
