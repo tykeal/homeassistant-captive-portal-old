@@ -145,22 +145,22 @@ class GrantRepository:
     def _row_to_domain(self, row: GrantTable) -> AccessGrant:
         """Convert database row to domain model."""
         return AccessGrant(
-            grant_id=row.grant_id,
-            booking_id=row.booking_id,
-            status=GrantStatus(row.status),
-            source=row.source,
-            start_time=row.start_time,
-            end_time=row.end_time,
-            created_at=row.created_at,
-            activated_at=row.activated_at,
-            revoked_at=row.revoked_at,
-            modified_at=row.modified_at,
-            guest_name=row.guest_name,
-            device_mac=row.device_mac,
-            controller_voucher_id=row.controller_voucher_id,
-            last_error=row.last_error,
-            retry_count=row.retry_count,
-            revocation_reason=row.revocation_reason,
+            grant_id=row.grant_id,  # type: ignore[arg-type]
+            booking_id=row.booking_id,  # type: ignore[arg-type]
+            status=GrantStatus(row.status),  # type: ignore[arg-type]
+            source=row.source,  # type: ignore[arg-type]
+            start_time=row.start_time,  # type: ignore[arg-type]
+            end_time=row.end_time,  # type: ignore[arg-type]
+            created_at=row.created_at,  # type: ignore[arg-type]
+            activated_at=row.activated_at,  # type: ignore[arg-type]
+            revoked_at=row.revoked_at,  # type: ignore[arg-type]
+            modified_at=row.modified_at,  # type: ignore[arg-type]
+            guest_name=row.guest_name,  # type: ignore[arg-type]
+            device_mac=row.device_mac,  # type: ignore[arg-type]
+            controller_voucher_id=row.controller_voucher_id,  # type: ignore[arg-type]
+            last_error=row.last_error,  # type: ignore[arg-type]
+            retry_count=row.retry_count,  # type: ignore[arg-type]
+            revocation_reason=row.revocation_reason,  # type: ignore[arg-type]
         )
 
 
@@ -239,16 +239,16 @@ class VoucherRepository:
     def _row_to_domain(self, row: VoucherTable) -> Voucher:
         """Convert database row to domain model."""
         return Voucher(
-            voucher_id=row.voucher_id,
-            code=row.code,
-            status=VoucherStatus(row.status),
-            duration_hours=row.duration_hours,
-            max_uses=row.max_uses,
-            uses_count=row.uses_count,
-            description=row.description,
-            created_by=row.created_by,
-            created_at=row.created_at,
-            expires_at=row.expires_at,
+            voucher_id=row.voucher_id,  # type: ignore[arg-type]
+            code=row.code,  # type: ignore[arg-type]
+            status=VoucherStatus(row.status),  # type: ignore[arg-type]
+            duration_hours=row.duration_hours,  # type: ignore[arg-type]
+            max_uses=row.max_uses,  # type: ignore[arg-type]
+            uses_count=row.uses_count,  # type: ignore[arg-type]
+            description=row.description,  # type: ignore[arg-type]
+            created_by=row.created_by,  # type: ignore[arg-type]
+            created_at=row.created_at,  # type: ignore[arg-type]
+            expires_at=row.expires_at,  # type: ignore[arg-type]
         )
 
 
@@ -343,19 +343,19 @@ class EventRepository:
 
     def _row_to_domain(self, row: EventLogTable) -> EventLogEntry:
         """Convert database row to domain model."""
-        details = json.loads(row.details) if row.details else {}
+        details = json.loads(row.details) if row.details else {}  # type: ignore[arg-type]
 
         return EventLogEntry(
-            event_id=row.event_id,
-            event_type=EventType(row.event_type),
-            timestamp=row.timestamp,
-            entity_type=row.entity_type,
-            entity_id=row.entity_id,
+            event_id=row.event_id,  # type: ignore[arg-type]
+            event_type=EventType(row.event_type),  # type: ignore[arg-type]
+            timestamp=row.timestamp,  # type: ignore[arg-type]
+            entity_type=row.entity_type,  # type: ignore[arg-type]
+            entity_id=row.entity_id,  # type: ignore[arg-type]
             details=details,
-            user_id=row.user_id,
-            session_id=row.session_id,
-            ip_address=row.ip_address,
-            user_agent=row.user_agent,
+            user_id=row.user_id,  # type: ignore[arg-type]
+            session_id=row.session_id,  # type: ignore[arg-type]
+            ip_address=row.ip_address,  # type: ignore[arg-type]
+            user_agent=row.user_agent,  # type: ignore[arg-type]
         )
 
 
@@ -422,11 +422,11 @@ class ThemeRepository:
     def _row_to_domain(self, row: ThemeConfigTable) -> ThemeConfig:
         """Convert database row to domain model."""
         return ThemeConfig(
-            portal_title=row.portal_title,
-            background_color=row.background_color,
-            primary_color=row.primary_color,
-            logo_url=row.logo_url,
-            custom_css=row.custom_css,
-            updated_at=row.updated_at,
-            updated_by=row.updated_by,
+            portal_title=row.portal_title,  # type: ignore[arg-type]
+            background_color=row.background_color,  # type: ignore[arg-type]
+            primary_color=row.primary_color,  # type: ignore[arg-type]
+            logo_url=row.logo_url,  # type: ignore[arg-type]
+            custom_css=row.custom_css,  # type: ignore[arg-type]
+            updated_at=row.updated_at,  # type: ignore[arg-type]
+            updated_by=row.updated_by,  # type: ignore[arg-type]
         )
