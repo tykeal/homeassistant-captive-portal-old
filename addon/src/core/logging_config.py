@@ -5,6 +5,7 @@
 
 import logging
 import sys
+from collections.abc import Callable, Mapping, MutableMapping
 from typing import Any
 
 import structlog
@@ -24,7 +25,12 @@ def configure_logging(log_level: str = "INFO", json_format: bool = True) -> None
     timestamper = structlog.processors.TimeStamper(fmt="iso")
 
     # Configure processors
-    shared_processors = [
+    shared_processors: list[
+        Callable[
+            [Any, str, MutableMapping[str, Any]],
+            Mapping[str, Any] | str | bytes | bytearray | tuple[Any, ...],
+        ]
+    ] = [
         structlog.stdlib.filter_by_level,
         structlog.stdlib.add_logger_name,
         structlog.stdlib.add_log_level,

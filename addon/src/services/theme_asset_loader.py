@@ -93,7 +93,7 @@ class ThemeAssetLoader:
         self,
         theme_name: str | None = None,
         template_name: str = "portal.html",
-        **context,
+        **context: Any,
     ) -> str:
         """Render a theme template with the given context.
 

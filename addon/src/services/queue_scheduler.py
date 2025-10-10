@@ -36,7 +36,7 @@ class QueueTask:
     max_retries: int = 3
     context: dict[str, Any] = field(default_factory=dict)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Initialize task after creation."""
         if self.created_at == 0:
             self.created_at = time.time()
@@ -92,8 +92,10 @@ class AdaptiveQueueScheduler:
         self.metrics_window_size = metrics_window_size
 
         # Queue and worker management
-        self._task_queue: asyncio.PriorityQueue = asyncio.PriorityQueue()
-        self._workers: list[asyncio.Task] = []
+        self._task_queue: asyncio.PriorityQueue[tuple[int, float, QueueTask]] = (
+            asyncio.PriorityQueue()
+        )
+        self._workers: list[asyncio.Task[None]] = []
         self._running = False
         self._shutdown_event = asyncio.Event()
 
