@@ -25,7 +25,7 @@ logger = get_logger(__name__)
 class GrantManager:
     """Service for access grant lifecycle management."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize grant manager."""
         self.audit_logger = get_audit_logger()
         self.metrics = get_metrics_exporter()

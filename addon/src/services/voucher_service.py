@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 class VoucherService:
     """Service for voucher management operations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize voucher service."""
         self.audit_logger = get_audit_logger()
 

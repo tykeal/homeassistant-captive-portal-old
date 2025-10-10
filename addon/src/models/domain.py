@@ -59,7 +59,9 @@ class AccessGrant(BaseModel):
     """Access grant domain model."""
 
     grant_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    booking_id: str | None = Field(None, description="Rental Control booking ID")
+    booking_id: str | None = Field(
+        default=None, description="Rental Control booking ID"
+    )
     status: GrantStatus = GrantStatus.PENDING
     source: GrantSource = GrantSource.RENTAL_CONTROL
 
@@ -73,10 +75,12 @@ class AccessGrant(BaseModel):
 
     # Guest information
     guest_name: str = Field(..., description="Guest name")
-    device_mac: str | None = Field(None, description="Device MAC address")
+    device_mac: str | None = Field(default=None, description="Device MAC address")
 
     # Controller integration
-    controller_voucher_id: str | None = Field(None, description="Controller voucher ID")
+    controller_voucher_id: str | None = Field(
+        default=None, description="Controller voucher ID"
+    )
 
     # Error tracking
     last_error: str | None = None
@@ -220,9 +224,9 @@ class EventLogEntry(BaseModel):
 
     # Context information
     entity_type: str | None = Field(
-        None, description="Type of entity (grant, voucher, etc.)"
+        default=None, description="Type of entity (grant, voucher, etc.)"
     )
-    entity_id: str | None = Field(None, description="ID of related entity")
+    entity_id: str | None = Field(default=None, description="ID of related entity")
 
     # Event details
     details: dict[str, Any] = Field(
@@ -230,12 +234,12 @@ class EventLogEntry(BaseModel):
     )
 
     # User context
-    user_id: str | None = Field(None, description="User or system identifier")
-    session_id: str | None = Field(None, description="Session identifier")
+    user_id: str | None = Field(default=None, description="User or system identifier")
+    session_id: str | None = Field(default=None, description="Session identifier")
 
     # Request context
-    ip_address: str | None = Field(None, description="Source IP address")
-    user_agent: str | None = Field(None, description="User agent string")
+    ip_address: str | None = Field(default=None, description="Source IP address")
+    user_agent: str | None = Field(default=None, description="User agent string")
 
     def add_detail(self, key: str, value: Any) -> None:
         """Add a detail to the event."""
@@ -301,14 +305,18 @@ class EventLogEntry(BaseModel):
 class ThemeConfig(BaseModel):
     """Theme configuration domain model."""
 
-    portal_title: str = Field("Guest Network Access", description="Portal page title")
-    background_color: str = Field("#f5f5f5", description="Background color (hex)")
-    primary_color: str = Field("#007bff", description="Primary color (hex)")
-    logo_url: str | None = Field(None, description="Logo URL")
-    custom_css: str | None = Field(None, description="Custom CSS styles")
+    portal_title: str = Field(
+        default="Guest Network Access", description="Portal page title"
+    )
+    background_color: str = Field(
+        default="#f5f5f5", description="Background color (hex)"
+    )
+    primary_color: str = Field(default="#007bff", description="Primary color (hex)")
+    logo_url: str | None = Field(default=None, description="Logo URL")
+    custom_css: str | None = Field(default=None, description="Custom CSS styles")
 
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    updated_by: str | None = Field(None, description="Who updated the theme")
+    updated_by: str | None = Field(default=None, description="Who updated the theme")
 
     @field_validator("background_color", "primary_color")
     @classmethod

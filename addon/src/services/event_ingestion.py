@@ -23,7 +23,7 @@ class EventIngestionService:
     FR-001: Obtain guest access grant inputs from Rental Control events
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the event ingestion service."""
         self._running = False
         self._watch_task: asyncio.Task | None = None

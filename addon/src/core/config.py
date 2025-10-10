@@ -35,13 +35,15 @@ class ThemeConfig(BaseModel):
     """Theme configuration settings."""
 
     portal_title: str = Field(
-        "Guest Network Access", description="Title shown on portal page"
+        default="Guest Network Access", description="Title shown on portal page"
     )
-    background_color: str = Field("#f5f5f5", description="Background color (hex)")
+    background_color: str = Field(
+        default="#f5f5f5", description="Background color (hex)"
+    )
     primary_color: str = Field(
-        "#007bff", description="Primary color for buttons/links (hex)"
+        default="#007bff", description="Primary color for buttons/links (hex)"
     )
-    logo_url: HttpUrl | None = Field(None, description="Logo URL (optional)")
+    logo_url: HttpUrl | None = Field(default=None, description="Logo URL (optional)")
 
     @field_validator("background_color", "primary_color")
     @classmethod

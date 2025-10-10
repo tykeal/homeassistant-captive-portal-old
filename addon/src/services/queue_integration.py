@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 class QueuedOperations:
     """Helper class for queuing grant and voucher operations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize queued operations."""
         self.scheduler = get_queue_scheduler()
         self.grant_manager = get_grant_manager()

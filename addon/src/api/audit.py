@@ -4,8 +4,10 @@
 """Audit API router."""
 
 from datetime import datetime
+from typing import Any
 
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import Response
 
 from ..core.auth import require_auth
 from ..core.logging_config import get_logger
@@ -74,15 +76,13 @@ async def export_audit_events(
     start_date: datetime | None = None,
     end_date: datetime | None = None,
     format: str = "json",
-):
+) -> Response | dict[str, Any]:
     """Export audit events for reporting or compliance.
 
     Supports JSON and CSV formats.
     """
     import csv
     from io import StringIO
-
-    from fastapi.responses import Response
 
     audit_logger = get_audit_logger()
 
