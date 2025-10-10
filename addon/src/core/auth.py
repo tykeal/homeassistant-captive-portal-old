@@ -33,7 +33,7 @@ class AuthService:
     compares with a configured static API key.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize authentication service."""
         self.supervisor_url = os.getenv("SUPERVISOR_URL", "http://supervisor")
         self.supervisor_token = os.getenv("SUPERVISOR_TOKEN")

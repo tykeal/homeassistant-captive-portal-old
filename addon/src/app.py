@@ -3,6 +3,7 @@
 
 """Main FastAPI application for the captive portal addon."""
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -92,7 +93,7 @@ def validate_startup_config(config: AddonConfig) -> None:
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """Application lifespan manager for startup and shutdown tasks."""
     # Startup
     logger.info("Starting captive portal addon")

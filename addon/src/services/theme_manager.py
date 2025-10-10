@@ -53,7 +53,7 @@ class ThemeManager:
         re.compile(r"url\s*\([^)]*javascript:", re.IGNORECASE),
     ]
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the theme manager."""
         self._cache: ThemeConfig | None = None
         self._cache_timestamp: datetime | None = None

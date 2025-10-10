@@ -4,6 +4,7 @@
 """Grants API router."""
 
 from datetime import UTC, datetime
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -23,7 +24,7 @@ router = APIRouter(
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-async def create_grant(request: GrantCreateRequest) -> dict:
+async def create_grant(request: GrantCreateRequest) -> dict[str, Any]:
     """Create a new access grant.
 
     Creates a grant that will provision network access for a guest.
@@ -87,7 +88,7 @@ async def create_grant(request: GrantCreateRequest) -> dict:
 
 
 @router.patch("/{grant_id}/extend")
-async def extend_grant(grant_id: str, request: GrantExtendRequest) -> dict:
+async def extend_grant(grant_id: str, request: GrantExtendRequest) -> dict[str, Any]:
     """Extend the expiration time of an existing grant."""
     grant_manager = get_grant_manager()
 
@@ -132,7 +133,7 @@ async def extend_grant(grant_id: str, request: GrantExtendRequest) -> dict:
 
 
 @router.patch("/{grant_id}/shorten")
-async def shorten_grant(grant_id: str, request: GrantShortenRequest) -> dict:
+async def shorten_grant(grant_id: str, request: GrantShortenRequest) -> dict[str, Any]:
     """Shorten or immediately terminate an existing grant.
 
     FR-013: Force terminate (immediate revoke) an active grant
@@ -222,7 +223,7 @@ async def shorten_grant(grant_id: str, request: GrantShortenRequest) -> dict:
 
 
 @router.get("/{grant_id}")
-async def get_grant(grant_id: str) -> dict:
+async def get_grant(grant_id: str) -> dict[str, Any]:
     """Get details of a specific grant."""
     grant_manager = get_grant_manager()
 
@@ -241,7 +242,7 @@ async def list_grants(
     status: GrantStatus | None = None,
     source: GrantSource | None = None,
     limit: int = 100,
-) -> dict:
+) -> dict[str, Any]:
     """List all grants with optional filtering."""
     grant_manager = get_grant_manager()
 
@@ -260,7 +261,7 @@ async def list_grants(
 
 
 @router.post("/{grant_id}/activate")
-async def activate_grant(grant_id: str) -> dict:
+async def activate_grant(grant_id: str) -> dict[str, Any]:
     """Manually activate a pending grant.
 
     This endpoint allows manual activation of grants that are in pending state.
@@ -298,7 +299,7 @@ async def activate_grant(grant_id: str) -> dict:
 
 
 @router.post("/ingest-event", status_code=status.HTTP_201_CREATED)
-async def ingest_rental_control_event(event_data: dict) -> dict:
+async def ingest_rental_control_event(event_data: dict[str, Any]) -> dict[str, Any]:
     """Ingest a Rental Control event and create a grant.
 
     This endpoint allows manual ingestion of Rental Control events.
@@ -344,7 +345,7 @@ async def ingest_rental_control_event(event_data: dict) -> dict:
 
 
 @router.patch("/{grant_id}/expire")
-async def expire_grant(grant_id: str) -> dict:
+async def expire_grant(grant_id: str) -> dict[str, Any]:
     """Manually expire a grant (for testing expired credential rejection).
 
     This endpoint immediately expires a grant by setting its end_time to now

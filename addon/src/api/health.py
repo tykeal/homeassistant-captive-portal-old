@@ -3,6 +3,8 @@
 
 """Health check API router."""
 
+from typing import Any
+
 from fastapi import APIRouter
 
 from ..core.logging_config import get_logger
@@ -81,7 +83,7 @@ async def health_check() -> HealthResponse:
 
 
 @router.get("/metrics")
-async def get_metrics() -> dict:
+async def get_metrics() -> dict[str, Any]:
     """Prometheus-style metrics endpoint."""
     try:
         # Get queue metrics

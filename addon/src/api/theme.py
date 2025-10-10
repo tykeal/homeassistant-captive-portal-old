@@ -3,6 +3,8 @@
 
 """Theme API router."""
 
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse
 
@@ -20,7 +22,7 @@ router = APIRouter(
 
 
 @router.get("")
-async def get_current_theme() -> dict:
+async def get_current_theme() -> dict[str, Any]:
     """Get the current theme configuration."""
     theme_manager = get_theme_manager()
     theme = await theme_manager.get_current_theme(use_fallback=True)
@@ -28,7 +30,7 @@ async def get_current_theme() -> dict:
 
 
 @router.post("")
-async def update_theme(request: ThemeUpdateRequest) -> dict:
+async def update_theme(request: ThemeUpdateRequest) -> dict[str, Any]:
     """Update theme configuration.
 
     Supports partial updates - only provided fields will be updated.
@@ -57,7 +59,7 @@ async def update_theme(request: ThemeUpdateRequest) -> dict:
 
 
 @router.post("/reset")
-async def reset_theme() -> dict:
+async def reset_theme() -> dict[str, Any]:
     """Reset theme to default configuration."""
     theme_manager = get_theme_manager()
     reset_theme_config = await theme_manager.reset_to_default()

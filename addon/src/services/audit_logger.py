@@ -17,7 +17,7 @@ logger = get_logger(__name__)
 class AuditLogger:
     """Service for audit logging with append-only guarantees."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize audit logger."""
         pass
 

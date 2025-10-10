@@ -3,6 +3,8 @@
 
 """Vouchers API router."""
 
+from typing import Any
+
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from ..core.auth import require_auth
@@ -21,7 +23,7 @@ router = APIRouter(
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-async def create_voucher(request: VoucherCreateRequest) -> dict:
+async def create_voucher(request: VoucherCreateRequest) -> dict[str, Any]:
     """Create a new voucher for manual guest access."""
     voucher_service = get_voucher_service()
 
@@ -54,7 +56,7 @@ async def create_voucher(request: VoucherCreateRequest) -> dict:
 
 
 @router.get("/{voucher_id}")
-async def get_voucher(voucher_id: str) -> dict:
+async def get_voucher(voucher_id: str) -> dict[str, Any]:
     """Get details of a specific voucher."""
     voucher_service = get_voucher_service()
 
@@ -72,7 +74,7 @@ async def get_voucher(voucher_id: str) -> dict:
 async def list_vouchers(
     status_filter: str | None = None,
     limit: int = 100,
-) -> dict:
+) -> dict[str, Any]:
     """List all vouchers with optional filtering."""
     voucher_service = get_voucher_service()
 
@@ -100,7 +102,7 @@ async def list_vouchers(
 @router.delete("/{voucher_id}")
 async def deactivate_voucher(
     voucher_id: str, reason: str = "Manual deactivation"
-) -> dict:
+) -> dict[str, Any]:
     """Deactivate a voucher to prevent further use."""
     voucher_service = get_voucher_service()
 

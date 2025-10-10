@@ -3,6 +3,8 @@
 
 """System API router for administrative operations."""
 
+from typing import Any
+
 from fastapi import APIRouter, Depends
 
 from ..core.auth import require_auth
@@ -18,7 +20,7 @@ router = APIRouter(
 
 
 @router.post("/process-expiry")
-async def process_expiry() -> dict:
+async def process_expiry() -> dict[str, Any]:
     """Manually trigger expiry processing.
 
     This endpoint processes all grants that have passed their
@@ -52,7 +54,7 @@ async def process_expiry() -> dict:
 
 
 @router.get("/grace-period")
-async def get_grace_period() -> dict:
+async def get_grace_period() -> dict[str, Any]:
     """Get the current grace period setting.
 
     Returns:
@@ -67,7 +69,7 @@ async def get_grace_period() -> dict:
 
 
 @router.post("/grace-period")
-async def set_grace_period(minutes: int) -> dict:
+async def set_grace_period(minutes: int) -> dict[str, Any]:
     """Update the grace period setting.
 
     Args:
