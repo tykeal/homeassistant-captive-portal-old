@@ -147,7 +147,7 @@ class GrantRepository:
         return AccessGrant(
             grant_id=row.grant_id,  # type: ignore[arg-type]
             booking_id=row.booking_id,  # type: ignore[arg-type]
-            status=GrantStatus(row.status),  # type: ignore[arg-type]
+            status=GrantStatus(row.status),
             source=row.source,  # type: ignore[arg-type]
             start_time=row.start_time,  # type: ignore[arg-type]
             end_time=row.end_time,  # type: ignore[arg-type]
@@ -241,7 +241,7 @@ class VoucherRepository:
         return Voucher(
             voucher_id=row.voucher_id,  # type: ignore[arg-type]
             code=row.code,  # type: ignore[arg-type]
-            status=VoucherStatus(row.status),  # type: ignore[arg-type]
+            status=VoucherStatus(row.status),
             duration_hours=row.duration_hours,  # type: ignore[arg-type]
             max_uses=row.max_uses,  # type: ignore[arg-type]
             uses_count=row.uses_count,  # type: ignore[arg-type]
@@ -347,7 +347,7 @@ class EventRepository:
 
         return EventLogEntry(
             event_id=row.event_id,  # type: ignore[arg-type]
-            event_type=EventType(row.event_type),  # type: ignore[arg-type]
+            event_type=EventType(row.event_type),
             timestamp=row.timestamp,  # type: ignore[arg-type]
             entity_type=row.entity_type,  # type: ignore[arg-type]
             entity_id=row.entity_id,  # type: ignore[arg-type]
