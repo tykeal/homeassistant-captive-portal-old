@@ -356,41 +356,41 @@ def test_metrics_handles_errors_gracefully(test_app):
             assert "error" in data or "metrics" in data
 
 
-def test_health_endpoint_includes_metrics(test_app):
+def test_health_endpoint_includes_metrics(
+    test_app, mock_grant_manager, mock_queued_operations
+):
     """Test that health endpoint includes key metrics."""
-    with patch("src.api.health.get_grant_manager") as mock_gm:
-        with patch("src.api.health.get_queued_operations") as mock_qo:
-            with patch("src.core.config.get_config") as mock_config:
-                mock_gm.return_value = AsyncMock()
-                mock_gm.return_value.get_stats = AsyncMock(
-                    return_value={
-                        "total": 100,
-                        "current_active": 45,
-                        "pending": 5,
-                        "expired": 30,
-                        "revoked": 20,
-                    }
-                )
-                mock_qo.return_value = AsyncMock()
-                mock_qo.return_value.get_queue_health = AsyncMock(
-                    return_value={
-                        "queue_depth": 12,
-                        "active_workers": 3,
-                        "max_workers": 5,
-                        "processing_rate": 8.5,
-                    }
-                )
+    # Update mock return values for this specific test
+    mock_grant_manager.get_stats = AsyncMock(
+        return_value={
+            "total": 100,
+            "current_active": 45,
+            "pending": 5,
+            "expired": 30,
+            "revoked": 20,
+        }
+    )
+    mock_queued_operations.get_queue_health = AsyncMock(
+        return_value={
+            "queue_depth": 12,
+            "active_workers": 3,
+            "max_workers": 5,
+            "processing_rate": 8.5,
+        }
+    )
 
-                # Mock the config object
-                from unittest.mock import MagicMock
+    # Mock controller
+    mock_controller = AsyncMock()
+    mock_controller.health_check = AsyncMock(return_value=True)
 
-                mock_conf = MagicMock()
-                mock_conf.controller.url = "http://localhost:8043"
-                mock_conf.controller.site_name = "default"
-                mock_conf.controller.username = "admin"
-                mock_conf.controller.password = "password"
-                mock_config.return_value = mock_conf
-
+    # Patch during request execution
+    with patch("src.api.health.get_grant_manager", return_value=mock_grant_manager):
+        with patch(
+            "src.api.health.get_queued_operations", return_value=mock_queued_operations
+        ):
+            with patch(
+                "src.controllers.factory.get_controller", return_value=mock_controller
+            ):
                 client = TestClient(test_app)
                 response = client.get("/api/health")
 
