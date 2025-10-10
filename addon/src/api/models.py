@@ -4,6 +4,7 @@
 """API request and response models."""
 
 from datetime import datetime
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -67,7 +68,7 @@ class AuditQueryParams(BaseModel):
 class PaginatedResponse(BaseModel):
     """Generic paginated response."""
 
-    events: list[dict]
+    events: list[dict[str, Any]]
     total: int
     page: int
     page_size: int
@@ -80,4 +81,4 @@ class HealthResponse(BaseModel):
     version: str = "1.0.0"
     queue_depth: int | None = None
     controller_status: str | None = None
-    details: dict | None = None
+    details: dict[str, Any] | None = None

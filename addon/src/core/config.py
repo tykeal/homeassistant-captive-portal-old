@@ -60,7 +60,7 @@ class AddonConfig(BaseModel):
     """Main addon configuration."""
 
     controller: ControllerConfig
-    theme: ThemeConfig = Field(default_factory=ThemeConfig)
+    theme: ThemeConfig = Field(default_factory=lambda: ThemeConfig())
     log_level: Literal["debug", "info", "warning", "error", "critical"] = "info"
 
     @classmethod
