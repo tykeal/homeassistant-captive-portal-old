@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 
 class GrantStatus(str, Enum):
@@ -96,7 +96,7 @@ class AccessGrant(BaseModel):
 
     @field_validator("end_time")
     @classmethod
-    def validate_end_after_start(cls, v: datetime, info) -> datetime:
+    def validate_end_after_start(cls, v: datetime, info: ValidationInfo) -> datetime:
         """Validate end_time is after start_time."""
         if hasattr(info.data, "start_time") and info.data.get("start_time"):
             start_time = info.data["start_time"]

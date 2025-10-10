@@ -435,3 +435,141 @@ Test run completed in 368.56s (6 minutes, 8 seconds)
 **Status**: Phase 3.11 COMPLETE ✅
 
 **Achievement**: 100% test pass rate (186/186 tests) with reliable suite execution!
+
+## Phase 3.12: MyPy Type Checking Compliance
+
+**Status**: Not Started
+**Current Mypy Status**: 317 errors across 36 files
+**Blocker**: Upstream repository requires passing mypy type checks for merge approval
+
+### Error Categories
+
+1. **no-untyped-def** (193 errors): Functions missing type annotations
+2. **arg-type** (53 errors): Type mismatches in function arguments (especially SQLAlchemy column types)
+3. **call-arg** (35 errors): Missing required arguments in function calls
+4. **type-arg** (27 errors): Missing generic type parameters (dict, PriorityQueue, Task)
+5. **Other** (9 errors): Various type issues (unused-ignore, var-annotated, etc.)
+
+### Most Affected Files
+
+1. `src/storage/repository.py` (46 errors) - SQLAlchemy column type conversions
+2. Test files (150+ errors) - Missing return type annotations
+3. `src/services/audit_logger.py` (13 errors)
+4. `src/services/grant_manager.py` (10 errors)
+5. `src/api/grants.py` (8 errors)
+
+### Tasks
+
+- [ ] T136: Fix SQLAlchemy repository type errors (src/storage/repository.py)
+  - Add proper type annotations for SQLAlchemy model conversions
+  - Fix Column[T] to T type mismatches when creating domain models
+  - Estimated: 60 minutes
+  - Priority: Critical
+  - Files: src/storage/repository.py (46 errors)
+
+- [ ] T137: Fix domain model type errors (src/models/domain.py)
+  - Add type annotations to model_validator methods
+  - Fix EventLogEntry instantiation with missing required fields
+  - Estimated: 30 minutes
+  - Priority: Critical
+  - Files: src/models/domain.py (7 errors)
+
+- [ ] T138: Fix configuration type errors (src/core/config.py, src/api/models.py)
+  - Fix ThemeConfig default_factory type issue
+  - Add type parameters to generic dict types
+  - Estimated: 20 minutes
+  - Priority: Critical
+  - Files: src/core/config.py, src/api/models.py (3 errors)
+
+- [ ] T139: Fix logging configuration type errors (src/core/logging_config.py)
+  - Fix structlog processors type annotation
+  - Estimated: 15 minutes
+  - Priority: High
+  - Files: src/core/logging_config.py (1 error)
+
+- [ ] T140: Fix service layer type errors
+  - Add type annotations to queue_scheduler.py
+  - Add type parameters to PriorityQueue and Task generics
+  - Fix theme_asset_loader.py type annotations
+  - Remove unused type: ignore comments
+  - Estimated: 30 minutes
+  - Priority: High
+  - Files: src/services/queue_scheduler.py, src/services/theme_asset_loader.py (5 errors)
+
+- [ ] T141: Fix SQLAlchemy schema type warnings (src/storage/schema.py)
+  - Add proper type stubs or ignore for SQLAlchemy Base imports
+  - Estimated: 15 minutes
+  - Priority: Medium
+  - Files: src/storage/schema.py (4 errors)
+
+- [ ] T142: Fix API endpoint type errors
+  - Add missing type annotations in grants.py
+  - Add missing type annotations in vouchers.py
+  - Estimated: 30 minutes
+  - Priority: High
+  - Files: src/api/grants.py, src/api/vouchers.py (12 errors)
+
+- [ ] T143: Fix service layer type errors (audit_logger, grant_manager, voucher_service)
+  - Add missing type annotations
+  - Fix datetime import issues
+  - Estimated: 45 minutes
+  - Priority: High
+  - Files: src/services/audit_logger.py, src/services/grant_manager.py, src/services/voucher_service.py (28 errors)
+
+- [ ] T144: Fix test type annotations - unit tests
+  - Add return type annotations (-> None) to all test functions
+  - Add type annotations to test fixtures
+  - Estimated: 60 minutes
+  - Priority: Medium
+  - Files: tests/unit/*.py (70 errors)
+
+- [ ] T145: Fix test type annotations - integration tests
+  - Add return type annotations (-> None) to all test functions
+  - Add type annotations to test fixtures
+  - Fix conftest.py type issues
+  - Estimated: 60 minutes
+  - Priority: Medium
+  - Files: tests/integration/*.py, tests/conftest.py (73 errors)
+
+- [ ] T146: Fix test type annotations - performance tests
+  - Add return type annotations (-> None) to all test functions
+  - Add type annotations to test fixtures
+  - Estimated: 20 minutes
+  - Priority: Medium
+  - Files: tests/performance/*.py (16 errors)
+
+- [ ] T147: Fix remaining miscellaneous type errors
+  - Fix app.py type annotations
+  - Fix theme_manager.py type annotations
+  - Address any remaining edge cases
+  - Estimated: 20 minutes
+  - Priority: Medium
+  - Files: src/app.py, src/services/theme_manager.py (4 errors)
+
+- [ ] T148: Validate complete mypy compliance
+  - Run full mypy check on src and tests
+  - Ensure zero errors
+  - Verify pre-commit mypy hook passes
+  - Estimated: 10 minutes
+  - Priority: Critical
+
+### Success Criteria
+
+- [ ] Zero mypy errors in src/ directory
+- [ ] Zero mypy errors in tests/ directory
+- [ ] Pre-commit mypy hook passes
+- [ ] All 186 tests still passing after type fixes
+- [ ] Ready for upstream merge
+
+### Dependencies
+
+- All tasks can be done in parallel except T148 (validation) which depends on all others
+- Each task should be committed individually with proper sign-off
+- Tasks should be done in priority order: Critical → High → Medium
+
+### Notes
+
+- Type annotation changes are non-functional (don't change runtime behavior)
+- Tests must continue to pass after each change
+- Follow existing type annotation patterns in the codebase
+- Use `# type: ignore[specific-error]` only as last resort with justification
