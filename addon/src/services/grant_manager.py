@@ -6,6 +6,7 @@
 from datetime import UTC, datetime
 from typing import Any
 
+from ..controllers.base import ProvisionResult
 from ..core.logging_config import get_logger
 from ..models.domain import AccessGrant, GrantSource, GrantStatus
 from ..services.audit_logger import get_audit_logger
@@ -39,7 +40,7 @@ class GrantManager:
         source: GrantSource,
         device_mac: str | None = None,
         user_id: str | None = None,
-        **audit_context,
+        **audit_context: Any,
     ) -> AccessGrant:
         """Create a new access grant.
 
@@ -150,7 +151,7 @@ class GrantManager:
         self,
         grant: AccessGrant,
         controller_voucher_id: str | None = None,
-        **audit_context,
+        **audit_context: Any,
     ) -> AccessGrant:
         """Activate a pending grant and provision network access (T031).
 
@@ -211,7 +212,7 @@ class GrantManager:
                 # Call controller with retry policy (T032)
                 retry_policy = get_retry_policy()
 
-                async def provision_operation() -> dict[str, Any]:
+                async def provision_operation() -> ProvisionResult:
                     """Provision grant on controller."""
                     return await controller.provision_grant(
                         grant_id=grant.grant_id,
@@ -361,7 +362,7 @@ class GrantManager:
         new_end_time: datetime,
         reason: str,
         user_id: str | None = None,
-        **audit_context,
+        **audit_context: Any,
     ) -> AccessGrant:
         """Extend a grant to a new end time (FR-004, FR-012).
 
@@ -484,7 +485,7 @@ class GrantManager:
         reason: str,
         immediate: bool = False,
         user_id: str | None = None,
-        **audit_context,
+        **audit_context: Any,
     ) -> AccessGrant:
         """Shorten a grant or terminate immediately (FR-004, FR-012, FR-013).
 
@@ -586,7 +587,7 @@ class GrantManager:
         reason: str,
         user_id: str | None = None,
         immediate: bool = True,
-        **audit_context,
+        **audit_context: Any,
     ) -> AccessGrant:
         """Revoke a grant immediately (FR-013, FR-019).
 
@@ -716,7 +717,9 @@ class GrantManager:
 
         return grant
 
-    async def expire_grant(self, grant: AccessGrant, **audit_context) -> AccessGrant:
+    async def expire_grant(
+        self, grant: AccessGrant, **audit_context: Any
+    ) -> AccessGrant:
         """Expire a grant that has passed its end time.
 
         Args:
@@ -918,7 +921,7 @@ class GrantManager:
 
         return stats
 
-    async def get_stats(self) -> dict:
+    async def get_stats(self) -> dict[str, Any]:
         """Get grant statistics (alias for get_grant_stats for API compatibility).
 
         Returns:

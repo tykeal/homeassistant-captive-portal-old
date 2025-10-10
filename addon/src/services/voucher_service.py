@@ -6,6 +6,7 @@
 import secrets
 import string
 from datetime import UTC, datetime
+from typing import Any
 
 from ..core.logging_config import get_logger
 from ..models.domain import Voucher, VoucherStatus
@@ -49,7 +50,7 @@ class VoucherService:
         max_uses: int = 1,
         expires_at: datetime | None = None,
         user_id: str | None = None,
-        **audit_context,
+        **audit_context: Any,
     ) -> Voucher:
         """Create a new voucher.
 
@@ -177,7 +178,7 @@ class VoucherService:
 
         return True, None, voucher
 
-    async def use_voucher(self, voucher: Voucher, **audit_context) -> Voucher:
+    async def use_voucher(self, voucher: Voucher, **audit_context: Any) -> Voucher:
         """Mark voucher as used (increment use count).
 
         Args:
@@ -213,7 +214,11 @@ class VoucherService:
         return voucher
 
     async def deactivate_voucher(
-        self, voucher_id: str, reason: str, user_id: str | None = None, **audit_context
+        self,
+        voucher_id: str,
+        reason: str,
+        user_id: str | None = None,
+        **audit_context: Any,
     ) -> Voucher | None:
         """Deactivate a voucher.
 
@@ -312,7 +317,7 @@ class VoucherService:
 
         return expired_count
 
-    async def get_voucher_stats(self) -> dict:
+    async def get_voucher_stats(self) -> dict[str, Any]:
         """Get voucher statistics.
 
         Returns:

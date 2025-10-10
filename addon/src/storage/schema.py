@@ -12,7 +12,7 @@ from sqlalchemy.ext.declarative import declarative_base
 Base: Any = declarative_base()
 
 
-class GrantTable(Base):
+class GrantTable(Base):  # type: ignore[no-any-unimported]
     """Access grants table."""
 
     __tablename__ = "grants"
@@ -60,7 +60,7 @@ class GrantTable(Base):
     )
 
 
-class VoucherTable(Base):
+class VoucherTable(Base):  # type: ignore[no-any-unimported]
     """Vouchers table."""
 
     __tablename__ = "vouchers"
@@ -95,7 +95,7 @@ class VoucherTable(Base):
     )
 
 
-class EventLogTable(Base):
+class EventLogTable(Base):  # type: ignore[no-any-unimported]
     """Audit event log table."""
 
     __tablename__ = "event_log"
@@ -129,7 +129,7 @@ class EventLogTable(Base):
     )
 
 
-class ThemeConfigTable(Base):
+class ThemeConfigTable(Base):  # type: ignore[no-any-unimported]
     """Theme configuration table."""
 
     __tablename__ = "theme_config"

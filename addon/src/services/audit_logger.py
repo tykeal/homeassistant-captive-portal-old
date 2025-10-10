@@ -103,7 +103,7 @@ class AuditLogger:
         return event
 
     async def log_grant_created(
-        self, grant: AccessGrant, user_id: str | None = None, **context
+        self, grant: AccessGrant, user_id: str | None = None, **context: Any
     ) -> EventLogEntry:
         """Log grant creation event.
 
@@ -141,7 +141,10 @@ class AuditLogger:
         )
 
     async def log_grant_activated(
-        self, grant: AccessGrant, controller_voucher_id: str | None = None, **context
+        self,
+        grant: AccessGrant,
+        controller_voucher_id: str | None = None,
+        **context: Any,
     ) -> EventLogEntry:
         """Log grant activation event.
 
@@ -184,7 +187,7 @@ class AuditLogger:
         new_end_time: datetime,
         reason: str,
         user_id: str | None = None,
-        **context,
+        **context: Any,
     ) -> EventLogEntry:
         """Log grant extension event.
 
@@ -231,7 +234,7 @@ class AuditLogger:
         reason: str,
         immediate: bool = False,
         user_id: str | None = None,
-        **context,
+        **context: Any,
     ) -> EventLogEntry:
         """Log grant shortening event.
 
@@ -273,7 +276,11 @@ class AuditLogger:
         )
 
     async def log_grant_revoked(
-        self, grant: AccessGrant, reason: str, user_id: str | None = None, **context
+        self,
+        grant: AccessGrant,
+        reason: str,
+        user_id: str | None = None,
+        **context: Any,
     ) -> EventLogEntry:
         """Log grant revocation event.
 
@@ -316,7 +323,9 @@ class AuditLogger:
             user_agent=user_agent,
         )
 
-    async def log_grant_expired(self, grant: AccessGrant, **context) -> EventLogEntry:
+    async def log_grant_expired(
+        self, grant: AccessGrant, **context: Any
+    ) -> EventLogEntry:
         """Log grant expiration event.
 
         Args:
@@ -350,7 +359,7 @@ class AuditLogger:
         )
 
     async def log_voucher_created(
-        self, voucher: Voucher, user_id: str | None = None, **context
+        self, voucher: Voucher, user_id: str | None = None, **context: Any
     ) -> EventLogEntry:
         """Log voucher creation event.
 
@@ -387,7 +396,7 @@ class AuditLogger:
         )
 
     async def log_voucher_used(
-        self, voucher: Voucher, grant: AccessGrant, **context
+        self, voucher: Voucher, grant: AccessGrant, **context: Any
     ) -> EventLogEntry:
         """Log voucher usage event.
 
@@ -424,7 +433,7 @@ class AuditLogger:
         )
 
     async def log_voucher_deactivated(
-        self, voucher: Voucher, reason: str, user_id: str | None = None, **context
+        self, voucher: Voucher, reason: str, user_id: str | None = None, **context: Any
     ) -> EventLogEntry:
         """Log voucher deactivation event.
 
@@ -461,7 +470,7 @@ class AuditLogger:
         )
 
     async def log_portal_access(
-        self, result: str, details: dict[str, Any] | None = None, **context
+        self, result: str, details: dict[str, Any] | None = None, **context: Any
     ) -> EventLogEntry:
         """Log portal access attempt.
 
@@ -493,7 +502,7 @@ class AuditLogger:
         old_theme: dict[str, Any] | None = None,
         new_theme: dict[str, Any] | None = None,
         user_id: str | None = None,
-        **context,
+        **context: Any,
     ) -> EventLogEntry:
         """Log theme update event.
 
@@ -523,7 +532,7 @@ class AuditLogger:
         )
 
     async def log_controller_error(
-        self, operation: str, error: str, grant_id: str | None = None, **context
+        self, operation: str, error: str, grant_id: str | None = None, **context: Any
     ) -> EventLogEntry:
         """Log controller communication error.
 

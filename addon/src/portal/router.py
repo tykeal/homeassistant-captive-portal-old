@@ -10,7 +10,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from fastapi import APIRouter, Form, Request, status
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
@@ -128,7 +128,7 @@ async def splash_page(request: Request) -> HTMLResponse:
 @router.post("/splash", response_class=HTMLResponse)
 async def splash_page_form_submit(
     request: Request, credential: str = Form(...)
-) -> HTMLResponse:
+) -> HTMLResponse | RedirectResponse:
     """Handle form submission from splash page (for performance testing).
 
     This endpoint handles traditional form POST submissions,
@@ -142,7 +142,6 @@ async def splash_page_form_submit(
     Returns:
         Redirect to success page or re-render splash with error
     """
-    from fastapi.responses import RedirectResponse
     from starlette import status as http_status
 
     if not credential:

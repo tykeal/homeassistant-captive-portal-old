@@ -26,7 +26,7 @@ class EventIngestionService:
     def __init__(self) -> None:
         """Initialize the event ingestion service."""
         self._running = False
-        self._watch_task: asyncio.Task | None = None
+        self._watch_task: asyncio.Task[None] | None = None
         self._poll_interval_seconds = 60  # Poll every minute
 
     async def start(self) -> None:

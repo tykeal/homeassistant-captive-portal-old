@@ -31,7 +31,7 @@ class QueuedOperations:
         grant: AccessGrant,
         controller_voucher_id: str | None = None,
         priority: TaskPriority = TaskPriority.NORMAL,
-        **audit_context,
+        **audit_context: Any,
     ) -> None:
         """Queue grant activation with controller provisioning.
 
@@ -101,7 +101,7 @@ class QueuedOperations:
         reason: str,
         user_id: str | None = None,
         priority: TaskPriority = TaskPriority.HIGH,
-        **audit_context,
+        **audit_context: Any,
     ) -> None:
         """Queue grant revocation with controller cleanup.
 

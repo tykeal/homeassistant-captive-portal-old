@@ -47,7 +47,7 @@ class ExpiryScheduler:
         self.grace_period_minutes = grace_period_minutes
         self.check_interval_seconds = check_interval_seconds
         self._running = False
-        self._scheduler_task: asyncio.Task | None = None
+        self._scheduler_task: asyncio.Task[None] | None = None
 
     async def start(self) -> None:
         """Start the expiry scheduler background task."""
@@ -192,7 +192,7 @@ class ExpiryScheduler:
                                 reason="Automatic expiry after grace period",
                             )
 
-                            if result.get("status") == "success":
+                            if result.success:
                                 revoked_count += 1
                                 logger.info(
                                     "Controller access revoked successfully",
@@ -202,7 +202,7 @@ class ExpiryScheduler:
                                 logger.warning(
                                     "Controller revocation completed with non-success",
                                     grant_id=grant.grant_id,
-                                    result=result,
+                                    result=result.model_dump(),
                                 )
 
                         except Exception as e:
