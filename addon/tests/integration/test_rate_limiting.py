@@ -11,7 +11,7 @@ from src.services.rate_limiter import RateLimiter
 
 
 @pytest.fixture
-def rate_limiter() -> None:
+def rate_limiter() -> RateLimiter:
     """Create a rate limiter with test settings."""
     return RateLimiter(
         max_attempts=5,

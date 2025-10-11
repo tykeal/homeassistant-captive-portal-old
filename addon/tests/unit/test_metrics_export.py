@@ -3,16 +3,18 @@
 
 """Unit tests for metrics assertion (FR-020 observability)."""
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from src.api.health import router
 
 
 @pytest.fixture
-def mock_grant_manager() -> None:
+def mock_grant_manager() -> AsyncMock:
     """Create a mock grant manager."""
     manager = AsyncMock()
     manager.get_stats = AsyncMock(
@@ -28,7 +30,7 @@ def mock_grant_manager() -> None:
 
 
 @pytest.fixture
-def mock_queued_operations() -> None:
+def mock_queued_operations() -> AsyncMock:
     """Create a mock queued operations service."""
     ops = AsyncMock()
     ops.get_queue_health = AsyncMock(
@@ -43,10 +45,8 @@ def mock_queued_operations() -> None:
 
 
 @pytest.fixture
-def test_app(mock_grant_manager, mock_queued_operations) -> None:
+def test_app(mock_grant_manager: Any, mock_queued_operations: Any) -> FastAPI:
     """Create a test FastAPI app with health/metrics router."""
-    from fastapi import FastAPI
-
     app = FastAPI()
 
     # Patch the global getters to return our mocks

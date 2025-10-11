@@ -111,7 +111,7 @@ class TestControllerUnreachable:
         # Track call attempts
         call_count = 0
 
-        async def mock_provision_with_recovery(*args, **kwargs) -> None:
+        async def mock_provision_with_recovery(*args, **kwargs) -> ProvisionResult:
             """Mock function that fails twice then succeeds to simulate recovery."""
             nonlocal call_count
             call_count += 1
