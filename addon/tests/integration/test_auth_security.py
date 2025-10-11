@@ -8,6 +8,9 @@ and return appropriate HTTP status codes (401/403) when authentication
 is enabled.
 """
 
+from collections.abc import Generator
+from typing import Any
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -19,7 +22,7 @@ class TestAuthenticationRequired:
     """Test that admin endpoints require authentication when auth is enabled."""
 
     @pytest.fixture(autouse=True)
-    def setup_auth_mode(self, monkeypatch) -> None:
+    def setup_auth_mode(self, monkeypatch: Any) -> Generator[None]:
         """Set up API key auth mode for these tests."""
         # Save original auth service
         original_auth_service = auth._auth_service
@@ -37,7 +40,7 @@ class TestAuthenticationRequired:
         auth._auth_service = original_auth_service
 
     @pytest.fixture
-    def auth_client(self) -> None:
+    def auth_client(self) -> TestClient:
         """Create test client with auth enabled."""
         app = create_app()
         return TestClient(app, raise_server_exceptions=False)
@@ -105,7 +108,7 @@ class TestAuthDisabledMode:
     """Test behavior when authentication is disabled (no credentials configured)."""
 
     @pytest.fixture(autouse=True)
-    def setup_no_auth(self, monkeypatch) -> None:
+    def setup_no_auth(self, monkeypatch: Any) -> Generator[None]:
         """Clear all auth credentials."""
         # Save original auth service
         original_auth_service = auth._auth_service
@@ -121,7 +124,7 @@ class TestAuthDisabledMode:
         auth._auth_service = original_auth_service
 
     @pytest.fixture
-    def noauth_client(self) -> None:
+    def noauth_client(self) -> TestClient:
         """Create test client with auth disabled."""
         app = create_app()
         return TestClient(app, raise_server_exceptions=False)
@@ -137,7 +140,7 @@ class TestAuthModes:
     """Test authentication mode detection."""
 
     @pytest.fixture(autouse=True)
-    def cleanup_auth_service(self) -> None:
+    def cleanup_auth_service(self) -> Generator[None]:
         """Clean up auth service after each test."""
         original_auth_service = auth._auth_service
         yield
@@ -175,7 +178,7 @@ class TestAuthorizationHeaders:
     """Test various Authorization header formats."""
 
     @pytest.fixture(autouse=True)
-    def setup_auth(self, monkeypatch) -> None:
+    def setup_auth(self, monkeypatch: Any) -> Generator[None]:
         """Enable API key auth."""
         # Save original auth service
         original_auth_service = auth._auth_service
@@ -190,7 +193,7 @@ class TestAuthorizationHeaders:
         auth._auth_service = original_auth_service
 
     @pytest.fixture
-    def auth_client(self) -> None:
+    def auth_client(self) -> TestClient:
         """Create test client."""
         app = create_app()
         return TestClient(app, raise_server_exceptions=False)
