@@ -4,6 +4,9 @@
 """Integration test for graceful shutdown preserving in-flight provisioning."""
 
 import asyncio
+from collections.abc import AsyncGenerator
+from datetime import UTC, datetime, timedelta
+from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
@@ -14,7 +17,7 @@ from src.services.queue_scheduler import AdaptiveQueueScheduler, TaskPriority
 
 
 @pytest.fixture
-def mock_controller() -> None:
+def mock_controller() -> AsyncMock:
     """Create a mock controller that simulates slow provisioning."""
     controller = AsyncMock()
 
@@ -29,7 +32,7 @@ def mock_controller() -> None:
 
 
 @pytest.fixture
-def mock_storage() -> None:
+def mock_storage() -> AsyncMock:
     """Create a mock storage layer."""
     storage = AsyncMock()
     storage.save_grant = AsyncMock()
@@ -39,7 +42,7 @@ def mock_storage() -> None:
 
 
 @pytest.fixture
-def mock_audit_logger() -> None:
+def mock_audit_logger() -> AsyncMock:
     """Create a mock audit logger."""
     audit = AsyncMock()
     audit.log_event = AsyncMock()
@@ -48,14 +51,16 @@ def mock_audit_logger() -> None:
 
 
 @pytest.fixture
-def mock_grant_manager(mock_controller, mock_storage, mock_audit_logger) -> None:
+def mock_grant_manager(
+    mock_controller: Any, mock_storage: Any, mock_audit_logger: Any
+) -> AsyncMock:
     """Create a mock grant manager."""
     manager = AsyncMock()
 
     # Track in-flight grants
     in_flight_grants = {}
 
-    async def activate_grant_mock(grant, **kwargs) -> None:
+    async def activate_grant_mock(grant: Any, **kwargs: Any) -> AccessGrant:
         """Mock activate that simulates slow provisioning."""
         grant_id = grant.grant_id if hasattr(grant, "grant_id") else grant
         in_flight_grants[grant_id] = "processing"
@@ -70,13 +75,14 @@ def mock_grant_manager(mock_controller, mock_storage, mock_audit_logger) -> None
             grant.status = GrantStatus.ACTIVE
             return grant
         else:
+            now = datetime.now(UTC)
             return AccessGrant(
-                id=grant_id,
-                device_id=f"device-{grant_id}",
+                grant_id=grant_id,
+                device_mac=f"device-{grant_id}",
                 guest_name=f"Guest {grant_id}",
                 status=GrantStatus.ACTIVE,
-                start_time=0,
-                end_time=3600,
+                start_time=now,
+                end_time=now + timedelta(hours=1),
             )
 
     manager.activate_grant = AsyncMock(side_effect=activate_grant_mock)
@@ -86,14 +92,14 @@ def mock_grant_manager(mock_controller, mock_storage, mock_audit_logger) -> None
 
 
 @pytest.fixture
-def mock_voucher_service() -> None:
+def mock_voucher_service() -> AsyncMock:
     """Create a mock voucher service."""
     service = AsyncMock()
     return service
 
 
 @pytest.fixture
-async def queue_scheduler() -> None:
+async def queue_scheduler() -> AsyncGenerator[AdaptiveQueueScheduler]:
     """Create a queue scheduler."""
     scheduler = AdaptiveQueueScheduler(
         min_workers=2, max_workers=5, latency_threshold_ms=400
@@ -105,8 +111,11 @@ async def queue_scheduler() -> None:
 
 @pytest.fixture
 def queued_operations(
-    queue_scheduler, mock_grant_manager, mock_voucher_service, mock_audit_logger
-) -> None:
+    queue_scheduler: AdaptiveQueueScheduler,
+    mock_grant_manager: Any,
+    mock_voucher_service: Any,
+    mock_audit_logger: Any,
+) -> QueuedOperations:
     """Create queued operations with mocked dependencies."""
     ops = QueuedOperations()
     ops.scheduler = queue_scheduler
@@ -118,18 +127,19 @@ def queued_operations(
 
 @pytest.mark.asyncio
 async def test_graceful_shutdown_waits_for_in_flight_tasks(
-    queued_operations, mock_grant_manager
+    queued_operations: QueuedOperations, mock_grant_manager: Any
 ) -> None:
     """Test that graceful shutdown waits for in-flight provisioning tasks."""
     # Create grants to provision
+    now = datetime.now(UTC)
     grants = [
         AccessGrant(
-            id=f"grant-{i}",
-            device_id=f"device-{i}",
+            grant_id=f"grant-{i}",
+            device_mac=f"device-{i}",
             guest_name=f"Guest {i}",
             status=GrantStatus.PENDING,
-            start_time=0,
-            end_time=3600,
+            start_time=now,
+            end_time=now + timedelta(hours=1),
         )
         for i in range(3)
     ]
@@ -193,18 +203,19 @@ async def test_graceful_shutdown_empty_queue(queued_operations) -> None:
 
 @pytest.mark.asyncio
 async def test_graceful_shutdown_preserves_completed_work(
-    queued_operations, mock_grant_manager
+    queued_operations: QueuedOperations, mock_grant_manager: Any
 ) -> None:
     """Test that graceful shutdown preserves completed work."""
     # Create and queue grants
+    now = datetime.now(UTC)
     grants = [
         AccessGrant(
-            id=f"grant-{i}",
-            device_id=f"device-{i}",
+            grant_id=f"grant-{i}",
+            device_mac=f"device-{i}",
             guest_name=f"Guest {i}",
             status=GrantStatus.PENDING,
-            start_time=0,
-            end_time=3600,
+            start_time=now,
+            end_time=now + timedelta(hours=1),
         )
         for i in range(5)
     ]
@@ -276,30 +287,31 @@ async def test_graceful_shutdown_multiple_drains(queued_operations) -> None:
 
 @pytest.mark.asyncio
 async def test_graceful_shutdown_partial_completion(
-    queued_operations, mock_grant_manager
+    queued_operations: QueuedOperations, mock_grant_manager: Any
 ) -> None:
     """Test graceful shutdown with mix of fast and slow tasks."""
     # Create mix of fast and slow grants
+    now = datetime.now(UTC)
     fast_grants = [
         AccessGrant(
-            id=f"fast-grant-{i}",
-            device_id=f"device-{i}",
+            grant_id=f"fast-grant-{i}",
+            device_mac=f"device-{i}",
             guest_name=f"Fast Guest {i}",
             status=GrantStatus.PENDING,
-            start_time=0,
-            end_time=3600,
+            start_time=now,
+            end_time=now + timedelta(hours=1),
         )
         for i in range(2)
     ]
 
     slow_grants = [
         AccessGrant(
-            id=f"slow-grant-{i}",
-            device_id=f"device-{i}",
+            grant_id=f"slow-grant-{i}",
+            device_mac=f"device-{i}",
             guest_name=f"Slow Guest {i}",
             status=GrantStatus.PENDING,
-            start_time=0,
-            end_time=3600,
+            start_time=now,
+            end_time=now + timedelta(hours=1),
         )
         for i in range(2)
     ]
