@@ -5,6 +5,7 @@
 
 import asyncio
 import time
+from collections.abc import AsyncGenerator
 
 import pytest
 
@@ -15,7 +16,7 @@ from src.services.queue_scheduler import (
 
 
 @pytest.fixture
-def scheduler() -> None:
+def scheduler() -> AdaptiveQueueScheduler:
     """Create a queue scheduler for testing."""
     return AdaptiveQueueScheduler(
         min_workers=2,
@@ -29,7 +30,9 @@ def scheduler() -> None:
 
 
 @pytest.fixture
-async def running_scheduler(scheduler) -> None:
+async def running_scheduler(
+    scheduler: AdaptiveQueueScheduler,
+) -> AsyncGenerator[AdaptiveQueueScheduler]:
     """Create and start a scheduler, then clean it up after test."""
     await scheduler.start()
     yield scheduler
