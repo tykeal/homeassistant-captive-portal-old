@@ -4,6 +4,8 @@
 """Performance test for portal page rendering."""
 
 import time
+from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
@@ -15,7 +17,7 @@ from src.services.theme_manager import ThemeManager
 
 
 @pytest.fixture
-def mock_storage() -> None:
+def mock_storage() -> AsyncMock:
     """Create a mock storage layer."""
     storage = AsyncMock()
     storage.validate_credential = AsyncMock(return_value=False)
@@ -23,7 +25,7 @@ def mock_storage() -> None:
 
 
 @pytest.fixture
-def mock_audit() -> None:
+def mock_audit() -> AsyncMock:
     """Create a mock audit logger."""
     audit = AsyncMock()
     audit.log_event = AsyncMock()
@@ -31,7 +33,7 @@ def mock_audit() -> None:
 
 
 @pytest.fixture
-def theme_manager(tmp_path) -> None:
+def theme_manager(tmp_path: Path) -> ThemeManager:
     """Create a theme manager with test themes."""
     # Create a simple test theme
     theme_dir = tmp_path / "themes"
@@ -60,7 +62,7 @@ def theme_manager(tmp_path) -> None:
 
 
 @pytest.fixture
-def test_app(theme_manager, mock_storage, mock_audit) -> None:
+def test_app(theme_manager: Any, mock_storage: Any, mock_audit: Any) -> FastAPI:
     """Create a test FastAPI app with portal router."""
     app = FastAPI()
     # The router is already configured, just include it
@@ -131,7 +133,7 @@ def test_portal_form_submission_performance(test_app) -> None:
     )
 
 
-def test_portal_concurrent_render_performance(test_app) -> None:
+def test_portal_concurrent_render_performance(test_app: FastAPI) -> None:
     """Test portal page rendering under concurrent load."""
     import concurrent.futures
 
@@ -139,9 +141,9 @@ def test_portal_concurrent_render_performance(test_app) -> None:
     concurrent_users = 10
     requests_per_user = 10
 
-    def make_requests() -> None:
+    def make_requests() -> list[float]:
         """Make multiple requests."""
-        latencies = []
+        latencies: list[float] = []
         for _ in range(requests_per_user):
             start = time.time()
             response = client.get("/portal/splash")
