@@ -11,7 +11,7 @@ from src.services.rate_limiter import RateLimiter
 
 
 @pytest.fixture
-def rate_limiter():
+def rate_limiter() -> None:
     """Create a rate limiter with test settings."""
     return RateLimiter(
         max_attempts=5,
@@ -21,7 +21,7 @@ def rate_limiter():
 
 
 @pytest.mark.asyncio
-async def test_rate_limiting_within_limits(rate_limiter):
+async def test_rate_limiting_within_limits(rate_limiter) -> None:
     """Test that requests within limits are allowed."""
     client_ip = "192.168.1.100"
 
@@ -37,7 +37,7 @@ async def test_rate_limiting_within_limits(rate_limiter):
 
 
 @pytest.mark.asyncio
-async def test_rate_limiting_lockout_triggers(rate_limiter):
+async def test_rate_limiting_lockout_triggers(rate_limiter) -> None:
     """Test that lockout triggers after max attempts exceeded."""
     client_ip = "192.168.1.101"
 
@@ -56,7 +56,7 @@ async def test_rate_limiting_lockout_triggers(rate_limiter):
 
 
 @pytest.mark.asyncio
-async def test_rate_limiting_lockout_duration(rate_limiter):
+async def test_rate_limiting_lockout_duration(rate_limiter) -> None:
     """Test that lockout persists for configured duration."""
     # Use short lockout for testing
     short_limiter = RateLimiter(
@@ -86,7 +86,7 @@ async def test_rate_limiting_lockout_duration(rate_limiter):
 
 
 @pytest.mark.asyncio
-async def test_rate_limiting_successful_auth_clears_history(rate_limiter):
+async def test_rate_limiting_successful_auth_clears_history(rate_limiter) -> None:
     """Test that successful authentication clears rate limit history."""
     client_ip = "192.168.1.103"
 
@@ -109,7 +109,7 @@ async def test_rate_limiting_successful_auth_clears_history(rate_limiter):
 
 
 @pytest.mark.asyncio
-async def test_rate_limiting_window_expiry(rate_limiter):
+async def test_rate_limiting_window_expiry(rate_limiter) -> None:
     """Test that old attempts outside window are discarded."""
     # Use short window for testing
     short_limiter = RateLimiter(
@@ -134,7 +134,7 @@ async def test_rate_limiting_window_expiry(rate_limiter):
 
 
 @pytest.mark.asyncio
-async def test_rate_limiting_different_ips_independent(rate_limiter):
+async def test_rate_limiting_different_ips_independent(rate_limiter) -> None:
     """Test that rate limiting is per-IP (different IPs don't affect each other)."""
     client_ip_1 = "192.168.1.105"
     client_ip_2 = "192.168.1.106"
@@ -156,7 +156,7 @@ async def test_rate_limiting_different_ips_independent(rate_limiter):
 
 
 @pytest.mark.asyncio
-async def test_rate_limiting_reset_client(rate_limiter):
+async def test_rate_limiting_reset_client(rate_limiter) -> None:
     """Test that reset_client clears all state for a client."""
     client_ip = "192.168.1.107"
 
@@ -180,7 +180,7 @@ async def test_rate_limiting_reset_client(rate_limiter):
 
 
 @pytest.mark.asyncio
-async def test_rate_limiting_stats(rate_limiter):
+async def test_rate_limiting_stats(rate_limiter) -> None:
     """Test rate limiter statistics."""
     # Trigger lockout for one IP
     client_ip = "192.168.1.108"
@@ -198,11 +198,11 @@ async def test_rate_limiting_stats(rate_limiter):
 
 
 @pytest.mark.asyncio
-async def test_rate_limiting_concurrent_requests(rate_limiter):
+async def test_rate_limiting_concurrent_requests(rate_limiter) -> None:
     """Test rate limiting handles concurrent requests correctly."""
     client_ip = "192.168.1.109"
 
-    async def make_attempt():
+    async def make_attempt() -> None:
         """Make a single failed attempt."""
         is_allowed, info = await rate_limiter.check_rate_limit(client_ip)
         if is_allowed:

@@ -60,7 +60,7 @@ class TestControllerUnreachable:
         """Test retry mechanism with exponential backoff when controller fails."""
         call_times = []
 
-        async def track_call_time(*args, **kwargs):
+        async def track_call_time(*args, **kwargs) -> None:
             """Mock function that tracks call times to verify backoff behavior."""
             import time
 
@@ -111,7 +111,7 @@ class TestControllerUnreachable:
         # Track call attempts
         call_count = 0
 
-        async def mock_provision_with_recovery(*args, **kwargs):
+        async def mock_provision_with_recovery(*args, **kwargs) -> None:
             """Mock function that fails twice then succeeds to simulate recovery."""
             nonlocal call_count
             call_count += 1

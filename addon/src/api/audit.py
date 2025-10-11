@@ -69,7 +69,7 @@ async def get_audit_events(
     )
 
 
-@router.get("/export")
+@router.get("/export", response_model=None)
 async def export_audit_events(
     event_type: str | None = None,
     entity_id: str | None = None,

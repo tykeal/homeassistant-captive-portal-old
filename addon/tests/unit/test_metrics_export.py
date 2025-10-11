@@ -12,7 +12,7 @@ from src.api.health import router
 
 
 @pytest.fixture
-def mock_grant_manager():
+def mock_grant_manager() -> None:
     """Create a mock grant manager."""
     manager = AsyncMock()
     manager.get_stats = AsyncMock(
@@ -28,7 +28,7 @@ def mock_grant_manager():
 
 
 @pytest.fixture
-def mock_queued_operations():
+def mock_queued_operations() -> None:
     """Create a mock queued operations service."""
     ops = AsyncMock()
     ops.get_queue_health = AsyncMock(
@@ -43,7 +43,7 @@ def mock_queued_operations():
 
 
 @pytest.fixture
-def test_app(mock_grant_manager, mock_queued_operations):
+def test_app(mock_grant_manager, mock_queued_operations) -> None:
     """Create a test FastAPI app with health/metrics router."""
     from fastapi import FastAPI
 
@@ -62,7 +62,7 @@ def test_app(mock_grant_manager, mock_queued_operations):
     return app
 
 
-def test_metrics_endpoint_exists(test_app):
+def test_metrics_endpoint_exists(test_app) -> None:
     """Test that /api/metrics endpoint exists."""
     with patch("src.api.health.get_grant_manager") as mock_gm:
         with patch("src.api.health.get_queued_operations") as mock_qo:
@@ -92,7 +92,7 @@ def test_metrics_endpoint_exists(test_app):
             assert response.status_code == 200
 
 
-def test_metrics_exports_active_grants(test_app):
+def test_metrics_exports_active_grants(test_app) -> None:
     """Test that active_grants metric is exported."""
     with patch("src.api.health.get_grant_manager") as mock_gm:
         with patch("src.api.health.get_queued_operations") as mock_qo:
@@ -129,7 +129,7 @@ def test_metrics_exports_active_grants(test_app):
             assert "captive_portal_grants_active 45" in metrics_text
 
 
-def test_metrics_exports_queue_depth(test_app):
+def test_metrics_exports_queue_depth(test_app) -> None:
     """Test that queue_depth metric is exported."""
     with patch("src.api.health.get_grant_manager") as mock_gm:
         with patch("src.api.health.get_queued_operations") as mock_qo:
@@ -165,7 +165,7 @@ def test_metrics_exports_queue_depth(test_app):
             assert "captive_portal_queue_depth 12" in metrics_text
 
 
-def test_metrics_exports_provision_latency_placeholder(test_app):
+def test_metrics_exports_provision_latency_placeholder(test_app) -> None:
     """Test that provision latency metric structure is present.
 
     Note: This tests the metric export structure. Actual latency tracking
@@ -205,7 +205,7 @@ def test_metrics_exports_provision_latency_placeholder(test_app):
             # TODO: Add provision_latency metric to grant_manager
 
 
-def test_metrics_exports_all_grant_states(test_app):
+def test_metrics_exports_all_grant_states(test_app) -> None:
     """Test that all grant state metrics are exported."""
     with patch("src.api.health.get_grant_manager") as mock_gm:
         with patch("src.api.health.get_queued_operations") as mock_qo:
@@ -244,7 +244,7 @@ def test_metrics_exports_all_grant_states(test_app):
             assert "captive_portal_grants_revoked 20" in metrics_text
 
 
-def test_metrics_exports_queue_workers(test_app):
+def test_metrics_exports_queue_workers(test_app) -> None:
     """Test that queue worker count is exported."""
     with patch("src.api.health.get_grant_manager") as mock_gm:
         with patch("src.api.health.get_queued_operations") as mock_qo:
@@ -279,7 +279,7 @@ def test_metrics_exports_queue_workers(test_app):
             assert "captive_portal_queue_workers 3" in metrics_text
 
 
-def test_metrics_format_prometheus_compatible(test_app):
+def test_metrics_format_prometheus_compatible(test_app) -> None:
     """Test that metrics format is Prometheus-compatible."""
     with patch("src.api.health.get_grant_manager") as mock_gm:
         with patch("src.api.health.get_queued_operations") as mock_qo:
@@ -327,7 +327,7 @@ def test_metrics_format_prometheus_compatible(test_app):
                 assert metric_value.replace(".", "").replace("-", "").isdigit()
 
 
-def test_metrics_handles_errors_gracefully(test_app):
+def test_metrics_handles_errors_gracefully(test_app) -> None:
     """Test that metrics endpoint handles errors gracefully."""
     with patch("src.api.health.get_grant_manager") as mock_gm:
         with patch("src.api.health.get_queued_operations") as mock_qo:
@@ -358,7 +358,7 @@ def test_metrics_handles_errors_gracefully(test_app):
 
 def test_health_endpoint_includes_metrics(
     test_app, mock_grant_manager, mock_queued_operations
-):
+) -> None:
     """Test that health endpoint includes key metrics."""
     # Update mock return values for this specific test
     mock_grant_manager.get_stats = AsyncMock(
@@ -405,7 +405,7 @@ def test_health_endpoint_includes_metrics(
 
 
 @pytest.mark.asyncio
-async def test_metrics_real_time_updates():
+async def test_metrics_real_time_updates() -> None:
     """Test that metrics reflect real-time changes."""
     from fastapi import FastAPI
 

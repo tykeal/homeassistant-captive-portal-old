@@ -14,7 +14,7 @@ from src.services.queue_scheduler import AdaptiveQueueScheduler, TaskPriority
 
 
 @pytest.fixture
-def mock_controller():
+def mock_controller() -> None:
     """Create a mock controller that simulates slow provisioning."""
     controller = AsyncMock()
 
@@ -29,7 +29,7 @@ def mock_controller():
 
 
 @pytest.fixture
-def mock_storage():
+def mock_storage() -> None:
     """Create a mock storage layer."""
     storage = AsyncMock()
     storage.save_grant = AsyncMock()
@@ -39,7 +39,7 @@ def mock_storage():
 
 
 @pytest.fixture
-def mock_audit_logger():
+def mock_audit_logger() -> None:
     """Create a mock audit logger."""
     audit = AsyncMock()
     audit.log_event = AsyncMock()
@@ -48,14 +48,14 @@ def mock_audit_logger():
 
 
 @pytest.fixture
-def mock_grant_manager(mock_controller, mock_storage, mock_audit_logger):
+def mock_grant_manager(mock_controller, mock_storage, mock_audit_logger) -> None:
     """Create a mock grant manager."""
     manager = AsyncMock()
 
     # Track in-flight grants
     in_flight_grants = {}
 
-    async def activate_grant_mock(grant, **kwargs):
+    async def activate_grant_mock(grant, **kwargs) -> None:
         """Mock activate that simulates slow provisioning."""
         grant_id = grant.grant_id if hasattr(grant, "grant_id") else grant
         in_flight_grants[grant_id] = "processing"
@@ -86,14 +86,14 @@ def mock_grant_manager(mock_controller, mock_storage, mock_audit_logger):
 
 
 @pytest.fixture
-def mock_voucher_service():
+def mock_voucher_service() -> None:
     """Create a mock voucher service."""
     service = AsyncMock()
     return service
 
 
 @pytest.fixture
-async def queue_scheduler():
+async def queue_scheduler() -> None:
     """Create a queue scheduler."""
     scheduler = AdaptiveQueueScheduler(
         min_workers=2, max_workers=5, latency_threshold_ms=400
@@ -106,7 +106,7 @@ async def queue_scheduler():
 @pytest.fixture
 def queued_operations(
     queue_scheduler, mock_grant_manager, mock_voucher_service, mock_audit_logger
-):
+) -> None:
     """Create queued operations with mocked dependencies."""
     ops = QueuedOperations()
     ops.scheduler = queue_scheduler
@@ -119,7 +119,7 @@ def queued_operations(
 @pytest.mark.asyncio
 async def test_graceful_shutdown_waits_for_in_flight_tasks(
     queued_operations, mock_grant_manager
-):
+) -> None:
     """Test that graceful shutdown waits for in-flight provisioning tasks."""
     # Create grants to provision
     grants = [
@@ -158,11 +158,11 @@ async def test_graceful_shutdown_waits_for_in_flight_tasks(
 
 
 @pytest.mark.asyncio
-async def test_graceful_shutdown_timeout_on_stuck_tasks(queued_operations):
+async def test_graceful_shutdown_timeout_on_stuck_tasks(queued_operations) -> None:
     """Test that graceful shutdown times out if tasks don't complete."""
 
     # Create a task that will never complete
-    async def stuck_task():
+    async def stuck_task() -> None:
         """A task that takes too long."""
         await asyncio.sleep(10)  # Longer than timeout
 
@@ -183,7 +183,7 @@ async def test_graceful_shutdown_timeout_on_stuck_tasks(queued_operations):
 
 
 @pytest.mark.asyncio
-async def test_graceful_shutdown_empty_queue(queued_operations):
+async def test_graceful_shutdown_empty_queue(queued_operations) -> None:
     """Test that graceful shutdown works with empty queue."""
     # Drain with no tasks should complete immediately
     await queued_operations.drain(timeout_seconds=5)
@@ -194,7 +194,7 @@ async def test_graceful_shutdown_empty_queue(queued_operations):
 @pytest.mark.asyncio
 async def test_graceful_shutdown_preserves_completed_work(
     queued_operations, mock_grant_manager
-):
+) -> None:
     """Test that graceful shutdown preserves completed work."""
     # Create and queue grants
     grants = [
@@ -214,7 +214,7 @@ async def test_graceful_shutdown_preserves_completed_work(
     # Save the original side_effect function
     original_activate_func = mock_grant_manager.activate_grant.side_effect
 
-    async def track_completion(grant, **kwargs):
+    async def track_completion(grant, **kwargs) -> None:
         """Track completed grants."""
         result = await original_activate_func(grant, **kwargs)
         completed_grants.append(grant.grant_id)
@@ -237,14 +237,14 @@ async def test_graceful_shutdown_preserves_completed_work(
 
 
 @pytest.mark.asyncio
-async def test_graceful_shutdown_logs_progress(queued_operations, caplog):
+async def test_graceful_shutdown_logs_progress(queued_operations, caplog) -> None:
     """Test that graceful shutdown logs progress information."""
     import logging
 
     caplog.set_level(logging.INFO)
 
     # Queue a quick task
-    async def quick_task():
+    async def quick_task() -> None:
         """Quick task."""
         await asyncio.sleep(0.05)
 
@@ -263,7 +263,7 @@ async def test_graceful_shutdown_logs_progress(queued_operations, caplog):
 
 
 @pytest.mark.asyncio
-async def test_graceful_shutdown_multiple_drains(queued_operations):
+async def test_graceful_shutdown_multiple_drains(queued_operations) -> None:
     """Test that multiple drain calls work correctly."""
     # First drain (empty queue)
     await queued_operations.drain(timeout_seconds=1)
@@ -277,7 +277,7 @@ async def test_graceful_shutdown_multiple_drains(queued_operations):
 @pytest.mark.asyncio
 async def test_graceful_shutdown_partial_completion(
     queued_operations, mock_grant_manager
-):
+) -> None:
     """Test graceful shutdown with mix of fast and slow tasks."""
     # Create mix of fast and slow grants
     fast_grants = [
@@ -305,7 +305,7 @@ async def test_graceful_shutdown_partial_completion(
     ]
 
     # Mock fast vs slow
-    async def variable_speed_activate(grant, **kwargs):
+    async def variable_speed_activate(grant, **kwargs) -> None:
         """Activate with variable speed."""
         if grant.grant_id.startswith("fast"):
             await asyncio.sleep(0.05)

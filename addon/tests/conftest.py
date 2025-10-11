@@ -26,7 +26,7 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop]:
 
 
 @pytest.fixture(scope="session")
-def setup_test_database():
+def setup_test_database() -> None:
     """Set up a test database path for all tests automatically.
 
     Note: This fixture is no longer autouse. Individual test fixtures

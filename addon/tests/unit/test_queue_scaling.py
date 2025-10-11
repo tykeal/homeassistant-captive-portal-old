@@ -15,7 +15,7 @@ from src.services.queue_scheduler import (
 
 
 @pytest.fixture
-def scheduler():
+def scheduler() -> None:
     """Create a queue scheduler for testing."""
     return AdaptiveQueueScheduler(
         min_workers=2,
@@ -29,7 +29,7 @@ def scheduler():
 
 
 @pytest.fixture
-async def running_scheduler(scheduler):
+async def running_scheduler(scheduler) -> None:
     """Create and start a scheduler, then clean it up after test."""
     await scheduler.start()
     yield scheduler
@@ -39,11 +39,11 @@ async def running_scheduler(scheduler):
 class TestQueueScalingEdgeCases:
     """Test adaptive queue scaling edge conditions."""
 
-    async def test_scale_up_on_queue_pressure(self, running_scheduler):
+    async def test_scale_up_on_queue_pressure(self, running_scheduler) -> None:
         """Test scaling up workers when queue has high pressure."""
 
         # Submit many tasks quickly to create queue pressure
-        async def dummy_task():
+        async def dummy_task() -> None:
             """dummy_task for testing."""
 
             await asyncio.sleep(0.1)
@@ -65,11 +65,11 @@ class TestQueueScalingEdgeCases:
         assert metrics["active_workers"] > 2
         assert metrics["scale_decisions"] > 0
 
-    async def test_scale_down_on_idle_queue(self, running_scheduler):
+    async def test_scale_down_on_idle_queue(self, running_scheduler) -> None:
         """Test scaling down workers when queue is idle with low latency."""
 
         # First, create a burst to scale up
-        async def quick_task():
+        async def quick_task() -> None:
             """quick_task for testing."""
 
             await asyncio.sleep(0.01)
@@ -94,10 +94,12 @@ class TestQueueScalingEdgeCases:
         # Should scale down when idle (might not reach min if still processing)
         assert final_workers <= initial_workers
 
-    async def test_cooldown_period_prevents_rapid_scaling(self, running_scheduler):
+    async def test_cooldown_period_prevents_rapid_scaling(
+        self, running_scheduler
+    ) -> None:
         """Test that cooldown period prevents rapid scaling decisions."""
 
-        async def dummy_task():
+        async def dummy_task() -> None:
             """dummy_task for testing."""
 
             await asyncio.sleep(0.05)
@@ -126,10 +128,10 @@ class TestQueueScalingEdgeCases:
         # Should not have additional scale decision due to cooldown
         assert metrics2["scale_decisions"] == scale_decisions_1
 
-    async def test_max_workers_limit(self, running_scheduler):
+    async def test_max_workers_limit(self, running_scheduler) -> None:
         """Test that worker count never exceeds max_workers."""
 
-        async def slow_task():
+        async def slow_task() -> None:
             """slow_task for testing."""
 
             await asyncio.sleep(0.2)
@@ -151,7 +153,7 @@ class TestQueueScalingEdgeCases:
         assert metrics["active_workers"] <= running_scheduler.max_workers
         assert metrics["active_workers"] <= 5
 
-    async def test_min_workers_limit(self, running_scheduler):
+    async def test_min_workers_limit(self, running_scheduler) -> None:
         """Test that worker count never goes below min_workers."""
         # Let queue be completely idle
         await asyncio.sleep(10.0)
@@ -162,7 +164,7 @@ class TestQueueScalingEdgeCases:
         assert metrics["active_workers"] >= running_scheduler.min_workers
         assert metrics["active_workers"] >= 2
 
-    async def test_consecutive_high_latency_required(self, running_scheduler):
+    async def test_consecutive_high_latency_required(self, running_scheduler) -> None:
         """Test that scale up requires consecutive high latency measurements."""
         # Create a scheduler with very specific thresholds
         scheduler = AdaptiveQueueScheduler(
@@ -175,7 +177,7 @@ class TestQueueScalingEdgeCases:
 
         try:
 
-            async def variable_latency_task():
+            async def variable_latency_task() -> None:
                 """variable_latency_task for testing."""
 
                 # Sometimes fast, sometimes slow
@@ -192,10 +194,10 @@ class TestQueueScalingEdgeCases:
         finally:
             await scheduler.stop()
 
-    async def test_scale_up_resets_low_latency_counter(self, running_scheduler):
+    async def test_scale_up_resets_low_latency_counter(self, running_scheduler) -> None:
         """Test that scaling up resets consecutive low latency counter."""
 
-        async def dummy_task():
+        async def dummy_task() -> None:
             """dummy_task for testing."""
 
             await asyncio.sleep(0.05)
@@ -219,10 +221,10 @@ class TestQueueScalingEdgeCases:
 
     async def test_empty_queue_alone_insufficient_for_scale_down(
         self, running_scheduler
-    ):
+    ) -> None:
         """Test that empty queue alone is not enough, needs low latency too."""
 
-        async def task():
+        async def task() -> None:
             """task for testing."""
 
             await asyncio.sleep(0.001)
@@ -251,11 +253,11 @@ class TestQueueScalingEdgeCases:
             or status["consecutive_low_latency"] < 5
         )
 
-    async def test_priority_tasks_during_scaling(self, running_scheduler):
+    async def test_priority_tasks_during_scaling(self, running_scheduler) -> None:
         """Test that high priority tasks are processed correctly during scaling."""
         results = []
 
-        async def tracked_task(task_id: str, priority: str):
+        async def tracked_task(task_id: str, priority: str) -> None:
             """Track task execution for testing."""
             results.append((task_id, priority, time.time()))
             await asyncio.sleep(0.01)
@@ -285,15 +287,15 @@ class TestQueueScalingEdgeCases:
             low_result = next(r for r in results if r[0] == "low_1")
             assert urgent_result[2] < low_result[2]  # Processed earlier
 
-    async def test_rapid_scale_up_down_stability(self, running_scheduler):
+    async def test_rapid_scale_up_down_stability(self, running_scheduler) -> None:
         """Test system stability with rapid load changes."""
 
-        async def quick_task():
+        async def quick_task() -> None:
             """quick_task for testing."""
 
             await asyncio.sleep(0.01)
 
-        async def slow_task():
+        async def slow_task() -> None:
             """slow_task for testing."""
 
             await asyncio.sleep(0.3)
@@ -319,10 +321,10 @@ class TestQueueScalingEdgeCases:
         )
         assert metrics["tasks_failed"] == 0  # No failures during transitions
 
-    async def test_metrics_window_size_limit(self, running_scheduler):
+    async def test_metrics_window_size_limit(self, running_scheduler) -> None:
         """Test that processing times don't grow unbounded."""
 
-        async def task():
+        async def task() -> None:
             """task for testing."""
 
             await asyncio.sleep(0.01)
@@ -338,10 +340,10 @@ class TestQueueScalingEdgeCases:
         # Processing times should be limited by window size
         assert status["processing_times_count"] <= running_scheduler.metrics_window_size
 
-    async def test_worker_count_consistency(self, running_scheduler):
+    async def test_worker_count_consistency(self, running_scheduler) -> None:
         """Test that active worker count stays consistent with worker list."""
 
-        async def task():
+        async def task() -> None:
             """task for testing."""
 
             await asyncio.sleep(0.1)

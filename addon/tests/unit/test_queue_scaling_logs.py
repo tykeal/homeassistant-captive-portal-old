@@ -11,7 +11,7 @@ from src.services.queue_scheduler import AdaptiveQueueScheduler
 
 
 @pytest.fixture
-async def queue_scheduler():
+async def queue_scheduler() -> None:
     """Create a queue scheduler for testing."""
     scheduler = AdaptiveQueueScheduler(
         min_workers=2, max_workers=5, latency_threshold_ms=400
@@ -22,11 +22,11 @@ async def queue_scheduler():
 
 
 @pytest.mark.asyncio
-async def test_queue_scaling_up_logs_decision(queue_scheduler):
+async def test_queue_scaling_up_logs_decision(queue_scheduler) -> None:
     """Test that scaling up occurs and is tracked in metrics."""
 
     # Create tasks that will trigger scaling
-    async def slow_task():
+    async def slow_task() -> None:
         """Simulate a slow task to trigger scaling."""
         await asyncio.sleep(0.5)  # 500ms > 400ms threshold
 
@@ -51,11 +51,11 @@ async def test_queue_scaling_up_logs_decision(queue_scheduler):
 
 
 @pytest.mark.asyncio
-async def test_queue_scaling_down_logs_decision(queue_scheduler):
+async def test_queue_scaling_down_logs_decision(queue_scheduler) -> None:
     """Test that scaling down can occur after load decreases."""
 
     # Initially scale up by submitting tasks
-    async def quick_task():
+    async def quick_task() -> None:
         """Quick task."""
         await asyncio.sleep(0.01)
 
@@ -74,7 +74,7 @@ async def test_queue_scaling_down_logs_decision(queue_scheduler):
 
 
 @pytest.mark.asyncio
-async def test_queue_scaling_logs_include_metrics(queue_scheduler):
+async def test_queue_scaling_logs_include_metrics(queue_scheduler) -> None:
     """Test that scaling logs include relevant metrics.
 
     Verifies that queue scaling decision logs contain:
@@ -94,7 +94,7 @@ async def test_queue_scaling_logs_include_metrics(queue_scheduler):
 
 
 @pytest.mark.asyncio
-async def test_queue_scaling_structured_logging():
+async def test_queue_scaling_structured_logging() -> None:
     """Test that queue scaling uses structured logging format."""
     # This tests the logging infrastructure is configured for structured logs
     from src.core.logging_config import configure_logging, get_logger
@@ -118,10 +118,10 @@ async def test_queue_scaling_structured_logging():
 
 
 @pytest.mark.asyncio
-async def test_queue_health_endpoint_provides_scaling_info(queue_scheduler):
+async def test_queue_health_endpoint_provides_scaling_info(queue_scheduler) -> None:
     """Test that queue health endpoint provides scaling information."""
 
-    async def task():
+    async def task() -> None:
         """Simple task."""
         await asyncio.sleep(0.01)
 
@@ -144,7 +144,7 @@ async def test_queue_health_endpoint_provides_scaling_info(queue_scheduler):
 
 
 @pytest.mark.asyncio
-async def test_queue_scaling_logs_are_searchable():
+async def test_queue_scaling_logs_are_searchable() -> None:
     """Test that queue scaling logs use consistent field names for searching.
 
     This ensures logs can be queried in production (e.g., via log aggregation).
@@ -180,14 +180,14 @@ async def test_queue_scaling_logs_are_searchable():
 
 
 @pytest.mark.asyncio
-async def test_queue_scheduler_tracks_latency():
+async def test_queue_scheduler_tracks_latency() -> None:
     """Test that queue scheduler tracks operation latency."""
     scheduler = AdaptiveQueueScheduler(
         min_workers=2, max_workers=5, latency_threshold_ms=400
     )
     await scheduler.start()
 
-    async def timed_task():
+    async def timed_task() -> None:
         """Task with known duration."""
         await asyncio.sleep(0.05)  # 50ms
         return "done"
@@ -206,7 +206,7 @@ async def test_queue_scheduler_tracks_latency():
 
 
 @pytest.mark.asyncio
-async def test_queue_scaling_decision_logged_on_threshold_breach():
+async def test_queue_scaling_decision_logged_on_threshold_breach() -> None:
     """Test that scaling decision is logged when latency threshold is breached."""
     scheduler = AdaptiveQueueScheduler(
         min_workers=2,
@@ -215,7 +215,7 @@ async def test_queue_scaling_decision_logged_on_threshold_breach():
     )
     await scheduler.start()
 
-    async def slow_task():
+    async def slow_task() -> None:
         """Task slower than threshold."""
         await asyncio.sleep(0.15)  # 150ms > 100ms threshold
 

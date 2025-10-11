@@ -13,13 +13,13 @@ from src.services.theme_manager import ThemeManager
 
 
 @pytest.fixture
-def theme_manager():
+def theme_manager() -> None:
     """Create a theme manager instance for testing."""
     return ThemeManager()
 
 
 @pytest.fixture
-def valid_theme():
+def valid_theme() -> None:
     """Create a valid theme configuration."""
     return ThemeConfig(
         portal_title="Test Portal",
@@ -32,7 +32,7 @@ def valid_theme():
 
 
 @pytest.fixture
-def default_theme():
+def default_theme() -> None:
     """Get the default theme configuration."""
     return ThemeManager.DEFAULT_THEME
 
@@ -40,7 +40,7 @@ def default_theme():
 class TestThemeFallbackLogic:
     """Test theme manager fallback behavior."""
 
-    async def test_fallback_on_database_error(self, theme_manager):
+    async def test_fallback_on_database_error(self, theme_manager) -> None:
         """Test that default theme is returned when database fails."""
         with patch("src.services.theme_manager.get_db_session") as mock_session:
             mock_session.side_effect = Exception("Database connection failed")
@@ -52,7 +52,7 @@ class TestThemeFallbackLogic:
             assert theme.background_color == ThemeManager.DEFAULT_THEME.background_color
             assert theme.primary_color == ThemeManager.DEFAULT_THEME.primary_color
 
-    async def test_fallback_disabled_raises_error(self, theme_manager):
+    async def test_fallback_disabled_raises_error(self, theme_manager) -> None:
         """Test that exception is raised when fallback is disabled."""
         with patch("src.services.theme_manager.get_db_session") as mock_session:
             mock_session.side_effect = Exception("Database error")
@@ -60,7 +60,7 @@ class TestThemeFallbackLogic:
             with pytest.raises(ValueError, match="Failed to load theme"):
                 await theme_manager.get_current_theme(use_fallback=False)
 
-    async def test_fallback_on_missing_theme(self, theme_manager):
+    async def test_fallback_on_missing_theme(self, theme_manager) -> None:
         """Test fallback when no theme exists in database."""
         mock_session = AsyncMock()
         mock_repo = AsyncMock()
@@ -79,7 +79,7 @@ class TestThemeFallbackLogic:
                 # Should return default theme
                 assert theme == ThemeManager.DEFAULT_THEME
 
-    async def test_fallback_on_invalid_theme_title(self, theme_manager):
+    async def test_fallback_on_invalid_theme_title(self, theme_manager) -> None:
         """Test fallback when theme has invalid title."""
         invalid_theme = ThemeConfig(
             portal_title="",  # Invalid: empty title
@@ -107,7 +107,7 @@ class TestThemeFallbackLogic:
                 # Should return default theme due to validation failure
                 assert theme.portal_title == ThemeManager.DEFAULT_THEME.portal_title
 
-    async def test_fallback_on_invalid_color(self, theme_manager):
+    async def test_fallback_on_invalid_color(self, theme_manager) -> None:
         """Test fallback when theme update has invalid color."""
         # Create a valid initial theme
         valid_theme = ThemeConfig(
@@ -136,7 +136,7 @@ class TestThemeFallbackLogic:
                     # This validates the color before updating
                     theme_manager._validate_color("not-a-color")
 
-    async def test_fallback_on_dangerous_css(self, theme_manager):
+    async def test_fallback_on_dangerous_css(self, theme_manager) -> None:
         """Test fallback when theme contains dangerous CSS."""
         dangerous_theme = ThemeConfig(
             portal_title="Test",
@@ -167,13 +167,15 @@ class TestThemeFallbackLogic:
                     or theme.custom_css == ThemeManager.DEFAULT_THEME.custom_css
                 )
 
-    async def test_fallback_on_invalid_logo_url(self, theme_manager):
+    async def test_fallback_on_invalid_logo_url(self, theme_manager) -> None:
         """Test fallback when theme update has invalid logo URL."""
         # Try to validate an invalid logo URL - should raise ValueError
         with pytest.raises(ValueError, match="Invalid URL format"):
             theme_manager._validate_url("javascript:alert('xss')")
 
-    async def test_cache_used_on_subsequent_calls(self, theme_manager, valid_theme):
+    async def test_cache_used_on_subsequent_calls(
+        self, theme_manager, valid_theme
+    ) -> None:
         """Test that cached theme is used on subsequent calls."""
         mock_session = AsyncMock()
         mock_repo = AsyncMock()
@@ -198,7 +200,9 @@ class TestThemeFallbackLogic:
                 # Repository should only be called once
                 assert mock_repo.get_current_theme.call_count == 1
 
-    async def test_cache_invalidated_on_update(self, theme_manager, valid_theme):
+    async def test_cache_invalidated_on_update(
+        self, theme_manager, valid_theme
+    ) -> None:
         """Test that cache is invalidated after update."""
         # Set up initial cached theme
         theme_manager._cache = valid_theme
@@ -213,7 +217,7 @@ class TestThemeFallbackLogic:
         assert theme_manager._cache is None
         assert theme_manager._cache_timestamp is None
 
-    async def test_cache_expires_after_ttl(self, theme_manager, valid_theme):
+    async def test_cache_expires_after_ttl(self, theme_manager, valid_theme) -> None:
         """Test that cache expires after TTL."""
         from datetime import timedelta
 
@@ -224,7 +228,7 @@ class TestThemeFallbackLogic:
         # Cache should be expired (TTL is 300 seconds)
         assert not theme_manager._is_cache_valid()
 
-    async def test_default_theme_properties(self, default_theme):
+    async def test_default_theme_properties(self, default_theme) -> None:
         """Test that default theme has required properties."""
         assert default_theme.portal_title is not None
         assert len(default_theme.portal_title) > 0
@@ -235,7 +239,7 @@ class TestThemeFallbackLogic:
         assert default_theme.logo_url is None  # Default has no logo
         assert default_theme.custom_css is None  # Default has no custom CSS
 
-    async def test_reset_to_default(self, theme_manager):
+    async def test_reset_to_default(self, theme_manager) -> None:
         """Test resetting theme to default configuration."""
         mock_session = AsyncMock()
         mock_repo = AsyncMock()
@@ -275,7 +279,9 @@ class TestThemeFallbackLogic:
                 # Cache should be invalidated
                 assert theme_manager._cache is None
 
-    async def test_partial_theme_update_with_fallback(self, theme_manager, valid_theme):
+    async def test_partial_theme_update_with_fallback(
+        self, theme_manager, valid_theme
+    ) -> None:
         """Test partial theme update doesn't break fallback."""
         mock_session = AsyncMock()
         mock_repo = AsyncMock()
@@ -301,7 +307,7 @@ class TestThemeFallbackLogic:
                 # Theme should still be valid after partial update
                 assert updated_theme.portal_title == "New Title"
 
-    async def test_missing_asset_fallback(self, theme_manager):
+    async def test_missing_asset_fallback(self, theme_manager) -> None:
         """Test fallback when logo asset is missing (URL validation)."""
         # Theme with logo URL that might not exist
         theme_with_missing_logo = ThemeConfig(
@@ -331,7 +337,7 @@ class TestThemeFallbackLogic:
                 # Theme should be loaded (validation doesn't check resource existence)
                 assert theme.logo_url == "https://example.com/missing.png"
 
-    async def test_concurrent_fallback_requests(self, theme_manager):
+    async def test_concurrent_fallback_requests(self, theme_manager) -> None:
         """Test that concurrent requests with fallback don't cause issues."""
         import asyncio
 
@@ -349,7 +355,7 @@ class TestThemeFallbackLogic:
             for theme in themes:
                 assert theme.portal_title == ThemeManager.DEFAULT_THEME.portal_title
 
-    async def test_validation_failure_triggers_fallback(self, theme_manager):
+    async def test_validation_failure_triggers_fallback(self, theme_manager) -> None:
         """Test that validation failures trigger fallback appropriately."""
         # Create theme that will fail validation
         invalid_theme = ThemeConfig(

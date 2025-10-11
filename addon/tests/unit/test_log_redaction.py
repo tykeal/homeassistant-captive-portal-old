@@ -6,7 +6,7 @@
 from src.core.logging_config import redact_sensitive_data
 
 
-def test_redact_password_field():
+def test_redact_password_field() -> None:
     """Test that password fields are redacted."""
     record = {
         "message": "User login",
@@ -21,7 +21,7 @@ def test_redact_password_field():
     assert redacted["password"] == "[REDACTED]"
 
 
-def test_redact_token_field():
+def test_redact_token_field() -> None:
     """Test that token fields are redacted."""
     record = {
         "action": "API call",
@@ -36,7 +36,7 @@ def test_redact_token_field():
     assert redacted["access_token"] == "[REDACTED]"
 
 
-def test_redact_credential_field():
+def test_redact_credential_field() -> None:
     """Test that credential fields are redacted."""
     record = {
         "event": "portal_auth",
@@ -51,7 +51,7 @@ def test_redact_credential_field():
     assert redacted["booking_credential"] == "[REDACTED]"
 
 
-def test_redact_secret_field():
+def test_redact_secret_field() -> None:
     """Test that secret fields are redacted."""
     record = {
         "service": "oauth",
@@ -66,7 +66,7 @@ def test_redact_secret_field():
     assert redacted["api_secret"] == "[REDACTED]"
 
 
-def test_redact_key_field():
+def test_redact_key_field() -> None:
     """Test that key fields are redacted."""
     record = {
         "operation": "encrypt",
@@ -81,7 +81,7 @@ def test_redact_key_field():
     assert redacted["private_key"] == "[REDACTED]"
 
 
-def test_redact_authorization_field():
+def test_redact_authorization_field() -> None:
     """Test that authorization fields are redacted."""
     record = {
         "request": "GET /api/grants",
@@ -94,7 +94,7 @@ def test_redact_authorization_field():
     assert redacted["authorization"] == "[REDACTED]"
 
 
-def test_redact_nested_dict():
+def test_redact_nested_dict() -> None:
     """Test that sensitive fields in nested dicts are redacted."""
     record = {
         "event": "user_created",
@@ -119,7 +119,7 @@ def test_redact_nested_dict():
     assert redacted["metadata"]["source"] == "admin_panel"
 
 
-def test_redact_list_of_dicts():
+def test_redact_list_of_dicts() -> None:
     """Test that sensitive fields in list items are redacted."""
     record = {
         "users": [
@@ -136,7 +136,7 @@ def test_redact_list_of_dicts():
     assert redacted["users"][1]["auth_token"] == "[REDACTED]"
 
 
-def test_redact_case_insensitive():
+def test_redact_case_insensitive() -> None:
     """Test that redaction is case-insensitive."""
     record = {
         "PASSWORD": "secret1",
@@ -153,7 +153,7 @@ def test_redact_case_insensitive():
     assert redacted["Api_Key"] == "[REDACTED]"
 
 
-def test_redact_partial_match():
+def test_redact_partial_match() -> None:
     """Test that fields containing sensitive keywords are redacted."""
     record = {
         "user_password": "pass123",
@@ -168,7 +168,7 @@ def test_redact_partial_match():
     assert redacted["encryption_key_id"] == "[REDACTED]"
 
 
-def test_redact_preserves_non_sensitive():
+def test_redact_preserves_non_sensitive() -> None:
     """Test that non-sensitive fields are preserved."""
     record = {
         "timestamp": "2025-01-26T10:00:00Z",
@@ -185,7 +185,7 @@ def test_redact_preserves_non_sensitive():
     assert redacted == record
 
 
-def test_redact_empty_dict():
+def test_redact_empty_dict() -> None:
     """Test that empty dict is handled correctly."""
     record = {}
 
@@ -194,7 +194,7 @@ def test_redact_empty_dict():
     assert redacted == {}
 
 
-def test_redact_none_values():
+def test_redact_none_values() -> None:
     """Test that None values are preserved."""
     record = {
         "username": "alice",
@@ -209,7 +209,7 @@ def test_redact_none_values():
     assert redacted["email"] is None
 
 
-def test_redact_certificate_fields():
+def test_redact_certificate_fields() -> None:
     """Test that certificate-related fields are redacted."""
     record = {
         "tls_config": {
@@ -226,7 +226,7 @@ def test_redact_certificate_fields():
     assert redacted["tls_config"]["private_key"] == "[REDACTED]"
 
 
-def test_redact_real_world_voucher_scenario():
+def test_redact_real_world_voucher_scenario() -> None:
     """Test redaction of voucher authentication log."""
     record = {
         "event": "portal_authentication",
@@ -248,7 +248,7 @@ def test_redact_real_world_voucher_scenario():
     assert redacted["grant_id"] == "grant-abc-123"
 
 
-def test_redact_real_world_api_key_scenario():
+def test_redact_real_world_api_key_scenario() -> None:
     """Test redaction of API configuration with keys."""
     record = {
         "service": "controller_adapter",

@@ -14,7 +14,7 @@ from src.services.grant_manager import GrantManager
 
 
 @pytest.fixture
-def mock_controller():
+def mock_controller() -> None:
     """Create a mock controller adapter."""
     controller = AsyncMock()
 
@@ -30,7 +30,7 @@ def mock_controller():
 
 
 @pytest.fixture
-def mock_storage():
+def mock_storage() -> None:
     """Create a mock storage layer."""
     storage = AsyncMock()
     storage.save_grant = AsyncMock()
@@ -40,7 +40,7 @@ def mock_storage():
 
 
 @pytest.fixture
-def mock_audit():
+def mock_audit() -> None:
     """Create a mock audit logger."""
     audit = AsyncMock()
     audit.log_event = AsyncMock()
@@ -48,7 +48,7 @@ def mock_audit():
 
 
 @pytest.fixture
-async def grant_manager(mock_controller, mock_storage, mock_audit):
+async def grant_manager(mock_controller, mock_storage, mock_audit) -> None:
     """Create a grant manager with mocked dependencies."""
     # GrantManager now uses singleton pattern and gets dependencies internally
     manager = GrantManager()
@@ -59,7 +59,7 @@ async def grant_manager(mock_controller, mock_storage, mock_audit):
 
 
 @pytest.mark.asyncio
-async def test_burst_provisioning_p95_latency(grant_manager, mock_storage):
+async def test_burst_provisioning_p95_latency(grant_manager, mock_storage) -> None:
     """Test that burst provisioning meets p95 latency threshold (<2s)."""
     from datetime import UTC, datetime, timedelta
 
@@ -110,7 +110,7 @@ async def test_burst_provisioning_p95_latency(grant_manager, mock_storage):
 
 
 @pytest.mark.asyncio
-async def test_burst_provisioning_throughput(grant_manager):
+async def test_burst_provisioning_throughput(grant_manager) -> None:
     """Test that burst provisioning maintains throughput under load."""
     from datetime import UTC, datetime, timedelta
 

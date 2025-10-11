@@ -15,7 +15,7 @@ from src.services.theme_manager import ThemeManager
 
 
 @pytest.fixture
-def mock_storage():
+def mock_storage() -> None:
     """Create a mock storage layer."""
     storage = AsyncMock()
     storage.validate_credential = AsyncMock(return_value=False)
@@ -23,7 +23,7 @@ def mock_storage():
 
 
 @pytest.fixture
-def mock_audit():
+def mock_audit() -> None:
     """Create a mock audit logger."""
     audit = AsyncMock()
     audit.log_event = AsyncMock()
@@ -31,7 +31,7 @@ def mock_audit():
 
 
 @pytest.fixture
-def theme_manager(tmp_path):
+def theme_manager(tmp_path) -> None:
     """Create a theme manager with test themes."""
     # Create a simple test theme
     theme_dir = tmp_path / "themes"
@@ -60,7 +60,7 @@ def theme_manager(tmp_path):
 
 
 @pytest.fixture
-def test_app(theme_manager, mock_storage, mock_audit):
+def test_app(theme_manager, mock_storage, mock_audit) -> None:
     """Create a test FastAPI app with portal router."""
     app = FastAPI()
     # The router is already configured, just include it
@@ -68,7 +68,7 @@ def test_app(theme_manager, mock_storage, mock_audit):
     return app
 
 
-def test_portal_page_render_performance(test_app):
+def test_portal_page_render_performance(test_app) -> None:
     """Test that portal page renders within <300ms p95 (FR-007/FR-009)."""
     client = TestClient(test_app)
     latencies = []
@@ -104,7 +104,7 @@ def test_portal_page_render_performance(test_app):
     assert mean_latency < 100, f"Mean latency {mean_latency:.1f}ms is unexpectedly high"
 
 
-def test_portal_form_submission_performance(test_app):
+def test_portal_form_submission_performance(test_app) -> None:
     """Test that form submission processing is performant."""
     client = TestClient(test_app)
     latencies = []
@@ -131,7 +131,7 @@ def test_portal_form_submission_performance(test_app):
     )
 
 
-def test_portal_concurrent_render_performance(test_app):
+def test_portal_concurrent_render_performance(test_app) -> None:
     """Test portal page rendering under concurrent load."""
     import concurrent.futures
 
@@ -139,7 +139,7 @@ def test_portal_concurrent_render_performance(test_app):
     concurrent_users = 10
     requests_per_user = 10
 
-    def make_requests():
+    def make_requests() -> None:
         """Make multiple requests."""
         latencies = []
         for _ in range(requests_per_user):
