@@ -654,3 +654,168 @@ Test run completed in 368.56s (6 minutes, 8 seconds)
 - Tests must continue to pass after each change
 - Follow existing type annotation patterns in the codebase
 - Use `# type: ignore[specific-error]` only as last resort with justification
+
+## Phase 3.13: Complete MyPy Compliance (Test Files)
+
+**Status**: TODO
+**Starting Status**: 60 errors in 12 test files
+**Target**: Zero mypy errors across entire addon directory
+**Blocking**: Upstream repository merge (requires 100% mypy compliance)
+
+### Error Summary (60 total errors)
+
+**By Error Type:**
+1. **var-annotated** (1 error): Missing type annotation for dict variable
+2. **misc** (4 errors): AsyncGenerator return type issues
+3. **return-value** (26 errors): "No return value expected" on test functions
+4. **call-arg** (8 errors): Unexpected kwargs in AccessGrant constructor
+5. **arg-type** (8 errors): int passed where datetime expected
+6. **attr-defined** (1 error): NoneType iteration issue
+
+**By File:**
+1. `test_log_redaction.py` (1 error): Type annotation needed
+2. `test_queue_scaling_logs.py` (2 errors): AsyncGenerator + return-value
+3. `test_queue_scaling.py` (2 errors): AsyncGenerator + return-value
+4. `test_rate_limiting.py` (1 error): return-value
+5. `test_theme_fallback.py` (3 errors): return-value
+6. `test_controller_retry.py` (1 error): return-value
+7. `test_burst_provisioning.py` (4 errors): return-value + AsyncGenerator
+8. `test_graceful_shutdown.py` (24 errors): Multiple issues (call-arg, arg-type, return-value, misc)
+9. `test_metrics_export.py` (3 errors): return-value
+10. `test_portal_render.py` (6 errors): return-value + attr-defined
+11. `conftest.py` (2 errors): misc + arg-type
+12. `test_auth_security.py` (11 errors): misc + return-value
+
+### Tasks
+
+#### Unit Test Fixes (Quick Wins)
+- [ ] T152: Fix test_log_redaction.py type annotation (1 error)
+  - Add type annotation: `record: dict[str, Any] = {...}`
+  - File: addon/tests/unit/test_log_redaction.py:190
+  - Priority: High
+  - Estimated: 5 minutes
+
+- [ ] T153: Fix test_queue_scaling_logs.py async generator types (2 errors)
+  - Change return type from `None` to `AsyncGenerator[None, None]`
+  - Remove return value from generator function
+  - File: addon/tests/unit/test_queue_scaling_logs.py
+  - Priority: High
+  - Estimated: 10 minutes
+
+- [ ] T154: Fix test_queue_scaling.py async generator types (2 errors)
+  - Change return type from `None` to `AsyncGenerator[None, None]`
+  - Remove return value from generator function
+  - File: addon/tests/unit/test_queue_scaling.py
+  - Priority: High
+  - Estimated: 10 minutes
+
+- [ ] T155: Fix test_theme_fallback.py return annotations (3 errors)
+  - Remove `-> None` from pytest fixtures (they should not specify return type)
+  - Files: addon/tests/unit/test_theme_fallback.py:18, 24, 37
+  - Priority: High
+  - Estimated: 5 minutes
+
+- [ ] T156: Fix test_metrics_export.py return annotations (3 errors)
+  - Remove `-> None` from pytest fixtures
+  - Files: addon/tests/unit/test_metrics_export.py:27, 42, 62
+  - Priority: High
+  - Estimated: 5 minutes
+
+#### Integration Test Fixes
+- [ ] T157: Fix test_rate_limiting.py return annotation (1 error)
+  - Remove `-> None` from pytest fixture
+  - File: addon/tests/integration/test_rate_limiting.py:16
+  - Priority: High
+  - Estimated: 2 minutes
+
+- [ ] T158: Fix test_controller_retry.py return annotation (1 error)
+  - Remove `-> None` from pytest fixture
+  - File: addon/tests/integration/test_controller_retry.py:124
+  - Priority: High
+  - Estimated: 2 minutes
+
+- [ ] T159: Fix test_graceful_shutdown.py AccessGrant constructor calls (24 errors)
+  - Replace `id=` kwarg with positional arg or remove (AccessGrant doesn't accept id kwarg)
+  - Replace `device_id=` kwarg with `mac_address=`
+  - Convert `int` timestamps to `datetime` objects for start_time/end_time
+  - Remove `-> None` from pytest fixtures
+  - Fix AsyncGenerator return type
+  - Files: Multiple locations in test_graceful_shutdown.py
+  - Priority: Critical (24 errors)
+  - Estimated: 30 minutes
+
+- [ ] T160: Fix test_auth_security.py generator types (11 errors)
+  - Change return type from `None` to `Generator[..., None, None]` for sync fixtures
+  - Remove `-> None` from pytest fixtures
+  - Files: Multiple locations in test_auth_security.py
+  - Priority: High
+  - Estimated: 15 minutes
+
+#### Performance Test Fixes
+- [ ] T161: Fix test_burst_provisioning.py async generator types (4 errors)
+  - Remove `-> None` from pytest fixtures
+  - Change return type to `AsyncGenerator[None, None]`
+  - File: addon/tests/performance/test_burst_provisioning.py
+  - Priority: High
+  - Estimated: 10 minutes
+
+- [ ] T162: Fix test_portal_render.py type issues (6 errors)
+  - Remove `-> None` from pytest fixtures
+  - Fix iteration over None (check fixture return value)
+  - Files: addon/tests/performance/test_portal_render.py
+  - Priority: High
+  - Estimated: 15 minutes
+
+#### Test Infrastructure Fixes
+- [ ] T163: Fix conftest.py type issues (2 errors)
+  - Change sync fixture return type to `Generator[..., None, None]`
+  - Fix HttpUrl type for controller URL (use Pydantic HttpUrl type properly)
+  - File: addon/tests/conftest.py
+  - Priority: Critical
+  - Estimated: 15 minutes
+
+#### Final Validation
+- [ ] T164: Run full mypy check on addon directory
+  - Verify zero errors in both src/ and tests/
+  - Run: `python -m mypy addon`
+  - Priority: Critical
+  - Estimated: 5 minutes
+
+- [ ] T165: Verify all tests still pass after type fixes
+  - Run: `pytest addon/tests -v`
+  - Ensure 186/186 tests passing
+  - Priority: Critical
+  - Estimated: 10 minutes
+
+- [ ] T166: Update tasks.md with Phase 3.13 completion
+  - Mark all tasks complete
+  - Update project status to reflect 100% mypy compliance
+  - Priority: High
+  - Estimated: 5 minutes
+
+### Success Criteria
+
+- [ ] Zero mypy errors in addon/src/ directory
+- [ ] Zero mypy errors in addon/tests/ directory
+- [ ] All 186 tests still passing
+- [ ] Pre-commit mypy hook passes on all files
+- [ ] Ready for upstream merge
+
+### Dependencies
+
+- Tasks T152-T163 can be done in parallel
+- T164 (validation) depends on T152-T163
+- T165 (test verification) depends on T164
+- T166 (documentation) depends on T165
+
+### Notes
+
+- Focus on test files only (src/ already passing)
+- Common patterns:
+  - Pytest fixtures should NOT have `-> None` return annotation
+  - Use `Generator[YieldType, None, None]` for sync fixtures
+  - Use `AsyncGenerator[YieldType, None]` for async fixtures
+  - AccessGrant constructor doesn't accept `id` or `device_id` kwargs
+  - Use `datetime` objects for temporal fields, not `int`
+- Each task should get its own commit with proper sign-off
+- Priority: High → Critical tasks first
