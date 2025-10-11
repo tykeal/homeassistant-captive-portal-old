@@ -6,7 +6,7 @@
 from pathlib import Path
 from typing import Any
 
-import yaml  # type: ignore[import-untyped]
+import yaml
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 
 from ..core.logging_config import get_logger
