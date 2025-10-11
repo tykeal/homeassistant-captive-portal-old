@@ -13,13 +13,13 @@ from src.services.theme_manager import ThemeManager
 
 
 @pytest.fixture
-def theme_manager() -> None:
+def theme_manager() -> ThemeManager:
     """Create a theme manager instance for testing."""
     return ThemeManager()
 
 
 @pytest.fixture
-def valid_theme() -> None:
+def valid_theme() -> ThemeConfig:
     """Create a valid theme configuration."""
     return ThemeConfig(
         portal_title="Test Portal",
@@ -32,7 +32,7 @@ def valid_theme() -> None:
 
 
 @pytest.fixture
-def default_theme() -> None:
+def default_theme() -> ThemeConfig:
     """Get the default theme configuration."""
     return ThemeManager.DEFAULT_THEME
 
