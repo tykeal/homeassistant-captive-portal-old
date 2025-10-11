@@ -11,6 +11,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
+from pydantic import HttpUrl
 
 from src.app import create_app
 from src.controllers.base import ProvisionResult
@@ -26,7 +27,7 @@ def event_loop() -> Generator[asyncio.AbstractEventLoop]:
 
 
 @pytest.fixture(scope="session")
-def setup_test_database() -> None:
+def setup_test_database() -> Generator[str]:
     """Set up a test database path for all tests automatically.
 
     Note: This fixture is no longer autouse. Individual test fixtures
@@ -64,7 +65,7 @@ def test_config() -> AddonConfig:
     return AddonConfig(
         controller=ControllerConfig(
             type="omada",
-            url="https://192.168.1.1:8443",
+            url=HttpUrl("https://192.168.1.1:8443"),
             username="admin",
             password="testpass",
             site_name="Default",
