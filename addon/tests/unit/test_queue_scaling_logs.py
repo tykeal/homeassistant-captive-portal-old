@@ -4,6 +4,7 @@
 """Unit tests for queue scaling decision log entries."""
 
 import asyncio
+from collections.abc import AsyncGenerator
 
 import pytest
 
@@ -11,7 +12,7 @@ from src.services.queue_scheduler import AdaptiveQueueScheduler
 
 
 @pytest.fixture
-async def queue_scheduler() -> None:
+async def queue_scheduler() -> AsyncGenerator[AdaptiveQueueScheduler]:
     """Create a queue scheduler for testing."""
     scheduler = AdaptiveQueueScheduler(
         min_workers=2, max_workers=5, latency_threshold_ms=400
@@ -190,7 +191,6 @@ async def test_queue_scheduler_tracks_latency() -> None:
     async def timed_task() -> None:
         """Task with known duration."""
         await asyncio.sleep(0.05)  # 50ms
-        return "done"
 
     # Submit task
     await scheduler.submit(timed_task)

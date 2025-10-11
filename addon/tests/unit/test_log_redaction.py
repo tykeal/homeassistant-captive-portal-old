@@ -3,6 +3,8 @@
 
 """Unit tests for log redaction of credentials and secrets."""
 
+from typing import Any
+
 from src.core.logging_config import redact_sensitive_data
 
 
@@ -187,7 +189,7 @@ def test_redact_preserves_non_sensitive() -> None:
 
 def test_redact_empty_dict() -> None:
     """Test that empty dict is handled correctly."""
-    record = {}
+    record: dict[str, Any] = {}
 
     redacted = redact_sensitive_data(record)
 
