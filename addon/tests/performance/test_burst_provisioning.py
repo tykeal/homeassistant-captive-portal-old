@@ -5,6 +5,8 @@
 
 import asyncio
 import time
+from collections.abc import AsyncGenerator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -14,7 +16,7 @@ from src.services.grant_manager import GrantManager
 
 
 @pytest.fixture
-def mock_controller() -> None:
+def mock_controller() -> AsyncMock:
     """Create a mock controller adapter."""
     controller = AsyncMock()
 
@@ -30,7 +32,7 @@ def mock_controller() -> None:
 
 
 @pytest.fixture
-def mock_storage() -> None:
+def mock_storage() -> AsyncMock:
     """Create a mock storage layer."""
     storage = AsyncMock()
     storage.save_grant = AsyncMock()
@@ -40,7 +42,7 @@ def mock_storage() -> None:
 
 
 @pytest.fixture
-def mock_audit() -> None:
+def mock_audit() -> AsyncMock:
     """Create a mock audit logger."""
     audit = AsyncMock()
     audit.log_event = AsyncMock()
@@ -48,7 +50,9 @@ def mock_audit() -> None:
 
 
 @pytest.fixture
-async def grant_manager(mock_controller, mock_storage, mock_audit) -> None:
+async def grant_manager(
+    mock_controller: Any, mock_storage: Any, mock_audit: Any
+) -> AsyncGenerator[GrantManager]:
     """Create a grant manager with mocked dependencies."""
     # GrantManager now uses singleton pattern and gets dependencies internally
     manager = GrantManager()
