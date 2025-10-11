@@ -125,7 +125,7 @@ async def splash_page(request: Request) -> HTMLResponse:
         )
 
 
-@router.post("/splash", response_class=HTMLResponse)
+@router.post("/splash", response_class=HTMLResponse, response_model=None)
 async def splash_page_form_submit(
     request: Request, credential: str = Form(...)
 ) -> HTMLResponse | RedirectResponse:
