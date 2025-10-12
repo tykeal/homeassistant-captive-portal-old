@@ -19,6 +19,7 @@ RUN pip3 install --no-cache-dir uv==0.9.2
 COPY src /app/src
 COPY pyproject.toml /app/
 COPY uv.lock /app/
+COPY README.md /app/
 
 # Set working directory
 WORKDIR /app
