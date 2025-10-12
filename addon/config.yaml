@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2025 Andrew Grimberg <tykeal@bardicgrove.org>
 # SPDX-License-Identifier: Apache-2.0
-
+---
 name: Captive Portal
 version: "1.0.0"
 slug: captive_portal
@@ -45,4 +45,4 @@ schema:
     primary_color: str?
     logo_url: url?
   log_level: list(debug|info|warning|error|critical)?
-image: ghcr.io/hassio-addons/addon-captive-portal
+# image: ghcr.io/hassio-addons/addon-captive-portal
