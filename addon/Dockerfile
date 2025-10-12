@@ -2,7 +2,7 @@
 # SPDX-FileCopyrightText: 2025 Andrew Grimberg <tykeal@bardicgrove.org>
 # SPDX-License-Identifier: Apache-2.0
 
-ARG BUILD_FROM=ghcr.io/hassio-addons/base:16.0.1
+ARG BUILD_FROM=ghcr.io/hassio-addons/base-python:17.0.0
 # hadolint ignore=DL3006
 FROM ${BUILD_FROM}
 
@@ -11,13 +11,9 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Setup base system
 ARG BUILD_ARCH=amd64
-RUN \
-    apk add --no-cache \
-        python3=~3.13 \
-        py3-pip=~24
 
 # Install uv for fast Python package management
-RUN pip3 install --no-cache-dir uv==0.4.29
+RUN pip3 install --no-cache-dir uv==0.9.2
 
 # Copy source code
 COPY src /app/src
