@@ -9,9 +9,6 @@ FROM ${BUILD_FROM}
 # Set shell
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Setup base system
-ARG BUILD_ARCH=amd64
-
 # Install uv for fast Python package management
 RUN pip3 install --no-cache-dir uv==0.9.2
 
